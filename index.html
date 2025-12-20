@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b5fff" />
+  <title>ElderConnect</title>
+
+  <!-- iOS “app-like” -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ElderConnect" />
+
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2e;
+      --muted: #98a2b3;
+      --text: #e6e9ef;
+      --blue: #0b5fff;
+      --red: #ef4444;
+      --line: rgba(255,255,255,.10);
+      --radius: 18px;
+      --pad: 14px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: linear-gradient(180deg, #0b1220 0%, #060a12 100%);
+      color: var(--text);
+      padding: env(safe-area-inset-top) 14px calc(84px + env(safe-area-inset-bottom)) 14px;
+      max-width: 920px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 6px 0 14px;
+    }
+
+    .brand {
+      display: flex; flex-direction: column;
+    }
+    .brand h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
+    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+    .pill {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(6,10,18,.86);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .tabbtn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      border-radius: 14px;
+      padding: 10px 8px;
+      font-size: 12px;
+      text-align: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tabbtn.active {
+      background: rgba(11,95,255,.22);
+      color: var(--text);
+      border-color: rgba(11,95,255,.35);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(17,26,46,.88);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+
+    .row {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 650;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn.blue { background: var(--blue); color: #fff; }
+    .btn.red  { background: var(--red);  color: #fff; }
+    .btn.ghost{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+    input, textarea {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline: none;
+      font-size: 15px;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+
+    .list { margin: 8px 0 0; padding: 0; list-style: none; }
+    .list li {
+      padding: 10px 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,.03);
+    }
+    .small { font-size: 12px; color: var(--muted); }
+
+    .hidden { display: none; }
+
+    .chatlog {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .bubble {
+      max-width: 92%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .bubble.me { margin-left: auto; background: rgba(11,95,255,.18); border-color: rgba(11,95,255,.28); }
+    .bubble.ai { margin-right: auto; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <h1>ElderConnect</h1>
+      <p>Support, reminders, and companionship.</p>
+    </div>
+    <div class="pill" id="statusPill">Offline-ready • Local storage</div>
+  </header>
+
+  <!-- HOME -->
+  <section class="grid" id="view-home">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div class="label">Daily Check-In</div>
+          <div style="font-size:18px;font-weight:700;">How are you today?</div>
+          <div class="small" id="lastCheckin">Last check-in: none yet</div>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+      <button class="btn blue" id="checkinBtn">Check In Now</button>
+      <div class="small" style="margin-top:10px;">
+        Tip: add this page to your Home Screen for an app-like experience.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Today</div>
+      <div id="todaySummary" style="font-size:15px;line-height:1.5;color:var(--text);"></div>
+    </div>
+  </section>
+
+  <!-- REMINDERS -->
+  <section class="grid hidden" id="view-reminders">
+    <div class="card">
+      <div style="font-size:18px;font-weight:800;">Reminders</div>
+      <p class="small">Add medication, hydration, or appointment reminders. Stored on this device.</p>
+      <div class="label">Reminder title</div>
+      <input id="remTitle" placeholder="e.g., Take blood pressure medicine" />
+      <div style="height:10px;"></div>
+      <div class="label">Time (optional)</div>
+      <input id="remTime" placeholder="e.g., 8:00 AM" />
+      <div style="height:10px;"></div>
+      <button class="btn blue" id="addReminderBtn">Add Reminder</button>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div style="font-size:16px;font-weight:800;">Saved Reminders</div>
+        <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:10px 12px;">Clear All</button>
+      </div>
+      <ul class="list" id="remList"></ul>
+      <div class="small" id="remEmpty" style="margin-top:8px;">No reminders yet.</div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+  <section class="grid hidden" id="view-chat">
+    <div class="card">
+      <div style="font-size:18px;font-weight:800;">Companion Chat</div>
+      <p class="small">This is a local starter chat. Next step is wiring this to a real AI (cloud) and saving chat history to a backend.</p>
+      <div class="label">Message</div>
+      <input id="chatInput" placeholder="Type a message…" />
+      <div style="height:10px;"></div>
+      <button class="btn blue" id="sendChatBtn">Send</button>
+      <div class="chatlog" id="chatLog"></div>
+    </div>
+  </section>
+
+  <!-- GAMES -->
+  <section class="grid hidden" id="view-games">
+    <div class="card">
+      <div style="font-size:18px;font-weight:800;">Brain Games</div>
+      <p class="small">Starter: quick memory prompt. We can add real games next (word match, trivia, memory cards).</p>
+      <button class="btn blue" id="gameBtn">Give me a quick prompt</button>
+      <div id="gameOut" style="margin-top:12px;font-size:15px;line-height:1.5;"></div>
+    </div>
+  </section>
+
+  <!-- CONTACTS -->
+  <section class="grid hidden" id="view-contacts">
+    <div class="card">
+      <div style="font-size:18px;font-weight:800;">Emergency Contact</div>
+      <p class="small">Set an emergency phone number. The “Call Now” button will dial it.</p>
+      <div class="label">Phone number</div>
+      <input id="emPhone" placeholder="e.g., 12253334444" inputmode="tel" />
+      <div style="height:10px;"></div>
+      <button class="btn blue" id="savePhoneBtn">Save Number</button>
+      <div style="height:10px;"></div>
+      <button class="btn red" id="callNowBtn">Call Now</button>
+      <div class="small" id="phoneSavedMsg" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <!-- TAB BAR -->
+  <nav class="tabs" role="navigation" aria-label="ElderConnect Tabs">
+    <div class="tabbtn active" data-tab="home">Home</div>
+    <div class="tabbtn" data-tab="reminders">Reminders</div>
+    <div class="tabbtn" data-tab="chat">Chat</div>
+    <div class="tabbtn" data-tab="games">Games</div>
+    <div class="tabbtn" data-tab="contacts">Contacts</div>
+  </nav>
+
+  <script>
+    // ---------- Storage helpers ----------
+    const S = {
+      get(key, fallback) {
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+        catch { return fallback; }
+      },
+      set(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    };
+
+    // ---------- Tabs ----------
+    const views = {
+      home: document.getElementById("view-home"),
+      reminders: document.getElementById("view-reminders"),
+      chat: document.getElementById("view-chat"),
+      games: document.getElementById("view-games"),
+      contacts: document.getElementById("view-contacts"),
+    };
+
+    function showTab(name) {
+      Object.entries(views).forEach(([k, el]) => {
+        el.classList.toggle("hidden", k !== name);
+      });
+      document.querySelectorAll(".tabbtn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === name);
+      });
+    }
+
+    document.querySelectorAll(".tabbtn").forEach(btn => {
+      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    });
+
+    // ---------- Home: Check-in ----------
+    const lastCheckinEl = document.getElementById("lastCheckin");
+    const todaySummaryEl = document.getElementById("todaySummary");
+    const checkinBtn = document.getElementById("checkinBtn");
+
+    function fmt(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString(undefined, { weekday: "short", year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+    }
+
+    function refreshHome() {
+      const checkins = S.get("checkins", []);
+      if (checkins.length) {
+        lastCheckinEl.textContent = "Last check-in: " + fmt(checkins[checkins.length - 1].ts);
+      } else {
+        lastCheckinEl.textContent = "Last check-in: none yet";
+      }
+
+      const reminders = S.get("reminders", []);
+      const emPhone = S.get("em_phone", "");
+      todaySummaryEl.innerHTML =
+        `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
+        `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhone ? emPhone : "not set"}</b></div>` +
+        `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
+    }
+
+    checkinBtn.addEventListener("click", () => {
+      const checkins = S.get("checkins", []);
+      checkins.push({ ts: Date.now() });
+      S.set("checkins", checkins);
+      refreshHome();
+      alert("Check-in saved.");
+    });
+
+    // ---------- Reminders ----------
+    const remTitle = document.getElementById("remTitle");
+    const remTime = document.getElementById("remTime");
+    const remList = document.getElementById("remList");
+    const remEmpty = document.getElementById("remEmpty");
+
+    function renderReminders() {
+      const reminders = S.get("reminders", []);
+      remList.innerHTML = "";
+      remEmpty.style.display = reminders.length ? "none" : "block";
+
+      reminders.forEach((r, idx) => {
+        const li = document.createElement("li");
+        const left = document.createElement("div");
+        left.innerHTML = `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
+          (r.time ? `<div class="small">${escapeHtml(r.time)}</div>` : `<div class="small">No time set</div>`);
+
+        const del = document.createElement("button");
+        del.className = "btn ghost";
+        del.style.width = "auto";
+        del.style.padding = "10px 12px";
+        del.textContent = "Delete";
+        del.addEventListener("click", () => {
+          const updated = S.get("reminders", []).filter((_, i) => i !== idx);
+          S.set("reminders", updated);
+          renderReminders();
+          refreshHome();
+        });
+
+        li.appendChild(left);
+        li.appendChild(del);
+        remList.appendChild(li);
+      });
+    }
+
+    document.getElementById("addReminderBtn").addEventListener("click", () => {
+      const title = remTitle.value.trim();
+      const time = remTime.value.trim();
+      if (!title) return alert("Enter a reminder title.");
+
+      const reminders = S.get("reminders", []);
+      reminders.push({ title, time, created: Date.now() });
+      S.set("reminders", reminders);
+
+      remTitle.value = "";
+      remTime.value = "";
+      renderReminders();
+      refreshHome();
+    });
+
+    document.getElementById("clearRemindersBtn").addEventListener("click", () => {
+      if (!confirm("Clear all reminders?")) return;
+      S.set("reminders", []);
+      renderReminders();
+      refreshHome();
+    });
+
+    // ---------- Chat (local starter) ----------
+    const chatInput = document.getElementById("chatInput");
+    const chatLog = document.getElementById("chatLog");
+
+    function pushBubble(text, who) {
+      const div = document.createElement("div");
+      div.className = "bubble " + who;
+      div.textContent = text;
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function simpleCompanionReply(userText) {
+      const t = userText.toLowerCase();
+      if (t.includes("lonely") || t.includes("alone")) return "I’m here with you. Want to talk about something that made you smile recently?";
+      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact. Do you want to describe where it hurts?";
+      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day. Are you going out today?";
+      return "Thanks for sharing. Tell me more—what’s on your mind right now?";
+    }
+
+    document.getElementById("sendChatBtn").addEventListener("click", () => {
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+      pushBubble(msg, "me");
+      chatInput.value = "";
+      setTimeout(() => pushBubble(simpleCompanionReply(msg), "ai"), 250);
+    });
+
+    // ---------- Games ----------
+    const prompts = [
+      "Name three things you’re grateful for today.",
+      "What’s one happy memory from childhood you can describe in detail?",
+      "Try this: list 5 animals starting with different letters.",
+      "What song always lifts your mood, and why?",
+      "Name 5 U.S. states you’d like to visit (or revisit)."
+    ];
+    document.getElementById("gameBtn").addEventListener("click", () => {
+      const p = prompts[Math.floor(Math.random() * prompts.length)];
+      document.getElementById("gameOut").textContent = p;
+    });
+
+    // ---------- Contacts / Emergency ----------
+    const emPhone = document.getElementById("emPhone");
+    const phoneSavedMsg = document.getElementById("phoneSavedMsg");
+
+    function refreshPhone() {
+      const saved = S.get("em_phone", "");
+      emPhone.value = saved || "";
+      phoneSavedMsg.textContent = saved ? `Saved: ${saved}` : "No number saved yet.";
+      refreshHome();
+    }
+
+    document.getElementById("savePhoneBtn").addEventListener("click", () => {
+      const raw = emPhone.value.trim();
+      if (!raw) return alert("Enter a phone number first.");
+      // Minimal sanitization: digits + optional leading +
+      const ok = /^(\+)?[0-9]{7,15}$/.test(raw.replace(/\s+/g, ""));
+      if (!ok) return alert("Enter digits only (optionally start with +). Example: 12253334444");
+      S.set("em_phone", raw.replace(/\s+/g, ""));
+      refreshPhone();
+      alert("Emergency number saved.");
+    });
+
+    document.getElementById("callNowBtn").addEventListener("click", () => {
+      const saved = S.get("em_phone", "");
+      if (!saved) return alert("No emergency number saved. Add one first.");
+      window.location.href = `tel:${saved}`;
+    });
+
+    // ---------- Offline status pill ----------
+    const statusPill = document.getElementById("statusPill");
+    function refreshOnlineStatus() {
+      statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
+    }
+    window.addEventListener("online", refreshOnlineStatus);
+    window.addEventListener("offline", refreshOnlineStatus);
+
+    // ---------- Utilities ----------
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>'\"]/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"
+      }[c]));
+    }
+
+    // Initial render
+    refreshOnlineStatus();
+    refreshHome();
+    renderReminders();
+    refreshPhone();
+  </script>
+</body>
+</html>
