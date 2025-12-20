@@ -189,7 +189,11 @@
     </div>
     <div class="pill" id="statusPill">Offline-ready • Local storage</div>
   </header>
-
+<script>
+  function openChatGPT() {
+    window.open("https://chat.openai.com/", "_blank");
+  }
+</script>
   <!-- HOME -->
   <section class="grid" id="view-home">
     <div class="card">
@@ -197,7 +201,8 @@
         <div>
           <div class="label">Daily Check-In</div>
           <div style="font-size:18px;font-weight:700;">How are you today?</div>
-          <div class="small" id="lastCheckin">Last check-in: none yet</div>
+
+                    <div class="small" id="lastCheckin">Last check-in: none yet</div>
         </div>
       </div>
       <div style="height:10px;"></div>
@@ -498,6 +503,11 @@
     refreshHome();
     renderReminders();
     refreshPhone();
+    <script>
+  function openChatGPT() {
+    window.open("https://chat.openai.com/", "_blank");
+  }
+</script>
   </script>
 </body>
 </html>
