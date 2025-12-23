@@ -381,13 +381,7 @@
         `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
     }
 
-    checkinBtn.addEventListener("click", () => {
-      const checkins = S.get("checkins", []);
-      checkins.push({ ts: Date.now() });
-      S.set("checkins", checkins);
-      refreshHome();
-      alert("Check-in saved.");
-    });
+    checkinBtn.onclick = saveCheckinV2;
 
     // ---------- Reminders ----------
     const remTitle = document.getElementById("remTitle");
@@ -529,10 +523,166 @@
         "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"
       }[c]));
     }
+// ---------- Check-In v2 (global) ----------
+let selectedMood = null;
 
+const moodSelectedEl = document.getElementById("moodSelected");
+const moodGoodBtn = document.getElementById("moodGood");
+const moodOkBtn = document.getElementById("moodOk");
+const moodNotGreatBtn = document.getElementById("moodNotGreat");
+const painInput = document.getElementById("painInput");
+const notesInput = document.getElementById("notesInput");
+
+const checkinList = document.getElementById("checkinList");
+const checkinEmpty = document.getElementById("checkinEmpty");
+const clearCheckinsBtn = document.getElementById("clearCheckinsBtn");
+const lastCheckinEl = document.getElementById("lastCheckin");
+
+function fmtCheckin(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function setMood(mood) {
+  selectedMood = mood;
+  if (moodSelectedEl) moodSelectedEl.textContent = `Selected: ${mood}`;
+
+  const all = [moodGoodBtn, moodOkBtn, moodNotGreatBtn].filter(Boolean);
+  all.forEach(b => {
+    b.style.background = "rgba(255,255,255,.06)";
+    b.style.borderColor = "rgba(255,255,255,.10)";
+  });
+
+  const active =
+    mood === "Good" ? moodGoodBtn :
+    mood === "OK" ? moodOkBtn :
+    moodNotGreatBtn;
+
+  if (active) {
+    active.style.background = "rgba(11,95,255,.22)";
+    active.style.borderColor = "rgba(11,95,255,.35)";
+  }
+}
+
+if (moodGoodBtn) moodGoodBtn.onclick = () => setMood("Good");
+if (moodOkBtn) moodOkBtn.onclick = () => setMood("OK");
+if (moodNotGreatBtn) moodNotGreatBtn.onclick = () => setMood("Not great");
+
+function getCheckinsV2() {
+  try {
+    return JSON.parse(localStorage.getItem("checkins_v2") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveCheckinsV2(list) {
+  localStorage.setItem("checkins_v2", JSON.stringify(list));
+}
+
+function refreshLastCheckinV2() {
+  const checkins = getCheckinsV2();
+  if (!lastCheckinEl) return;
+  lastCheckinEl.textContent = checkins.length
+    ? "Last check-in: " + fmtCheckin(checkins[0].ts)
+    : "Last check-in: none yet";
+}
+
+function renderCheckinsV2() {
+  if (!checkinList || !checkinEmpty) return;
+
+  const checkins = getCheckinsV2();
+  checkinList.innerHTML = "";
+  checkinEmpty.style.display = checkins.length ? "none" : "block";
+
+  checkins.slice(0, 7).forEach((c, idx) => {
+    const li = document.createElement("li");
+
+    const wrap = document.createElement("div");
+    wrap.style.flex = "1";
+
+    wrap.innerHTML =
+      `<div style="font-weight:750;">${fmtCheckin(c.ts)}</div>` +
+      `<div class="small">Mood: <b>${escapeHtml(c.mood || "—")}</b> • Pain: <b>${escapeHtml(c.pain ?? "—")}</b></div>` +
+      (c.notes ? `<div class="small">${escapeHtml(c.notes)}</div>` : "");
+
+    const del = document.createElement("button");
+    del.className = "btn ghost";
+    del.textContent = "Delete";
+    del.onclick = () => {
+      const list = getCheckinsV2();
+      list.splice(idx, 1);
+      saveCheckinsV2(list);
+      renderCheckinsV2();
+      refreshLastCheckinV2();
+      if (typeof refreshHome === "function") refreshHome();
+    };
+
+    li.appendChild(wrap);
+    li.appendChild(del);
+    checkinList.appendChild(li);
+  });
+}
+
+function saveCheckinV2() {
+  if (!selectedMood) return alert("Select a mood first.");
+
+  const painRaw = painInput?.value.trim();
+  let pain = null;
+  if (painRaw) {
+    const n = Number(painRaw);
+    if (!Number.isFinite(n) || n < 0 || n > 10) {
+      return alert("Pain must be between 0 and 10.");
+    }
+    pain = n;
+  }
+
+  const notes = notesInput?.value.trim() || "";
+
+  const entry = {
+    ts: Date.now(),
+    mood: selectedMood,
+    pain,
+    notes
+  };
+
+  const list = getCheckinsV2();
+  list.unshift(entry);
+  saveCheckinsV2(list);
+
+  painInput.value = "";
+  notesInput.value = "";
+  selectedMood = null;
+  if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
+
+  renderCheckinsV2();
+  refreshLastCheckinV2();
+  if (typeof refreshHome === "function") refreshHome();
+
+  alert("Check-in saved.");
+}
+
+if (clearCheckinsBtn) {
+  clearCheckinsBtn.onclick = () => {
+    if (!confirm("Clear all check-ins?")) return;
+    saveCheckinsV2([]);
+    renderCheckinsV2();
+    refreshLastCheckinV2();
+    if (typeof refreshHome === "function") refreshHome();
+  };
+}
     // Initial render
     refreshOnlineStatus();
     refreshHome();
+    renderCheckinsV2();
+     refreshLastCheckinV2();
     renderReminders();
     refreshPhone();
     <script>
