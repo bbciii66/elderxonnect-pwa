@@ -198,15 +198,37 @@
   <section class="grid" id="view-home">
     
     </div>
-<div class="card">
-  <div class="row" style="justify-content:space-between;">
-    <div>
-      <div class="label">Daily Check-In</div>
-      <div style="font-size:18px;font-weight:800;">How are you today?</div>
-      <div class="small" id="lastCheckin">Last check-in: none yet</div>
-    </div>
-  </div>
 
+  </div>
+<div class="card">
+  <div class="label">Daily Check-In</div>
+  <div style="font-size:18px;font-weight:700;">
+    How are you feeling today?
+  </div>
+  <div class="small" id="lastCheckinV2"></div>
+
+  <div style="height:12px;"></div>
+
+  <div class="label">Pain Level</div>
+  <input type="range" id="painInput" min="0" max="10" value="0" />
+  <div class="small">0 = no pain · 10 = severe pain</div>
+
+  <div style="height:12px;"></div>
+
+  <div class="label">Notes</div>
+  <textarea id="notesInput" rows="3" placeholder="Optional notes..."></textarea>
+
+  <div style="height:12px;"></div>
+
+  <button class="btn blue" id="saveCheckinBtn">
+    Save Check-In
+  </button>
+
+  <div style="height:6px;"></div>
+  <button class="btn ghost" id="clearCheckinsBtn">
+    Clear all check-ins
+  </button>
+</div>
   <div style="height:12px;"></div>
 
   <div class="label">Mood</div>
@@ -341,7 +363,28 @@
       games: document.getElementById("view-games"),
       contacts: document.getElementById("view-contacts"),
     };
+    saveCheckinBtn.onclick = () => {
+  const pain = Number(painInput.value);
+  const notes = notesInput.value.trim();
 
+  const checkins = getCheckinsV2();
+
+  checkins.push({
+    ts: Date.now(),
+    pain,
+    notes
+  });
+
+  saveCheckinsV2(checkins);
+
+  painInput.value = 0;
+  notesInput.value = "";
+
+  renderCheckinsV2();
+  refreshLastCheckinV2();
+
+  alert("Check-in saved.");
+};
     function showTab(name) {
       Object.entries(views).forEach(([k, el]) => {
         el.classList.toggle("hidden", k !== name);
