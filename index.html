@@ -251,7 +251,10 @@
 
   <div style="height:12px;"></div>
 
-  <button class="btn blue" id="checkinBtn">Save Check-In</button>
+  checkinBtn.onclick = () => {
+  showTab("home");       // stay on home
+  showCheckinV2();       // open the v2 check-in card
+};
 
   <div class="small" style="margin-top:10px;">
     Tip: add this page to your Home Screen for an app-like experience.
@@ -423,8 +426,16 @@
         `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhone ? emPhone : "not set"}</b></div>` +
         `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
     }
+function showCheckinV2() {
+  // Hide all main views
+  Object.values(views).forEach(v => v.style.display = "none");
 
-    checkinBtn.onclick = saveCheckinV2;
+  // Show the check-in v2 card
+  document.getElementById("checkinV2Card").style.display = "block";
+}
+    checkinBtn.onclick = () => {
+  showCheckinV2();
+};
 
     // ---------- Reminders ----------
     const remTitle = document.getElementById("remTitle");
