@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html>save
 <html lang="en">
 <head>
   <link rel="manifest" href="/manifest.json">
@@ -215,19 +215,20 @@
 
   <div style="height:12px;"></div>
 
-  <div class="label">Notes</div>
-  <textarea id="notesInput" rows="3" placeholder="Optional notes..."></textarea>
+<button class="btn blue" id="saveCheckinBtn">
+  Save Check-In
+</button>
 
-  <div style="height:12px;"></div>
+<button class="btn ghost" id="cancelCheckinBtn" type="button">
+  Cancel
+</button>
 
-  <button class="btn blue" id="saveCheckinBtn">
-    Save Check-In
-  </button>
+<div style="height:6px;"></div>
+<button class="btn ghost" id="clearCheckinsBtn" type="button">
+  Clear all check-ins
+</button>
 
-  <div style="height:6px;"></div>
-  <button class="btn ghost" id="clearCheckinsBtn">
-    Clear all check-ins
-  </button>
+</button>
 </div>
   <div style="height:12px;"></div>
 
@@ -366,6 +367,8 @@
       games: document.getElementById("view-games"),
       contacts: document.getElementById("view-contacts"),
     };
+    const cancelCheckinBtn = document.getElementById("cancelCheckinBtn");
+
     saveCheckinBtn.onclick = () => {
   const pain = Number(painInput.value);
   const notes = notesInput.value.trim();
@@ -387,6 +390,9 @@
   refreshLastCheckinV2();
 
   alert("Check-in saved.");
+};
+    cancelCheckinBtn.onclick = () => {
+  showTab("home");
 };
     function showTab(name) {
       Object.entries(views).forEach(([k, el]) => {
