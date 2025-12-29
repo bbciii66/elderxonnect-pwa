@@ -127,7 +127,13 @@
       border: 1px solid var(--line);
       color: var(--text);
     }
+   .btn.attention {
+   background: #facc15;        /* yellow */
+   color: #111827;             /* dark text for contrast */
+   border-color: rgba(250,204,21,.85);
+}
 
+    
     .label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
     input, textarea {
       width: 100%;
@@ -381,11 +387,14 @@
     const checkinCard      = document.getElementById("checkinCard");
     const checkinBtn       = document.getElementById("checkinBtn");
 
-    if (checkinBtn && checkinCard) {
-      checkinBtn.onclick = () => {
-        checkinCard.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
-    }
+   if (checkinBtn) {
+  checkinBtn.onclick = () => {
+    // Once the user starts again, go back to normal blue style
+    checkinBtn.classList.remove("attention");
+    showCheckinV2();
+  };
+}
+
 
     function fmtCheckin(ts) {
       const d = new Date(ts);
@@ -516,14 +525,20 @@
       alert("Check-in saved.");
     }
 
-    if (saveCheckinBtn)   saveCheckinBtn.onclick   = saveCheckinV2;
-   if (cancelCheckinBtn) {
+  if (cancelCheckinBtn) {
   cancelCheckinBtn.onclick = () => {
-    resetCheckinForm();      // clears mood, pain, notes
-    alert("Check-in canceled.");  
-    showTab("home");         // return to Home screen
+    resetCheckinForm();
+
+    // Turn the Home "Check In Now" button yellow to signal retry
+    if (checkinBtn) {
+      checkinBtn.classList.add("attention");
+    }
+
+    alert("Check-in canceled. Tap 'Check In Now' to try again.");
+    showTab("home");
   };
 }
+
 
 
     if (clearCheckinsBtn) {
