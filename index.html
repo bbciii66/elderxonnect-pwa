@@ -529,15 +529,23 @@
   cancelCheckinBtn.onclick = () => {
     resetCheckinForm();
 
-    // Turn the Home "Check In Now" button yellow to signal retry
+    // Turn home button yellow
     if (checkinBtn) {
       checkinBtn.classList.add("attention");
     }
 
     alert("Check-in canceled. Tap 'Check In Now' to try again.");
+
+    // Go back to Home screen
     showTab("home");
+
+    // Scroll user to top so button is visible
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
   };
 }
+
 
 
 
