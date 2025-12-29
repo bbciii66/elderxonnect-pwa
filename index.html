@@ -27,7 +27,6 @@
     }
 
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: var(--font);
@@ -109,10 +108,7 @@
     }
 
     .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
     }
 
     .btn {
@@ -126,14 +122,13 @@
     }
     .btn.blue { background: var(--blue); color: #fff; }
     .btn.red  { background: var(--red);  color: #fff; }
-    .btn.ghost {
+    .btn.ghost{
       background: rgba(255,255,255,.06);
       border: 1px solid var(--line);
       color: var(--text);
     }
 
     .label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
-
     input, textarea {
       width: 100%;
       padding: 12px 12px;
@@ -181,7 +176,6 @@
     .bubble.ai { margin-right: auto; }
   </style>
 </head>
-
 <body>
   <header>
     <div class="brand">
@@ -193,34 +187,29 @@
 
   <!-- HOME -->
   <section class="grid" id="view-home">
+    <!-- Hero summary card -->
     <div class="card">
-      <div class="label">Daily Check-In</div>
-      <div style="font-size:18px;font-weight:700;">
-        How are you feeling today?
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div class="label">Daily Check-In</div>
+          <div style="font-size:18px;font-weight:700;">How are you today?</div>
+          <div class="small" id="lastCheckinV2">Last check-in: none yet</div>
+        </div>
+        <button class="btn blue" id="checkinBtn" style="max-width:200px;">Check In Now</button>
       </div>
-      <div class="small" id="lastCheckinV2"></div>
+      <div class="small" style="margin-top:10px;">
+        Tip: add this page to your Home Screen for an app-like experience.
+      </div>
+    </div>
 
-      <div style="height:12px;"></div>
+    <!-- Check-in v2 card -->
+    <div class="card" id="checkinCard">
+      <div class="label">Daily Check-In</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">How are you feeling today?</div>
 
-      <div class="label">Pain Level</div>
+      <div class="label">Pain level (0–10)</div>
       <input type="range" id="painInput" min="0" max="10" value="0" />
       <div class="small">0 = no pain · 10 = severe pain</div>
-
-      <div style="height:12px;"></div>
-
-      <button class="btn blue" id="saveCheckinBtn" type="button">
-        Save Check-In
-      </button>
-
-      <button class="btn ghost" id="cancelCheckinBtn" type="button">
-        Cancel
-      </button>
-
-      <div style="height:6px;"></div>
-
-      <button class="btn ghost" id="clearCheckinsBtn" type="button">
-        Clear all check-ins
-      </button>
 
       <div style="height:12px;"></div>
 
@@ -239,11 +228,14 @@
 
       <div style="height:12px;"></div>
 
-      <div class="small" style="margin-top:10px;">
-        Tip: add this page to your Home Screen for an app-like experience.
-      </div>
+      <button class="btn blue" id="saveCheckinBtn" type="button">Save Check-In</button>
+      <div style="height:6px;"></div>
+      <button class="btn ghost" id="cancelCheckinBtn" type="button">Cancel</button>
+      <div style="height:6px;"></div>
+      <button class="btn ghost" id="clearCheckinsBtn" type="button">Clear all check-ins</button>
     </div>
 
+    <!-- Recent check-ins -->
     <div class="card">
       <div class="row" style="justify-content:space-between;">
         <div style="font-size:16px;font-weight:800;">Recent Check-Ins</div>
@@ -252,6 +244,7 @@
       <div class="small" id="checkinEmpty">No check-ins yet.</div>
     </div>
 
+    <!-- Today summary -->
     <div class="card">
       <div class="label">Today</div>
       <div id="todaySummary" style="font-size:15px;line-height:1.5;color:var(--text);"></div>
@@ -337,10 +330,6 @@
       });
     }
 
-    function openChatGPT() {
-      window.open("https://chat.openai.com/", "_blank");
-    }
-
     // ---------- Storage helpers ----------
     const S = {
       get(key, fallback) {
@@ -374,177 +363,6 @@
       btn.addEventListener("click", () => showTab(btn.dataset.tab));
     });
 
-    // ---------- Home summary ----------
-    const todaySummaryEl = document.getElementById("todaySummary");
-
-    function fmt(ts) {
-      const d = new Date(ts);
-      return d.toLocaleString(undefined, {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
-    }
-
-    function refreshHome() {
-      const reminders = S.get("reminders", []);
-      const emPhoneSaved = S.get("em_phone", "");
-
-      todaySummaryEl.innerHTML =
-        `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
-        `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhoneSaved ? emPhoneSaved : "not set"}</b></div>` +
-        `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
-    }
-
-    // ---------- Reminders ----------
-    const remTitle = document.getElementById("remTitle");
-    const remTime = document.getElementById("remTime");
-    const remList = document.getElementById("remList");
-    const remEmpty = document.getElementById("remEmpty");
-
-    function renderReminders() {
-      const reminders = S.get("reminders", []);
-      remList.innerHTML = "";
-      remEmpty.style.display = reminders.length ? "none" : "block";
-
-      reminders.forEach((r, idx) => {
-        const li = document.createElement("li");
-        const left = document.createElement("div");
-        left.innerHTML =
-          `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
-          (r.time ? `<div class="small">${escapeHtml(r.time)}</div>` : `<div class="small">No time set</div>`);
-
-        const del = document.createElement("button");
-        del.className = "btn ghost";
-        del.style.width = "auto";
-        del.style.padding = "10px 12px";
-        del.textContent = "Delete";
-        del.addEventListener("click", () => {
-          const updated = S.get("reminders", []).filter((_, i) => i !== idx);
-          S.set("reminders", updated);
-          renderReminders();
-          refreshHome();
-        });
-
-        li.appendChild(left);
-        li.appendChild(del);
-        remList.appendChild(li);
-      });
-    }
-
-    document.getElementById("addReminderBtn").addEventListener("click", () => {
-      const title = remTitle.value.trim();
-      const time = remTime.value.trim();
-      if (!title) return alert("Enter a reminder title.");
-
-      const reminders = S.get("reminders", []);
-      reminders.push({ title, time, created: Date.now() });
-      S.set("reminders", reminders);
-
-      remTitle.value = "";
-      remTime.value = "";
-      renderReminders();
-      refreshHome();
-    });
-
-    document.getElementById("clearRemindersBtn").addEventListener("click", () => {
-      if (!confirm("Clear all reminders?")) return;
-      S.set("reminders", []);
-      renderReminders();
-      refreshHome();
-    });
-
-    // ---------- Chat (local starter) ----------
-    const chatInput = document.getElementById("chatInput");
-    const chatLog = document.getElementById("chatLog");
-
-    function pushBubble(text, who) {
-      const div = document.createElement("div");
-      div.className = "bubble " + who;
-      div.textContent = text;
-      chatLog.appendChild(div);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    function simpleCompanionReply(userText) {
-      const t = userText.toLowerCase();
-      if (t.includes("lonely") || t.includes("alone")) return "I’m here with you. Want to talk about something that made you smile recently?";
-      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact. Do you want to describe where it hurts?";
-      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day. Are you going out today?";
-      return "Thanks for sharing. Tell me more—what’s on your mind right now?";
-    }
-
-    document.getElementById("sendChatBtn").addEventListener("click", () => {
-      const msg = chatInput.value.trim();
-      if (!msg) return;
-      pushBubble(msg, "me");
-      chatInput.value = "";
-      setTimeout(() => pushBubble(simpleCompanionReply(msg), "ai"), 250);
-    });
-
-    // ---------- Games ----------
-    const prompts = [
-      "Name three things you’re grateful for today.",
-      "What’s one happy memory from childhood you can describe in detail?",
-      "Try this: list 5 animals starting with different letters.",
-      "What song always lifts your mood, and why?",
-      "Name 5 U.S. states you’d like to visit (or revisit)."
-    ];
-
-    document.getElementById("gameBtn").addEventListener("click", () => {
-      const p = prompts[Math.floor(Math.random() * prompts.length)];
-      document.getElementById("gameOut").textContent = p;
-    });
-
-    // ---------- Contacts / Emergency ----------
-    const emPhone = document.getElementById("emPhone");
-    const phoneSavedMsg = document.getElementById("phoneSavedMsg");
-
-    function refreshPhone() {
-      const saved = S.get("em_phone", "");
-      emPhone.value = saved || "";
-      phoneSavedMsg.textContent = saved ? `Saved: ${saved}` : "No number saved yet.";
-    }
-
-    document.getElementById("savePhoneBtn").addEventListener("click", () => {
-      const raw = emPhone.value.trim();
-      if (!raw) return alert("Enter a phone number first.");
-      const ok = /^(\+)?[0-9]{7,15}$/.test(raw.replace(/\s+/g, ""));
-      if (!ok) return alert("Enter digits only (optionally start with +). Example: 12253334444");
-      S.set("em_phone", raw.replace(/\s+/g, ""));
-      refreshPhone();
-      refreshHome();
-      alert("Emergency number saved.");
-    });
-
-    document.getElementById("callNowBtn").addEventListener("click", () => {
-      const saved = S.get("em_phone", "");
-      if (!saved) return alert("No emergency number saved. Add one first.");
-      window.location.href = `tel:${saved}`;
-    });
-
-    // ---------- Offline status pill ----------
-    const statusPill = document.getElementById("statusPill");
-    function refreshOnlineStatus() {
-      statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
-    }
-    window.addEventListener("online", refreshOnlineStatus);
-    window.addEventListener("offline", refreshOnlineStatus);
-
-    // ---------- Utilities ----------
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>'"]/g, c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "'": "&#39;",
-        "\"": "&quot;"
-      }[c]));
-    }
-
     // ---------- Check-In v2 ----------
     let selectedMood = null;
 
@@ -557,10 +375,17 @@
     const saveCheckinBtn   = document.getElementById("saveCheckinBtn");
     const cancelCheckinBtn = document.getElementById("cancelCheckinBtn");
     const clearCheckinsBtn = document.getElementById("clearCheckinsBtn");
+    const checkinList      = document.getElementById("checkinList");
+    const checkinEmpty     = document.getElementById("checkinEmpty");
+    const lastCheckinV2El  = document.getElementById("lastCheckinV2");
+    const checkinCard      = document.getElementById("checkinCard");
+    const checkinBtn       = document.getElementById("checkinBtn");
 
-    const checkinList = document.getElementById("checkinList");
-    const checkinEmpty = document.getElementById("checkinEmpty");
-    const lastCheckinV2El = document.getElementById("lastCheckinV2");
+    if (checkinBtn && checkinCard) {
+      checkinBtn.onclick = () => {
+        checkinCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    }
 
     function fmtCheckin(ts) {
       const d = new Date(ts);
@@ -595,20 +420,16 @@
       }
     }
 
-    if (moodGoodBtn)      moodGoodBtn.onclick     = () => setMood("Good");
-    if (moodOkBtn)        moodOkBtn.onclick       = () => setMood("OK");
-    if (moodNotGreatBtn)  moodNotGreatBtn.onclick = () => setMood("Not great");
+    if (moodGoodBtn)     moodGoodBtn.onclick     = () => setMood("Good");
+    if (moodOkBtn)       moodOkBtn.onclick       = () => setMood("OK");
+    if (moodNotGreatBtn) moodNotGreatBtn.onclick = () => setMood("Not great");
 
     function getCheckinsV2() {
-      try {
-        return JSON.parse(localStorage.getItem("checkins_v2") || "[]");
-      } catch {
-        return [];
-      }
+      return S.get("checkins_v2", []);
     }
 
     function saveCheckinsV2(list) {
-      localStorage.setItem("checkins_v2", JSON.stringify(list));
+      S.set("checkins_v2", list);
     }
 
     function refreshLastCheckinV2() {
@@ -628,9 +449,9 @@
 
       checkins.slice(0, 7).forEach((c, idx) => {
         const li = document.createElement("li");
-
         const wrap = document.createElement("div");
         wrap.style.flex = "1";
+
         wrap.innerHTML =
           `<div style="font-weight:750;">${fmtCheckin(c.ts)}</div>` +
           `<div class="small">Mood: <b>${escapeHtml(c.mood || "—")}</b> • Pain: <b>${escapeHtml(c.pain ?? "—")}</b></div>` +
@@ -654,20 +475,27 @@
       });
     }
 
+    function resetCheckinForm() {
+      painInput.value = "0";
+      notesInput.value = "";
+      selectedMood = null;
+      if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
+      const all = [moodGoodBtn, moodOkBtn, moodNotGreatBtn].filter(Boolean);
+      all.forEach(b => {
+        b.style.background = "rgba(255,255,255,.06)";
+        b.style.borderColor = "rgba(255,255,255,.10)";
+      });
+    }
+
     function saveCheckinV2() {
       if (!selectedMood) return alert("Select a mood first.");
 
-      const painRaw = painInput?.value;
-      let pain = null;
-      if (painRaw !== "" && painRaw != null) {
-        const n = Number(painRaw);
-        if (!Number.isFinite(n) || n < 0 || n > 10) {
-          return alert("Pain must be between 0 and 10.");
-        }
-        pain = n;
+      const pain = Number(painInput.value);
+      if (!Number.isFinite(pain) || pain < 0 || pain > 10) {
+        return alert("Pain must be between 0 and 10.");
       }
 
-      const notes = notesInput?.value.trim() || "";
+      const notes = notesInput.value.trim();
 
       const entry = {
         ts: Date.now(),
@@ -680,11 +508,7 @@
       list.unshift(entry);
       saveCheckinsV2(list);
 
-      painInput.value = "0";
-      notesInput.value = "";
-      selectedMood = null;
-      if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
-
+      resetCheckinForm();
       renderCheckinsV2();
       refreshLastCheckinV2();
       refreshHome();
@@ -692,21 +516,8 @@
       alert("Check-in saved.");
     }
 
-    if (saveCheckinBtn) {
-      saveCheckinBtn.onclick = saveCheckinV2;
-    }
-
-    if (cancelCheckinBtn) {
-      cancelCheckinBtn.onclick = () => {
-        painInput.value = "0";
-        notesInput.value = "";
-        selectedMood = null;
-        if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
-        setMood("Good"); // optional: default back to Good
-        selectedMood = null;
-        if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
-      };
-    }
+    if (saveCheckinBtn)   saveCheckinBtn.onclick   = saveCheckinV2;
+    if (cancelCheckinBtn) cancelCheckinBtn.onclick = resetCheckinForm;
 
     if (clearCheckinsBtn) {
       clearCheckinsBtn.onclick = () => {
@@ -718,12 +529,170 @@
       };
     }
 
+    // ---------- Reminders ----------
+    const remTitle = document.getElementById("remTitle");
+    const remTime  = document.getElementById("remTime");
+    const remList  = document.getElementById("remList");
+    const remEmpty = document.getElementById("remEmpty");
+
+    function renderReminders() {
+      const reminders = S.get("reminders", []);
+      remList.innerHTML = "";
+      remEmpty.style.display = reminders.length ? "none" : "block";
+
+      reminders.forEach((r, idx) => {
+        const li = document.createElement("li");
+        const left = document.createElement("div");
+        left.innerHTML =
+          `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
+          (r.time ? `<div class="small">${escapeHtml(r.time)}</div>` : `<div class="small">No time set</div>`);
+
+        const del = document.createElement("button");
+        del.className = "btn ghost";
+        del.style.width = "auto";
+        del.style.padding = "10px 12px";
+        del.textContent = "Delete";
+        del.addEventListener("click", () => {
+          const updated = S.get("reminders", []).filter((_, i) => i !== idx);
+          S.set("reminders", updated);
+          renderReminders();
+          refreshHome();
+        });
+
+        li.appendChild(left);
+        li.appendChild(del);
+        remList.appendChild(li);
+      });
+    }
+
+    document.getElementById("addReminderBtn").addEventListener("click", () => {
+      const title = remTitle.value.trim();
+      const time  = remTime.value.trim();
+      if (!title) return alert("Enter a reminder title.");
+
+      const reminders = S.get("reminders", []);
+      reminders.push({ title, time, created: Date.now() });
+      S.set("reminders", reminders);
+
+      remTitle.value = "";
+      remTime.value  = "";
+      renderReminders();
+      refreshHome();
+    });
+
+    document.getElementById("clearRemindersBtn").addEventListener("click", () => {
+      if (!confirm("Clear all reminders?")) return;
+      S.set("reminders", []);
+      renderReminders();
+      refreshHome();
+    });
+
+    // ---------- Chat (local starter) ----------
+    const chatInput = document.getElementById("chatInput");
+    const chatLog   = document.getElementById("chatLog");
+
+    function pushBubble(text, who) {
+      const div = document.createElement("div");
+      div.className = "bubble " + who;
+      div.textContent = text;
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function simpleCompanionReply(userText) {
+      const t = userText.toLowerCase();
+      if (t.includes("lonely") || t.includes("alone")) return "I’m here with you. Want to talk about something that made you smile recently?";
+      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact. Do you want to describe where it hurts?";
+      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day. Are you going out today?";
+      return "Thanks for sharing. Tell me more—what’s on your mind right now?";
+    }
+
+    document.getElementById("sendChatBtn").addEventListener("click", () => {
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+      pushBubble(msg, "me");
+      chatInput.value = "";
+      setTimeout(() => pushBubble(simpleCompanionReply(msg), "ai"), 250);
+    });
+
+    // ---------- Games ----------
+    const prompts = [
+      "Name three things you’re grateful for today.",
+      "What’s one happy memory from childhood you can describe in detail?",
+      "Try this: list 5 animals starting with different letters.",
+      "What song always lifts your mood, and why?",
+      "Name 5 U.S. states you’d like to visit (or revisit)."
+    ];
+    document.getElementById("gameBtn").addEventListener("click", () => {
+      const p = prompts[Math.floor(Math.random() * prompts.length)];
+      document.getElementById("gameOut").textContent = p;
+    });
+
+    // ---------- Contacts / Emergency ----------
+    const emPhone       = document.getElementById("emPhone");
+    const phoneSavedMsg = document.getElementById("phoneSavedMsg");
+
+    function refreshPhone() {
+      const saved = S.get("em_phone", "");
+      emPhone.value = saved || "";
+      phoneSavedMsg.textContent = saved ? `Saved: ${saved}` : "No number saved yet.";
+    }
+
+    document.getElementById("savePhoneBtn").addEventListener("click", () => {
+      const raw = emPhone.value.trim();
+      if (!raw) return alert("Enter a phone number first.");
+      const ok = /^(\+)?[0-9]{7,15}$/.test(raw.replace(/\s+/g, ""));
+      if (!ok) return alert("Enter digits only (optionally start with +). Example: 12253334444");
+      S.set("em_phone", raw.replace(/\s+/g, ""));
+      refreshPhone();
+      alert("Emergency number saved.");
+    });
+
+    document.getElementById("callNowBtn").addEventListener("click", () => {
+      const saved = S.get("em_phone", "");
+      if (!saved) return alert("No emergency number saved. Add one first.");
+      window.location.href = `tel:${saved}`;
+    });
+
+    // ---------- Offline status pill ----------
+    const statusPill = document.getElementById("statusPill");
+    function refreshOnlineStatus() {
+      statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
+    }
+    window.addEventListener("online", refreshOnlineStatus);
+    window.addEventListener("offline", refreshOnlineStatus);
+
+    // ---------- Utilities ----------
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>'\"]/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"
+      }[c]));
+    }
+
+    // ---------- Home summary ----------
+    function refreshHome() {
+      const reminders = S.get("reminders", []);
+      const emPhoneVal = S.get("em_phone", "");
+      const checkins = getCheckinsV2();
+
+      const todaySummaryEl = document.getElementById("todaySummary");
+      const last = checkins[0];
+
+      todaySummaryEl.innerHTML =
+        `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
+        `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhoneVal ? emPhoneVal : "not set"}</b></div>` +
+        (last
+          ? `<div style="margin-top:6px;" class="small">Last check-in pain: <b>${escapeHtml(last.pain ?? "—")}</b>, mood: <b>${escapeHtml(last.mood || "—")}</b></div>`
+          : ``) +
+        `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
+    }
+
     // ---------- Initial render ----------
     refreshOnlineStatus();
     renderReminders();
+    refreshPhone();
     renderCheckinsV2();
     refreshLastCheckinV2();
-    refreshPhone();
     refreshHome();
   </script>
 </body>
