@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#0b5fff" />
   <title>ElderConnect</title>
 
+  <!-- iOS “app-like” -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="ElderConnect" />
@@ -26,6 +27,7 @@
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: var(--font);
@@ -46,7 +48,8 @@
     }
 
     .brand {
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
     }
     .brand h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
     .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
@@ -83,6 +86,7 @@
       text-align: center;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
     .tabbtn.active {
       background: rgba(11,95,255,.22);
@@ -105,7 +109,10 @@
     }
 
     .row {
-      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .btn {
@@ -119,13 +126,14 @@
     }
     .btn.blue { background: var(--blue); color: #fff; }
     .btn.red  { background: var(--red);  color: #fff; }
-    .btn.ghost{
+    .btn.ghost {
       background: rgba(255,255,255,.06);
       border: 1px solid var(--line);
       color: var(--text);
     }
 
     .label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+
     input, textarea {
       width: 100%;
       padding: 12px 12px;
@@ -173,16 +181,7 @@
     .bubble.ai { margin-right: auto; }
   </style>
 </head>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      // navigator.serviceWorker.register("/service-worker.js");
-    });
-  }
-  function openChatGPT() {
-    window.open("https://chat.openai.com/", "_blank");
-  }
-</script>
+
 <body>
   <header>
     <div class="brand">
@@ -192,14 +191,36 @@
     <div class="pill" id="statusPill">Offline-ready • Local storage</div>
   </header>
 
+  <!-- HOME -->
   <section class="grid" id="view-home">
-
-    <div class="card" id="checkinV2Card">
+    <div class="card">
       <div class="label">Daily Check-In</div>
       <div style="font-size:18px;font-weight:700;">
         How are you feeling today?
       </div>
       <div class="small" id="lastCheckinV2"></div>
+
+      <div style="height:12px;"></div>
+
+      <div class="label">Pain Level</div>
+      <input type="range" id="painInput" min="0" max="10" value="0" />
+      <div class="small">0 = no pain · 10 = severe pain</div>
+
+      <div style="height:12px;"></div>
+
+      <button class="btn blue" id="saveCheckinBtn" type="button">
+        Save Check-In
+      </button>
+
+      <button class="btn ghost" id="cancelCheckinBtn" type="button">
+        Cancel
+      </button>
+
+      <div style="height:6px;"></div>
+
+      <button class="btn ghost" id="clearCheckinsBtn" type="button">
+        Clear all check-ins
+      </button>
 
       <div style="height:12px;"></div>
 
@@ -213,24 +234,10 @@
 
       <div style="height:12px;"></div>
 
-      <div class="label">Pain Level (0–10)</div>
-      <input type="range" id="painInput" min="0" max="10" value="0" style="margin-bottom: 5px;" oninput="document.getElementById('painValDisplay').innerText = this.value" />
-      <div class="small">Level: <span id="painValDisplay">0</span> (0 = none, 10 = severe)</div>
-
-      <div style="height:12px;"></div>
-
       <div class="label">Notes (optional)</div>
       <textarea id="notesInput" placeholder="Any notes for today…"></textarea>
 
       <div style="height:12px;"></div>
-
-      <button class="btn blue" id="saveCheckinBtn">
-        Save Check-In
-      </button>
-
-      <button class="btn ghost" id="clearCheckinsBtn" type="button" style="margin-top: 10px;">
-        Clear all check-ins
-      </button>
 
       <div class="small" style="margin-top:10px;">
         Tip: add this page to your Home Screen for an app-like experience.
@@ -251,6 +258,7 @@
     </div>
   </section>
 
+  <!-- REMINDERS -->
   <section class="grid hidden" id="view-reminders">
     <div class="card">
       <div style="font-size:18px;font-weight:800;">Reminders</div>
@@ -274,10 +282,11 @@
     </div>
   </section>
 
+  <!-- CHAT -->
   <section class="grid hidden" id="view-chat">
     <div class="card">
       <div style="font-size:18px;font-weight:800;">Companion Chat</div>
-      <p class="small">This is a local starter chat. Data is not sent to the cloud.</p>
+      <p class="small">This is a local starter chat. Next step is wiring this to a real AI (cloud) and saving chat history to a backend.</p>
       <div class="label">Message</div>
       <input id="chatInput" placeholder="Type a message…" />
       <div style="height:10px;"></div>
@@ -286,15 +295,17 @@
     </div>
   </section>
 
+  <!-- GAMES -->
   <section class="grid hidden" id="view-games">
     <div class="card">
       <div style="font-size:18px;font-weight:800;">Brain Games</div>
-      <p class="small">Starter: quick memory prompt.</p>
+      <p class="small">Starter: quick memory prompt. We can add real games next (word match, trivia, memory cards).</p>
       <button class="btn blue" id="gameBtn">Give me a quick prompt</button>
       <div id="gameOut" style="margin-top:12px;font-size:15px;line-height:1.5;"></div>
     </div>
   </section>
 
+  <!-- CONTACTS -->
   <section class="grid hidden" id="view-contacts">
     <div class="card">
       <div style="font-size:18px;font-weight:800;">Emergency Contact</div>
@@ -309,6 +320,7 @@
     </div>
   </section>
 
+  <!-- TAB BAR -->
   <nav class="tabs" role="navigation" aria-label="ElderConnect Tabs">
     <div class="tabbtn active" data-tab="home">Home</div>
     <div class="tabbtn" data-tab="reminders">Reminders</div>
@@ -317,7 +329,18 @@
     <div class="tabbtn" data-tab="contacts">Contacts</div>
   </nav>
 
-<script>
+  <script>
+    // Service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js");
+      });
+    }
+
+    function openChatGPT() {
+      window.open("https://chat.openai.com/", "_blank");
+    }
+
     // ---------- Storage helpers ----------
     const S = {
       get(key, fallback) {
@@ -351,23 +374,10 @@
       btn.addEventListener("click", () => showTab(btn.dataset.tab));
     });
 
-    // ---------- Home: Check-in (V2 Logic) ----------
-    let selectedMood = null;
-    const moodSelectedEl = document.getElementById("moodSelected");
-    const moodGoodBtn = document.getElementById("moodGood");
-    const moodOkBtn = document.getElementById("moodOk");
-    const moodNotGreatBtn = document.getElementById("moodNotGreat");
-    
-    // Ensure we only have one ID for this in HTML
-    const painInput = document.getElementById("painInput");
-    const notesInput = document.getElementById("notesInput");
-    const checkinList = document.getElementById("checkinList");
-    const checkinEmpty = document.getElementById("checkinEmpty");
-    const clearCheckinsBtn = document.getElementById("clearCheckinsBtn");
-    const lastCheckinEl = document.getElementById("lastCheckinV2"); // Fixed ID reference
-    const saveCheckinBtn = document.getElementById("saveCheckinBtn");
+    // ---------- Home summary ----------
+    const todaySummaryEl = document.getElementById("todaySummary");
 
-    function fmtCheckin(ts) {
+    function fmt(ts) {
       const d = new Date(ts);
       return d.toLocaleString(undefined, {
         weekday: "short",
@@ -379,132 +389,14 @@
       });
     }
 
-    function setMood(mood) {
-      selectedMood = mood;
-      if (moodSelectedEl) moodSelectedEl.textContent = `Selected: ${mood}`;
-
-      [moodGoodBtn, moodOkBtn, moodNotGreatBtn].forEach(b => {
-        if(b) {
-          b.style.background = "rgba(255,255,255,.06)";
-          b.style.borderColor = "rgba(255,255,255,.10)";
-        }
-      });
-
-      const active = (mood === "Good" ? moodGoodBtn : (mood === "OK" ? moodOkBtn : moodNotGreatBtn));
-      if (active) {
-        active.style.background = "rgba(11,95,255,.22)";
-        active.style.borderColor = "rgba(11,95,255,.35)";
-      }
-    }
-
-    if (moodGoodBtn) moodGoodBtn.onclick = () => setMood("Good");
-    if (moodOkBtn) moodOkBtn.onclick = () => setMood("OK");
-    if (moodNotGreatBtn) moodNotGreatBtn.onclick = () => setMood("Not great");
-
-    function getCheckinsV2() {
-      try { return JSON.parse(localStorage.getItem("checkins_v2") || "[]"); } 
-      catch { return []; }
-    }
-
-    function saveCheckinsV2(list) {
-      localStorage.setItem("checkins_v2", JSON.stringify(list));
-    }
-
-    function refreshLastCheckinV2() {
-      const checkins = getCheckinsV2();
-      if (!lastCheckinEl) return;
-      lastCheckinEl.textContent = checkins.length
-        ? "Last check-in: " + fmtCheckin(checkins[0].ts)
-        : "Last check-in: none yet";
-    }
-
-    function renderCheckinsV2() {
-      if (!checkinList || !checkinEmpty) return;
-      const checkins = getCheckinsV2();
-      checkinList.innerHTML = "";
-      checkinEmpty.style.display = checkins.length ? "none" : "block";
-
-      checkins.slice(0, 7).forEach((c, idx) => {
-        const li = document.createElement("li");
-        const wrap = document.createElement("div");
-        wrap.style.flex = "1";
-        wrap.innerHTML =
-          `<div style="font-weight:750;">${fmtCheckin(c.ts)}</div>` +
-          `<div class="small">Mood: <b>${escapeHtml(c.mood || "—")}</b> • Pain: <b>${escapeHtml(c.pain ?? "—")}</b></div>` +
-          (c.notes ? `<div class="small">${escapeHtml(c.notes)}</div>` : "");
-
-        const del = document.createElement("button");
-        del.className = "btn ghost";
-        del.textContent = "Delete";
-        del.style.width = "auto";
-        del.onclick = () => {
-          const list = getCheckinsV2();
-          list.splice(idx, 1);
-          saveCheckinsV2(list);
-          renderCheckinsV2();
-          refreshLastCheckinV2();
-        };
-
-        li.appendChild(wrap);
-        li.appendChild(del);
-        checkinList.appendChild(li);
-      });
-    }
-
-    // Main Save Logic
-    if (saveCheckinBtn) {
-      saveCheckinBtn.onclick = () => {
-        // Validation: require mood? or optional? Let's make it optional but warn.
-        // if (!selectedMood) return alert("Please select a mood first.");
-        
-        const pain = Number(painInput.value);
-        const notes = notesInput.value.trim();
-        
-        const entry = {
-          ts: Date.now(),
-          mood: selectedMood || "Not specified",
-          pain,
-          notes
-        };
-
-        const list = getCheckinsV2();
-        list.unshift(entry);
-        saveCheckinsV2(list);
-
-        // Reset UI
-        painInput.value = 0;
-        document.getElementById('painValDisplay').innerText = "0";
-        notesInput.value = "";
-        selectedMood = null;
-        if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
-        setMood(null); // Clear visual selection buttons
-
-        renderCheckinsV2();
-        refreshLastCheckinV2();
-        alert("Check-in saved.");
-      };
-    }
-
-    if (clearCheckinsBtn) {
-      clearCheckinsBtn.onclick = () => {
-        if (!confirm("Clear all check-ins?")) return;
-        saveCheckinsV2([]);
-        renderCheckinsV2();
-        refreshLastCheckinV2();
-      };
-    }
-
-    // ---------- Summary / Status ----------
-    const todaySummaryEl = document.getElementById("todaySummary");
-    
     function refreshHome() {
       const reminders = S.get("reminders", []);
-      const emPhone = S.get("em_phone", "");
-      if(todaySummaryEl) {
-        todaySummaryEl.innerHTML =
-          `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
-          `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhone ? emPhone : "not set"}</b></div>`;
-      }
+      const emPhoneSaved = S.get("em_phone", "");
+
+      todaySummaryEl.innerHTML =
+        `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
+        `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhoneSaved ? emPhoneSaved : "not set"}</b></div>` +
+        `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
     }
 
     // ---------- Reminders ----------
@@ -521,7 +413,8 @@
       reminders.forEach((r, idx) => {
         const li = document.createElement("li");
         const left = document.createElement("div");
-        left.innerHTML = `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
+        left.innerHTML =
+          `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
           (r.time ? `<div class="small">${escapeHtml(r.time)}</div>` : `<div class="small">No time set</div>`);
 
         const del = document.createElement("button");
@@ -579,8 +472,8 @@
     function simpleCompanionReply(userText) {
       const t = userText.toLowerCase();
       if (t.includes("lonely") || t.includes("alone")) return "I’m here with you. Want to talk about something that made you smile recently?";
-      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact.";
-      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day.";
+      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact. Do you want to describe where it hurts?";
+      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day. Are you going out today?";
       return "Thanks for sharing. Tell me more—what’s on your mind right now?";
     }
 
@@ -600,6 +493,7 @@
       "What song always lifts your mood, and why?",
       "Name 5 U.S. states you’d like to visit (or revisit)."
     ];
+
     document.getElementById("gameBtn").addEventListener("click", () => {
       const p = prompts[Math.floor(Math.random() * prompts.length)];
       document.getElementById("gameOut").textContent = p;
@@ -613,17 +507,16 @@
       const saved = S.get("em_phone", "");
       emPhone.value = saved || "";
       phoneSavedMsg.textContent = saved ? `Saved: ${saved}` : "No number saved yet.";
-      refreshHome();
     }
 
     document.getElementById("savePhoneBtn").addEventListener("click", () => {
       const raw = emPhone.value.trim();
       if (!raw) return alert("Enter a phone number first.");
-      // Minimal sanitization: digits + optional leading +
       const ok = /^(\+)?[0-9]{7,15}$/.test(raw.replace(/\s+/g, ""));
       if (!ok) return alert("Enter digits only (optionally start with +). Example: 12253334444");
       S.set("em_phone", raw.replace(/\s+/g, ""));
       refreshPhone();
+      refreshHome();
       alert("Emergency number saved.");
     });
 
@@ -636,26 +529,202 @@
     // ---------- Offline status pill ----------
     const statusPill = document.getElementById("statusPill");
     function refreshOnlineStatus() {
-      if(statusPill) statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
+      statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
     }
     window.addEventListener("online", refreshOnlineStatus);
     window.addEventListener("offline", refreshOnlineStatus);
 
     // ---------- Utilities ----------
     function escapeHtml(s) {
-      return String(s).replace(/[&<>'\"]/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"
+      return String(s).replace(/[&<>'"]/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        "\"": "&quot;"
       }[c]));
     }
 
-    // ---------- Initial Init ----------
+    // ---------- Check-In v2 ----------
+    let selectedMood = null;
+
+    const moodSelectedEl   = document.getElementById("moodSelected");
+    const moodGoodBtn      = document.getElementById("moodGood");
+    const moodOkBtn        = document.getElementById("moodOk");
+    const moodNotGreatBtn  = document.getElementById("moodNotGreat");
+    const painInput        = document.getElementById("painInput");
+    const notesInput       = document.getElementById("notesInput");
+    const saveCheckinBtn   = document.getElementById("saveCheckinBtn");
+    const cancelCheckinBtn = document.getElementById("cancelCheckinBtn");
+    const clearCheckinsBtn = document.getElementById("clearCheckinsBtn");
+
+    const checkinList = document.getElementById("checkinList");
+    const checkinEmpty = document.getElementById("checkinEmpty");
+    const lastCheckinV2El = document.getElementById("lastCheckinV2");
+
+    function fmtCheckin(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function setMood(mood) {
+      selectedMood = mood;
+      if (moodSelectedEl) moodSelectedEl.textContent = `Selected: ${mood}`;
+
+      const all = [moodGoodBtn, moodOkBtn, moodNotGreatBtn].filter(Boolean);
+      all.forEach(b => {
+        b.style.background = "rgba(255,255,255,.06)";
+        b.style.borderColor = "rgba(255,255,255,.10)";
+      });
+
+      const active =
+        mood === "Good" ? moodGoodBtn :
+        mood === "OK" ? moodOkBtn :
+        moodNotGreatBtn;
+
+      if (active) {
+        active.style.background = "rgba(11,95,255,.22)";
+        active.style.borderColor = "rgba(11,95,255,.35)";
+      }
+    }
+
+    if (moodGoodBtn)      moodGoodBtn.onclick     = () => setMood("Good");
+    if (moodOkBtn)        moodOkBtn.onclick       = () => setMood("OK");
+    if (moodNotGreatBtn)  moodNotGreatBtn.onclick = () => setMood("Not great");
+
+    function getCheckinsV2() {
+      try {
+        return JSON.parse(localStorage.getItem("checkins_v2") || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCheckinsV2(list) {
+      localStorage.setItem("checkins_v2", JSON.stringify(list));
+    }
+
+    function refreshLastCheckinV2() {
+      const checkins = getCheckinsV2();
+      if (!lastCheckinV2El) return;
+      lastCheckinV2El.textContent = checkins.length
+        ? "Last check-in: " + fmtCheckin(checkins[0].ts)
+        : "Last check-in: none yet";
+    }
+
+    function renderCheckinsV2() {
+      if (!checkinList || !checkinEmpty) return;
+
+      const checkins = getCheckinsV2();
+      checkinList.innerHTML = "";
+      checkinEmpty.style.display = checkins.length ? "none" : "block";
+
+      checkins.slice(0, 7).forEach((c, idx) => {
+        const li = document.createElement("li");
+
+        const wrap = document.createElement("div");
+        wrap.style.flex = "1";
+        wrap.innerHTML =
+          `<div style="font-weight:750;">${fmtCheckin(c.ts)}</div>` +
+          `<div class="small">Mood: <b>${escapeHtml(c.mood || "—")}</b> • Pain: <b>${escapeHtml(c.pain ?? "—")}</b></div>` +
+          (c.notes ? `<div class="small">${escapeHtml(c.notes)}</div>` : "");
+
+        const del = document.createElement("button");
+        del.className = "btn ghost";
+        del.textContent = "Delete";
+        del.onclick = () => {
+          const list = getCheckinsV2();
+          list.splice(idx, 1);
+          saveCheckinsV2(list);
+          renderCheckinsV2();
+          refreshLastCheckinV2();
+          refreshHome();
+        };
+
+        li.appendChild(wrap);
+        li.appendChild(del);
+        checkinList.appendChild(li);
+      });
+    }
+
+    function saveCheckinV2() {
+      if (!selectedMood) return alert("Select a mood first.");
+
+      const painRaw = painInput?.value;
+      let pain = null;
+      if (painRaw !== "" && painRaw != null) {
+        const n = Number(painRaw);
+        if (!Number.isFinite(n) || n < 0 || n > 10) {
+          return alert("Pain must be between 0 and 10.");
+        }
+        pain = n;
+      }
+
+      const notes = notesInput?.value.trim() || "";
+
+      const entry = {
+        ts: Date.now(),
+        mood: selectedMood,
+        pain,
+        notes
+      };
+
+      const list = getCheckinsV2();
+      list.unshift(entry);
+      saveCheckinsV2(list);
+
+      painInput.value = "0";
+      notesInput.value = "";
+      selectedMood = null;
+      if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
+
+      renderCheckinsV2();
+      refreshLastCheckinV2();
+      refreshHome();
+
+      alert("Check-in saved.");
+    }
+
+    if (saveCheckinBtn) {
+      saveCheckinBtn.onclick = saveCheckinV2;
+    }
+
+    if (cancelCheckinBtn) {
+      cancelCheckinBtn.onclick = () => {
+        painInput.value = "0";
+        notesInput.value = "";
+        selectedMood = null;
+        if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
+        setMood("Good"); // optional: default back to Good
+        selectedMood = null;
+        if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
+      };
+    }
+
+    if (clearCheckinsBtn) {
+      clearCheckinsBtn.onclick = () => {
+        if (!confirm("Clear all check-ins?")) return;
+        saveCheckinsV2([]);
+        renderCheckinsV2();
+        refreshLastCheckinV2();
+        refreshHome();
+      };
+    }
+
+    // ---------- Initial render ----------
     refreshOnlineStatus();
+    renderReminders();
     renderCheckinsV2();
     refreshLastCheckinV2();
-    renderReminders();
     refreshPhone();
     refreshHome();
-
-</script>
+  </script>
 </body>
 </html>
