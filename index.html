@@ -517,7 +517,14 @@
     }
 
     if (saveCheckinBtn)   saveCheckinBtn.onclick   = saveCheckinV2;
-    if (cancelCheckinBtn) cancelCheckinBtn.onclick = resetCheckinForm;
+   if (cancelCheckinBtn) {
+  cancelCheckinBtn.onclick = () => {
+    resetCheckinForm();      // clears mood, pain, notes
+    alert("Check-in canceled.");  
+    showTab("home");         // return to Home screen
+  };
+}
+
 
     if (clearCheckinsBtn) {
       clearCheckinsBtn.onclick = () => {
