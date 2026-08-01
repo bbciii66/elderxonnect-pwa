@@ -4,726 +4,2748 @@
   <link rel="manifest" href="/manifest.json">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b5fff" />
-  <title>ElderConnect</title>
-
-  <!-- iOS “app-like” -->
+  <meta name="theme-color" content="#1a6b4a" />
+  <title>ElderXonnect</title>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="ElderConnect" />
-
+  <meta name="apple-mobile-web-app-title" content="ElderXonnect" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="description" content="ElderXonnect — daily companion, reminders, and support for seniors." />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b1220;
-      --card: #111a2e;
-      --muted: #98a2b3;
-      --text: #e6e9ef;
-      --blue: #0b5fff;
-      --red: #ef4444;
-      --line: rgba(255,255,255,.10);
-      --radius: 18px;
-      --pad: 14px;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg: #0e1a14;
+      --bg2: #121f18;
+      --card: #162219;
+      --card2: #1c2b22;
+      --green: #2ecc8a;
+      --green2: #1a6b4a;
+      --green3: #0f3d2a;
+      --gold: #e8c97e;
+      --gold-dark: #b8942a;
+      --red: #e05252;
+      --red2: #c0392b;
+      --text: #e8ede9;
+      --muted: #7a9b86;
+      --line: rgba(46,204,138,.12);
+      --line2: rgba(255,255,255,.07);
+      --radius: 20px;
+      --pad: 18px;
+      --shadow: 0 8px 32px rgba(0,0,0,.4);
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      font-family: var(--font);
-      background: linear-gradient(180deg, #0b1220 0%, #060a12 100%);
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
       color: var(--text);
-      padding: env(safe-area-inset-top) 14px calc(84px + env(safe-area-inset-bottom)) 14px;
-      max-width: 920px;
-      margin-left: auto;
-      margin-right: auto;
+      padding: max(env(safe-area-inset-top), 12px) 14px calc(100px + env(safe-area-inset-bottom)) 14px;
+      max-width: 540px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(46,204,138,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 20% 80%, rgba(26,107,74,.08) 0%, transparent 60%);
     }
 
+    /* ── HEADER ── */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 10px 0 14px;
       gap: 12px;
-      margin: 6px 0 14px;
+      position: relative;
+      z-index: 102;
     }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
+    .brand h1 {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e8ede9 0%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .brand h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
-    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .brand p { color: var(--muted); font-size: 12px; margin-top: 1px; font-weight: 300; }
 
-    .pill {
-      padding: 8px 10px;
+    .status-dot {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 11px;
       border: 1px solid var(--line);
       border-radius: 999px;
+      font-size: 11px;
       color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
+      background: rgba(46,204,138,.04);
     }
+    .dot { width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s ease-in-out infinite; }
+    .dot.offline { background:var(--muted);box-shadow:none;animation:none; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
 
-    .tabs {
+    /* ── ME BUTTON (floating top-center) ── */
+    .me-fab {
       position: fixed;
-      left: 0; right: 0; bottom: 0;
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(6,10,18,.86);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid var(--line);
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      z-index: 10;
-    }
-
-    .tabbtn {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      border-radius: 14px;
-      padding: 10px 8px;
-      font-size: 12px;
-      text-align: center;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-    }
-    .tabbtn.active {
-      background: rgba(11,95,255,.22);
-      color: var(--text);
-      border-color: rgba(11,95,255,.35);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .card {
-      background: rgba(17,26,46,.88);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: var(--pad);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-    }
-
-    .row {
-      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 14px;
+      top: max(env(safe-area-inset-top), 90px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 98;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #1a1000;
+      font-family: 'Lora', serif;
       font-size: 15px;
-      font-weight: 650;
+      font-weight: 700;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 20px rgba(232,201,126,.5), 0 2px 8px rgba(0,0,0,.4);
       cursor: pointer;
-      width: 100%;
-    }
-    .btn.blue { background: var(--blue); color: #fff; }
-    .btn.red  { background: var(--red);  color: #fff; }
-    .btn.ghost{
-      background: rgba(255,255,255,.06);
-      border: 1px solid var(--line);
-      color: var(--text);
-    }
-   .btn.attention {
-   background: #facc15;        /* yellow */
-   color: #111827;             /* dark text for contrast */
-   border-color: rgba(250,204,21,.85);
-}
-
-    
-    .label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
-    input, textarea {
-      width: 100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      outline: none;
-      font-size: 15px;
-    }
-    textarea { min-height: 92px; resize: vertical; }
-
-    .list { margin: 8px 0 0; padding: 0; list-style: none; }
-    .list li {
-      padding: 10px 10px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      margin: 8px 0;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: rgba(255,255,255,.03);
-    }
-    .small { font-size: 12px; color: var(--muted); }
-
-    .hidden { display: none; }
-
-    .chatlog {
-      display: flex;
+      justify-content: center;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
+      line-height: 1;
+      transition: transform .15s, box-shadow .15s;
+      -webkit-tap-highlight-color: transparent;
+      animation: mePulse 3s ease-in-out infinite;
     }
-    .bubble {
-      max-width: 92%;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      font-size: 14px;
-      line-height: 1.35;
+    .me-fab:active { transform: translateX(-50%) scale(.93); }
+    @keyframes mePulse {
+      0%,100% { box-shadow: 0 4px 20px rgba(232,201,126,.5), 0 2px 8px rgba(0,0,0,.4); }
+      50% { box-shadow: 0 4px 28px rgba(232,201,126,.85), 0 2px 8px rgba(0,0,0,.4); }
     }
-    .bubble.me { margin-left: auto; background: rgba(11,95,255,.18); border-color: rgba(11,95,255,.28); }
-    .bubble.ai { margin-right: auto; }
+
+    /* ── TABS ── */
+    .tabs {
+      position: fixed;
+      left:0;right:0;bottom:0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(8,14,10,.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid rgba(46,204,138,.15);
+      display: grid;
+      grid-template-columns: repeat(5,1fr);
+      gap: 6px;
+      z-index: 100;
+      box-shadow: 0 -4px 24px rgba(0,0,0,.4);
+    }
+    .tabbtn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 14px;
+      padding: 8px 4px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      text-align: center;
+      cursor: pointer;
+      transition: all .18s;
+      display: flex;flex-direction:column;align-items:center;gap:4px;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing:.3px;
+    }
+    .tabbtn .icon { font-size: 22px; line-height:1; }
+    .tabbtn.active {
+      background:rgba(46,204,138,.14);
+      color:var(--green);
+      border-color:rgba(46,204,138,.25);
+      box-shadow:0 2px 12px rgba(46,204,138,.1);
+    }
+
+    /* ── AI PROVIDER TOGGLE ── */
+    .ai-provider-btn {
+      flex:1;padding:10px;border-radius:12px;
+      background:rgba(255,255,255,.05);border:2px solid var(--line2);
+      color:var(--muted);font-size:13px;font-weight:600;
+      cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
+    }
+    .ai-provider-btn.active {
+      background:rgba(46,204,138,.12);
+      border-color:rgba(46,204,138,.4);
+      color:var(--green);
+    }
+    .ai-provider-btn:active { transform:scale(.97); }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-action-btn {
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+      padding:18px 10px;border-radius:18px;
+      background:var(--card);border:1px solid var(--line2);
+      cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;
+      font-family:'DM Sans',sans-serif;
+    }
+    .quick-action-btn:hover { border-color:rgba(46,204,138,.3);background:rgba(46,204,138,.06); }
+    .quick-action-btn:active { transform:scale(.96); }
+    .qa-label { font-size:13px;font-weight:600;color:var(--text); }
+
+    /* ── CARDS ── */
+    .grid { display:flex;flex-direction:column;gap:14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line2);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+    }
+    .card-title { font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:4px; }
+    .card-sub { font-size:13px;color:var(--muted);font-weight:300;margin-bottom:14px;line-height:1.5; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      border:0;border-radius:14px;padding:13px 16px;
+      font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;
+      cursor:pointer;width:100%;transition:all .18s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn:active { transform:scale(.97); }
+    .btn.green { background:var(--green);color:#071209; }
+    .btn.red { background:var(--red);color:#fff; }
+    .btn.red:hover { background:var(--red2); }
+    .btn.ghost { background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--text); }
+    .btn.gold { background:var(--gold);color:#1a1000; }
+    .btn:disabled { opacity:.5;cursor:not-allowed; }
+
+    /* ── INPUTS ── */
+    .label { font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;letter-spacing:.3px;text-transform:uppercase; }
+    input,textarea,select {
+      width:100%;padding:12px 14px;border-radius:14px;
+      border:1px solid var(--line2);background:rgba(0,0,0,.25);
+      color:var(--text);outline:none;font-size:15px;
+      font-family:'DM Sans',sans-serif;transition:border-color .2s;
+    }
+    input:focus,textarea:focus { border-color:rgba(46,204,138,.4); }
+    textarea { min-height:80px;resize:vertical;line-height:1.5; }
+    input[type=range] { padding:6px 0;cursor:pointer;accent-color:var(--green);background:transparent;border:none; }
+    input[type=checkbox] { width:auto;margin-right:8px;accent-color:var(--green); }
+
+    /* ── LISTS ── */
+    .list { list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:10px; }
+    .list li {
+      padding:12px 14px;border:1px solid var(--line2);border-radius:14px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background:rgba(255,255,255,.02);animation:fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none} }
+    .small { font-size:12px;color:var(--muted);line-height:1.5; }
+    .hidden { display:none !important; }
+    .divider { height:1px;background:var(--line2);margin:14px 0; }
+    .sp8{height:8px}.sp12{height:12px}.sp16{height:16px}
+
+    /* ── BADGES ── */
+    .badge { display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600; }
+    .badge.good { background:rgba(46,204,138,.15);color:var(--green);border:1px solid rgba(46,204,138,.25); }
+    .badge.ok { background:rgba(232,201,126,.15);color:var(--gold);border:1px solid rgba(232,201,126,.25); }
+    .badge.bad { background:rgba(224,82,82,.15);color:var(--red);border:1px solid rgba(224,82,82,.25); }
+
+    /* ── HOME ── */
+    .checkin-hero { display:flex;align-items:center;justify-content:space-between;gap:14px; }
+    .checkin-hero-left .day { font-size:13px;color:var(--muted);margin-bottom:4px; }
+    .checkin-hero-left .prompt { font-family:'Lora',serif;font-size:19px;font-weight:600;line-height:1.3; }
+    .checkin-hero-left .last { font-size:12px;color:var(--muted);margin-top:6px; }
+    #checkinHeroBtn { max-width:120px;padding:12px 10px;font-size:14px; }
+    #checkinCard { display:none; }
+    #checkinCard.open { display:block;animation:fadeIn .2s ease; }
+    .mood-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px; }
+    .mood-btn {
+      border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text);
+      border-radius:14px;padding:10px 4px;font-size:12px;font-weight:500;
+      cursor:pointer;text-align:center;transition:all .15s;
+      font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;
+    }
+    .mood-btn .emoji { font-size:20px;display:block;margin-bottom:3px; }
+    .mood-btn.selected { background:rgba(46,204,138,.18);border-color:rgba(46,204,138,.4);color:var(--green); }
+    .pain-display { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
+    .pain-val { font-size:28px;font-weight:700;font-family:'Lora',serif;color:var(--green); }
+    .pain-color-0{color:var(--green)!important}.pain-color-1,.pain-color-2,.pain-color-3{color:#6ec97e!important}
+    .pain-color-4,.pain-color-5{color:var(--gold)!important}.pain-color-6,.pain-color-7{color:#e09550!important}
+    .pain-color-8,.pain-color-9,.pain-color-10{color:var(--red)!important}
+    .stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .stat-box { background:var(--card2);border:1px solid var(--line2);border-radius:16px;padding:14px;text-align:center; }
+    .stat-box .stat-num { font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--green); }
+    .stat-box .stat-label { font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.4px; }
+
+    /* ── ME PAGE ── */
+    .me-hero {
+      background: linear-gradient(135deg, rgba(232,201,126,.15) 0%, rgba(26,107,74,.2) 100%);
+      border: 1px solid rgba(232,201,126,.25);
+      border-radius: var(--radius);
+      padding: 24px var(--pad);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .me-hero::before {
+      content:'';position:absolute;top:-30px;right:-30px;
+      width:120px;height:120px;border-radius:50%;
+      background:rgba(232,201,126,.08);
+    }
+    .me-avatar {
+      width: 80px;height: 80px;border-radius: 50%;
+      background: var(--green3);
+      border: 3px solid var(--gold);
+      display: flex;align-items:center;justify-content:center;
+      font-size: 36px;margin: 0 auto 12px;
+      position: relative;cursor:pointer;
+      overflow:hidden;
+    }
+    .me-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+    .me-avatar .edit-overlay {
+      position:absolute;bottom:0;left:0;right:0;
+      background:rgba(0,0,0,.5);font-size:10px;
+      color:#fff;padding:3px 0;text-align:center;
+    }
+    .me-name { font-family:'Lora',serif;font-size:24px;font-weight:700;color:var(--gold); }
+    .me-dob { font-size:13px;color:var(--muted);margin-top:4px; }
+
+    .caregiver-btn {
+      width:100%;padding:18px;
+      background: linear-gradient(135deg, #e05252, #c0392b);
+      border:0;border-radius:18px;
+      font-family:'Lora',serif;font-size:18px;font-weight:700;
+      color:#fff;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      box-shadow: 0 6px 24px rgba(224,82,82,.4);
+      transition: all .18s;
+      -webkit-tap-highlight-color:transparent;
+      animation: caregiverPulse 2.5s ease-in-out infinite;
+    }
+    .caregiver-btn:active { transform:scale(.97); }
+    @keyframes caregiverPulse {
+      0%,100% { box-shadow:0 6px 24px rgba(224,82,82,.4); }
+      50% { box-shadow:0 6px 32px rgba(224,82,82,.7); }
+    }
+
+    .info-section { margin-bottom:14px; }
+    .info-section .section-head {
+      font-size:11px;font-weight:600;color:var(--gold);
+      text-transform:uppercase;letter-spacing:.6px;
+      margin-bottom:8px;display:flex;align-items:center;gap:6px;
+    }
+    .info-row {
+      display:flex;align-items:flex-start;gap:10px;
+      padding:11px 14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line2);
+      border-radius:14px;
+      margin-bottom:6px;
+    }
+    .info-row .info-icon { font-size:18px;flex-shrink:0;margin-top:1px; }
+    .info-row .info-body { flex:1;min-width:0; }
+    .info-row .info-label { font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px; }
+    .info-row .info-val { font-size:15px;font-weight:500;margin-top:2px;word-break:break-word; }
+    .info-row .info-val.empty { color:var(--muted);font-style:italic;font-weight:300; }
+
+    .me-edit-btn {
+      position:absolute;top:14px;right:14px;
+      background:rgba(232,201,126,.15);border:1px solid rgba(232,201,126,.3);
+      color:var(--gold);border-radius:999px;padding:6px 12px;
+      font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+    }
+
+    /* ── ME EDIT MODAL ── */
+    .modal-backdrop {
+      position:fixed;inset:0;z-index:300;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      display:flex;align-items:flex-end;justify-content:center;
+      animation:fadeIn .2s ease;
+    }
+    .modal-backdrop.hidden { display:none; }
+    .modal {
+      background:var(--card);border:1px solid var(--line2);
+      border-radius:24px 24px 0 0;
+      width:100%;max-width:540px;
+      padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+      max-height:88dvh;overflow-y:auto;
+      animation:slideUp .25s ease;
+    }
+    @keyframes slideUp { from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1} }
+    .modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+    .modal-title { font-family:'Lora',serif;font-size:20px;font-weight:700; }
+    .modal-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:16px; }
+
+    /* ── URGENT ALERT OVERLAY ── */
+    .urgent-overlay {
+      position:fixed;inset:0;z-index:500;
+      background: linear-gradient(135deg, #1a0505 0%, #2d0a0a 100%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:30px 20px;
+      animation:fadeIn .3s ease;
+    }
+    .urgent-overlay.hidden { display:none; }
+    .urgent-icon { font-size:72px;animation:urgentBounce 0.6s ease-in-out infinite alternate; }
+    @keyframes urgentBounce { from{transform:scale(1)}to{transform:scale(1.12)} }
+    .urgent-title {
+      font-family:'Lora',serif;font-size:32px;font-weight:700;
+      color:#fff;text-align:center;margin:16px 0 8px;
+      text-shadow:0 0 20px rgba(224,82,82,.8);
+    }
+    .urgent-body { font-size:18px;color:#ffb3b3;text-align:center;line-height:1.5;margin-bottom:30px; }
+    .urgent-dismiss {
+      width:100%;max-width:320px;padding:20px;
+      background:var(--red);border:0;border-radius:18px;
+      font-family:'Lora',serif;font-size:20px;font-weight:700;color:#fff;
+      cursor:pointer;box-shadow:0 6px 24px rgba(224,82,82,.5);
+    }
+    .urgent-time { font-size:13px;color:rgba(255,255,255,.4);margin-top:16px; }
+
+    /* ── NOTIFICATION BANNER ── */
+    .notif-banner {
+      position:fixed;top:max(env(safe-area-inset-top),10px);left:14px;right:14px;
+      z-index:200;
+      background:var(--card2);border:1px solid var(--line);
+      border-radius:18px;padding:14px 16px;
+      box-shadow:0 8px 32px rgba(0,0,0,.5);
+      display:flex;align-items:center;gap:12px;
+      animation:slideDown .3s ease;
+      max-width:540px;margin:0 auto;
+    }
+    .notif-banner.hidden { display:none; }
+    @keyframes slideDown { from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1} }
+    .notif-banner.urgent { border-color:rgba(224,82,82,.5);background:rgba(50,10,10,.95); }
+    .notif-banner-icon { font-size:28px;flex-shrink:0; }
+    .notif-banner-body { flex:1;min-width:0; }
+    .notif-banner-title { font-weight:700;font-size:14px; }
+    .notif-banner-msg { font-size:13px;color:var(--muted);margin-top:2px; }
+    .notif-banner-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:13px;flex-shrink:0; }
+
+    /* ── CHAT ── */
+    .chatlog { display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;padding:4px 0;scroll-behavior:smooth; }
+    .chatlog::-webkit-scrollbar{width:4px}.chatlog::-webkit-scrollbar-track{background:transparent}.chatlog::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+    .bubble { max-width:88%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.5;animation:fadeIn .2s ease; }
+    .bubble.me { margin-left:auto;background:var(--green2);border-bottom-right-radius:5px;color:#d4f0e5; }
+    .bubble.ai { margin-right:auto;background:var(--card2);border:1px solid var(--line2);border-bottom-left-radius:5px; }
+    .bubble.typing { margin-right:auto;background:var(--card2);border:1px solid var(--line2);border-bottom-left-radius:5px; }
+    .typing-dots span { display:inline-block;width:7px;height:7px;background:var(--muted);border-radius:50%;margin:0 2px;animation:typingDot 1.2s ease-in-out infinite; }
+    .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+    @keyframes typingDot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+    .chat-input-row { display:flex;gap:8px;align-items:flex-end;margin-top:12px; }
+    .chat-input-row input { flex:1; }
+    .send-btn { width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border-radius:14px; }
+    .chip { padding:7px 12px;border:1px solid var(--line2);border-radius:999px;font-size:12px;color:var(--muted);cursor:pointer;background:rgba(255,255,255,.03);transition:all .15s;font-family:'DM Sans',sans-serif; }
+    .chip:hover { border-color:rgba(46,204,138,.3);color:var(--green);background:rgba(46,204,138,.06); }
+    .chat-starter-chips { display:flex;flex-wrap:wrap;gap:8px;margin:10px 0; }
+    .api-key-card { border-color:rgba(232,201,126,.2);background:rgba(232,201,126,.04); }
+    .api-key-input-wrap { position:relative; }
+    .api-key-input-wrap input { padding-right:42px;font-family:monospace;font-size:13px; }
+    .toggle-key-btn { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:4px; }
+
+    /* ── VOICE ── */
+    .mic-btn {
+      width:46px;height:46px;border-radius:14px;flex-shrink:0;
+      background:rgba(46,204,138,.12);border:1px solid rgba(46,204,138,.25);
+      font-size:20px;cursor:pointer;transition:all .15s;
+      display:flex;align-items:center;justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .mic-btn:hover { background:rgba(46,204,138,.22); }
+    .mic-btn.listening {
+      background:rgba(224,82,82,.2);border-color:rgba(224,82,82,.5);
+      animation:micPulse .6s ease-in-out infinite alternate;
+    }
+    @keyframes micPulse { from{transform:scale(1)}to{transform:scale(1.08)} }
+
+    .input-mic-wrap { position:relative;display:flex;gap:8px;align-items:flex-start; }
+    .input-mic-wrap input,.input-mic-wrap textarea { flex:1; }
+    .mic-btn-inline {
+      width:40px;height:40px;border-radius:12px;flex-shrink:0;
+      background:rgba(46,204,138,.1);border:1px solid rgba(46,204,138,.2);
+      font-size:17px;cursor:pointer;transition:all .15s;
+      display:flex;align-items:center;justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .mic-btn-inline.hidden { display:none; }
+    .mic-btn-inline.listening { background:rgba(224,82,82,.2);border-color:rgba(224,82,82,.5);animation:micPulse .6s ease-in-out infinite alternate; }
+
+    .voice-status-bar {
+      display:flex;align-items:center;gap:10px;
+      padding:10px 14px;margin-top:8px;
+      background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.25);
+      border-radius:14px;font-size:13px;
+    }
+    .voice-status-bar.hidden { display:none; }
+    .voice-pulse {
+      width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;
+      animation:micPulse .5s ease-in-out infinite alternate;
+    }
+    #voiceStatusText { flex:1;color:var(--text); }
+    #voiceStopBtn { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif; }
+
+    /* Toggle switches */
+    .voice-toggle-row {
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
+      padding:12px 0;border-bottom:1px solid var(--line2);
+    }
+    .voice-toggle-row:last-of-type { border-bottom:none; }
+    .voice-toggle-info { flex:1; }
+    .voice-toggle-label { font-size:14px;font-weight:600; }
+    .voice-toggle-sub { font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4; }
+    .toggle-switch { position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0; }
+    .toggle-switch input { opacity:0;width:0;height:0; }
+    .toggle-slider {
+      position:absolute;inset:0;border-radius:999px;
+      background:rgba(255,255,255,.1);border:1px solid var(--line2);
+      cursor:pointer;transition:all .2s;
+    }
+    .toggle-slider:before {
+      content:'';position:absolute;width:20px;height:20px;border-radius:50%;
+      background:#fff;bottom:3px;left:3px;transition:all .2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background:var(--green);border-color:var(--green2); }
+    .toggle-switch input:checked + .toggle-slider:before { transform:translateX(22px); }
+
+    /* ── QUICK SETTINGS ── */
+    .qs-row {
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:7px 0;border-bottom:1px solid var(--line2);
+    }
+    .qs-left { display:flex;align-items:center;gap:8px;flex:1; }
+    .qs-icon { font-size:17px;flex-shrink:0; }
+    .qs-label { font-size:13px;font-weight:600; }
+    .qs-sub { display:none; }
+
+    /* ── GAMES ── */
+    .score-bar { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card2);border:1px solid var(--line2);border-radius:14px;margin-bottom:12px;font-size:13px; }
+    .score-bar .score-num { font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--green); }
+    .game-card { background:var(--card2);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-bottom:10px; }
+    .game-question { font-family:'Lora',serif;font-size:17px;line-height:1.5;margin-bottom:14px; }
+    .game-options { display:flex;flex-direction:column;gap:8px; }
+    .game-option { padding:12px 14px;border:1px solid var(--line2);border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;transition:all .15s;text-align:left;color:var(--text);-webkit-tap-highlight-color:transparent; }
+    .game-option:hover{border-color:rgba(46,204,138,.3);background:rgba(46,204,138,.06)}
+    .game-option.correct{background:rgba(46,204,138,.18);border-color:rgba(46,204,138,.5);color:var(--green)}
+    .game-option.wrong{background:rgba(224,82,82,.15);border-color:rgba(224,82,82,.4);color:var(--red)}
+
+    /* ── CONTACTS ── */
+    .contact-card { display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line2);border-radius:16px;background:rgba(255,255,255,.02);margin-bottom:8px; }
+    .contact-avatar { width:44px;height:44px;border-radius:50%;background:var(--green3);border:1px solid rgba(46,204,138,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
+    .contact-info { flex:1;min-width:0; }
+    .contact-name { font-weight:600;font-size:15px; }
+    .contact-rel { font-size:12px;color:var(--muted);margin-top:2px; }
+    .contact-actions { display:flex;gap:6px; }
+    .icon-btn { width:38px;height:38px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-tap-highlight-color:transparent; }
+    .icon-btn.call { background:rgba(46,204,138,.15);border-color:rgba(46,204,138,.3); }
+
+    /* ── REMINDERS ── */
+    .rem-item-icon { font-size:22px; }
+    .urgent-badge { background:rgba(224,82,82,.18);color:var(--red);border:1px solid rgba(224,82,82,.3);font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px; }
+
+    /* ── TRENDS CHART ── */
+    .chart-wrap { position:relative; width:100%; }
+    .chart-canvas { width:100%; border-radius:12px; display:block; }
+    .chart-legend { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+    .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .chart-tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .chart-tab { padding:6px 14px; border-radius:999px; font-size:12px; border:1px solid var(--line2); background:transparent; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .chart-tab.active { background:rgba(46,204,138,.15); color:var(--green); border-color:rgba(46,204,138,.3); }
+    .no-data-msg { text-align:center; padding:30px 0; color:var(--muted); font-size:13px; }
+
+    /* ── ME INLINE BUTTON ── */
+    .me-fab-inline {
+      width:48px;height:48px;border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+      border:2px solid var(--gold);
+      color:#1a1200;font-size:11px;font-weight:900;letter-spacing:.5px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:all .15s;
+      box-shadow:0 2px 12px rgba(232,201,126,.3);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .me-fab-inline:hover { transform:scale(1.05);box-shadow:0 4px 18px rgba(232,201,126,.5); }
+    .me-fab-inline:active { transform:scale(.93); }
+
+    /* ── SETTINGS BUTTON ── */
+    .settings-btn {
+      width:48px;height:48px;border-radius:14px;
+      background:rgba(46,204,138,.15);
+      border:2px solid rgba(46,204,138,.35);
+      font-size:22px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .15s;-webkit-tap-highlight-color:transparent;
+      flex-shrink:0;position:relative;z-index:103;
+    }
+    .settings-btn:hover { background:rgba(46,204,138,.28);border-color:rgba(46,204,138,.6); }
+    .settings-btn:active { transform:scale(.92); }
+
+    /* ── SETTINGS DRAWER ── */
+    .settings-drawer-backdrop {
+      position:fixed;inset:0;z-index:400;
+      background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+      animation:fadeIn .2s ease;
+    }
+    .settings-drawer-backdrop.hidden { display:none; }
+    .settings-drawer {
+      position:absolute;bottom:0;left:0;right:0;
+      background:var(--card);
+      border-radius:24px 24px 0 0;
+      border-top:1px solid var(--line2);
+      padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+      max-height:80dvh;overflow-y:auto;
+      animation:slideUp .25s ease;
+    }
+    @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+    .drawer-handle {
+      width:40px;height:4px;border-radius:2px;
+      background:var(--line2);margin:0 auto 18px;
+    }
+    .drawer-title {
+      font-family:'Lora',serif;font-size:19px;font-weight:600;
+      margin-bottom:4px;
+    }
+    .drawer-sub { font-size:13px;color:var(--muted);margin-bottom:16px; }
+    .drawer-row {
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:12px 0;border-bottom:1px solid var(--line2);
+    }
+    .drawer-row:last-of-type { border-bottom:none; }
+    .drawer-row-left { display:flex;align-items:center;gap:12px;flex:1; }
+    .drawer-row-icon { font-size:20px;flex-shrink:0; }
+    .drawer-row-label { font-size:14px;font-weight:600; }
+    .drawer-row-sub { font-size:12px;color:var(--muted);margin-top:1px;line-height:1.4; }
+    .drawer-more-link {
+      display:block;text-align:center;margin-top:14px;
+      font-size:13px;color:var(--green);cursor:pointer;
+      text-decoration:underline;text-underline-offset:3px;
+      background:none;border:none;font-family:'DM Sans',sans-serif;
+      width:100%;padding:4px;
+    }
+
+    /* ════════════════════════════════
+       AUTH SCREEN
+    ════════════════════════════════ */
+    #authScreen {
+      position:fixed;inset:0;z-index:1000;
+      background:var(--bg);
+      display:flex;align-items:center;justify-content:center;
+      padding:20px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(46,204,138,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 20% 80%, rgba(26,107,74,.1) 0%, transparent 60%);
+      overflow-y:auto;
+    }
+    #authScreen.hidden { display:none; }
+    #mainApp.hidden { display:none; }
+
+    .auth-panel {
+      width:100%;max-width:400px;
+      animation:fadeUp .35s ease;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+    .auth-logo { text-align:center;margin-bottom:28px; }
+    .auth-logo-icon {
+      width:70px;height:70px;border-radius:22px;
+      background:linear-gradient(135deg,var(--green2),var(--green));
+      display:flex;align-items:center;justify-content:center;
+      font-size:34px;margin:0 auto 14px;
+      box-shadow:0 8px 24px rgba(46,204,138,.3);
+    }
+    .auth-title {
+      font-family:'Lora',serif;font-size:28px;font-weight:700;
+      background:linear-gradient(135deg,#e8ede9,var(--green));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .auth-sub { font-size:14px;color:var(--muted);margin-top:4px; }
+
+    .auth-card {
+      background:var(--card);border:1px solid var(--line2);
+      border-radius:24px;padding:24px 22px;
+      box-shadow:var(--shadow);
+    }
+    .auth-card-title { font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:4px; }
+    .auth-card-sub { font-size:13px;color:var(--muted);line-height:1.5; }
+    .auth-error { color:var(--red);font-size:13px;min-height:18px;margin-top:8px;text-align:center; }
+    .auth-link {
+      display:block;text-align:center;margin-top:12px;
+      font-size:13px;color:var(--muted);cursor:pointer;
+      background:none;border:none;font-family:'DM Sans',sans-serif;
+      text-decoration:underline;text-underline-offset:3px;width:100%;padding:4px;
+    }
+    .auth-link:hover { color:var(--green); }
+    .auth-step { animation:fadeUp .2s ease; }
+
+    /* Biometric button */
+    .biometric-btn {
+      width:100%;padding:18px 16px;
+      background:linear-gradient(135deg,rgba(46,204,138,.15),rgba(26,107,74,.2));
+      border:2px solid rgba(46,204,138,.35);border-radius:18px;
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      cursor:pointer;transition:all .18s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .biometric-btn:hover { background:linear-gradient(135deg,rgba(46,204,138,.25),rgba(26,107,74,.3));border-color:rgba(46,204,138,.6); }
+    .biometric-btn:active { transform:scale(.97); }
+    .biometric-icon { font-size:40px;line-height:1; }
+    .biometric-label { font-size:16px;font-weight:700;color:var(--green);font-family:'Lora',serif; }
+    .biometric-sub { font-size:12px;color:var(--muted); }
+
+    /* Divider */
+    .auth-divider {
+      display:flex;align-items:center;gap:10px;
+      margin:16px 0;color:var(--muted);font-size:12px;
+    }
+    .auth-divider::before,.auth-divider::after { content:'';flex:1;height:1px;background:var(--line2); }
+
+    /* PIN pad */
+    .pin-display {
+      display:flex;justify-content:center;gap:14px;margin-bottom:16px;
+    }
+    .pin-dot {
+      width:16px;height:16px;border-radius:50%;
+      border:2px solid var(--muted);background:transparent;
+      transition:all .15s;
+    }
+    .pin-dot.filled { background:var(--green);border-color:var(--green);transform:scale(1.1); }
+    .pin-dot.error { background:var(--red);border-color:var(--red); }
+
+    .pin-pad {
+      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+      max-width:260px;margin:0 auto;
+    }
+    .pin-key {
+      aspect-ratio:1;border-radius:50%;
+      background:rgba(255,255,255,.06);border:1px solid var(--line2);
+      color:var(--text);font-size:22px;font-weight:600;
+      font-family:'Lora',serif;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .12s;-webkit-tap-highlight-color:transparent;
+    }
+    .pin-key:hover { background:rgba(46,204,138,.15);border-color:rgba(46,204,138,.3); }
+    .pin-key:active { transform:scale(.9);background:rgba(46,204,138,.25); }
+    .pin-key-empty { background:transparent;border-color:transparent;cursor:default; }
+    .pin-key-empty:hover { background:transparent;border-color:transparent; }
+    .pin-key-del { font-size:18px; }
+
+    /* ── TOAST ── */
+    #toast { position:fixed;bottom:108px;left:50%;transform:translateX(-50%) translateY(0);background:var(--card2);border:1px solid var(--line);color:var(--text);padding:11px 20px;border-radius:999px;font-size:14px;z-index:1100;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4); }
+    #toast.show { opacity:1;transform:translateX(-50%) translateY(-6px); }
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <h1>ElderConnect</h1>
-      <p>Support, reminders, and companionship.</p>
-    </div>
-    <div class="pill" id="statusPill">Offline-ready • Local storage</div>
-  </header>
 
-  <!-- HOME -->
-  <section class="grid" id="view-home">
-    <!-- Hero summary card -->
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <div class="label">Daily Check-In</div>
-          <div style="font-size:18px;font-weight:700;">How are you today?</div>
-          <div class="small" id="lastCheckinV2">Last check-in: none yet</div>
+<!-- ══════════════ AUTH SCREEN ══════════════ -->
+<div id="authScreen">
+  <div class="auth-panel">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🌿</div>
+      <h1 class="auth-title">ElderXonnect</h1>
+      <p class="auth-sub">Your daily companion &amp; support</p>
+    </div>
+
+    <!-- RETURNING USER -->
+    <div id="authReturning">
+      <div class="auth-card">
+        <div class="auth-card-title">Welcome back 👋</div>
+        <div id="authReturnName" style="color:var(--green);font-size:18px;font-weight:700;margin:8px 0 16px;"></div>
+        <button class="biometric-btn" id="biometricLoginBtn" style="display:none;">
+          <span class="biometric-icon">👆</span>
+          <span class="biometric-label">Touch ID / Face ID</span>
+          <span class="biometric-sub">Tap to sign in instantly</span>
+        </button>
+        <div class="auth-divider" id="authDivider" style="display:none;"><span>or enter your PIN</span></div>
+        <div class="pin-display">
+          <div class="pin-dot" id="ld0"></div>
+          <div class="pin-dot" id="ld1"></div>
+          <div class="pin-dot" id="ld2"></div>
+          <div class="pin-dot" id="ld3"></div>
         </div>
-        <button class="btn blue" id="checkinBtn" style="max-width:200px;">Check In Now</button>
+        <div class="pin-pad">
+          <button class="pin-key" data-val="1">1</button>
+          <button class="pin-key" data-val="2">2</button>
+          <button class="pin-key" data-val="3">3</button>
+          <button class="pin-key" data-val="4">4</button>
+          <button class="pin-key" data-val="5">5</button>
+          <button class="pin-key" data-val="6">6</button>
+          <button class="pin-key" data-val="7">7</button>
+          <button class="pin-key" data-val="8">8</button>
+          <button class="pin-key" data-val="9">9</button>
+          <button class="pin-key pin-key-empty"></button>
+          <button class="pin-key" data-val="0">0</button>
+          <button class="pin-key pin-key-del" id="loginDelBtn">⌫</button>
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button class="auth-link" id="showNewUserBtn">New user? Create account</button>
       </div>
-      <div class="small" style="margin-top:10px;">
-        Tip: add this page to your Home Screen for an app-like experience.
+    </div>
+
+    <!-- NEW USER -->
+    <div id="authNewUser" style="display:none;">
+      <div class="auth-card">
+        <div class="auth-card-title">Create Your Account</div>
+        <div class="auth-card-sub" style="margin-bottom:16px;">Name, username, and a 4-digit PIN.</div>
+        <div class="label">Your full name</div>
+        <input id="setupName" placeholder="e.g., Ben Crump" style="font-size:16px;margin-bottom:12px;"/>
+        <div class="label">Choose a username</div>
+        <input id="setupUsername" placeholder="e.g., ben66" style="font-size:16px;margin-bottom:16px;" autocomplete="off"/>
+        <div class="auth-card-sub" style="margin-bottom:10px;">Choose a 4-digit PIN</div>
+        <div class="pin-display">
+          <div class="pin-dot" id="sd0"></div>
+          <div class="pin-dot" id="sd1"></div>
+          <div class="pin-dot" id="sd2"></div>
+          <div class="pin-dot" id="sd3"></div>
+        </div>
+        <div class="pin-pad">
+          <button class="pin-key" data-new="1">1</button>
+          <button class="pin-key" data-new="2">2</button>
+          <button class="pin-key" data-new="3">3</button>
+          <button class="pin-key" data-new="4">4</button>
+          <button class="pin-key" data-new="5">5</button>
+          <button class="pin-key" data-new="6">6</button>
+          <button class="pin-key" data-new="7">7</button>
+          <button class="pin-key" data-new="8">8</button>
+          <button class="pin-key" data-new="9">9</button>
+          <button class="pin-key pin-key-empty"></button>
+          <button class="pin-key" data-new="0">0</button>
+          <button class="pin-key pin-key-del" id="newDelBtn">⌫</button>
+        </div>
+        <div class="auth-error" id="newUserError"></div>
+        <div class="sp12"></div>
+        <button class="btn green" id="createAccountBtn" style="font-size:16px;padding:14px;">Create Account →</button>
+        <button class="auth-link" id="showReturningBtn">← Already have an account</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Check-in v2 card -->
-    <div class="card" id="checkinCard">
-      <div class="label">Daily Check-In</div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">How are you feeling today?</div>
+<!-- ══════════════ MAIN APP ══════════════ -->
 
-      <div class="label">Pain level (0–10)</div>
-      <input type="range" id="painInput" min="0" max="10" value="0" />
-      <div class="small">0 = no pain · 10 = severe pain</div>
+<div id="mainApp" class="hidden">
+<header>
+  <div class="brand">
+    <h1>ElderXonnect</h1>
+    <p>Your daily companion &amp; support</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="status-dot">
+      <span class="dot" id="dotEl"></span>
+      <span id="statusText">Online</span>
+    </div>
+    <button class="me-fab-inline" id="meFabBtn" aria-label="My Profile">ME</button>
+    <button class="settings-btn" id="openSettingsBtn" aria-label="Open Settings">⚙️</button>
+  </div>
+</header>
 
-      <div style="height:12px;"></div>
-
-      <div class="label">Mood</div>
-      <div class="row" style="gap:8px;">
-        <button class="btn ghost" type="button" id="moodGood">Good</button>
-        <button class="btn ghost" type="button" id="moodOk">OK</button>
-        <button class="btn ghost" type="button" id="moodNotGreat">Not great</button>
+<!-- ══════════════ HOME ══════════════ -->
+<section class="grid" id="view-home">
+  <div class="card" id="checkinHeroCard">
+    <div class="checkin-hero">
+      <div class="checkin-hero-left">
+        <div class="day" id="todayDateEl"></div>
+        <div class="prompt">How are you feeling today?</div>
+        <div class="last" id="lastCheckinLabel">Last check-in: none yet</div>
       </div>
-      <div class="small" id="moodSelected" style="margin-top:6px;">Selected: none</div>
-
-      <div style="height:12px;"></div>
-
-      <div class="label">Notes (optional)</div>
-      <textarea id="notesInput" placeholder="Any notes for today…"></textarea>
-
-      <div style="height:12px;"></div>
-
-      <button class="btn blue" id="saveCheckinBtn" type="button">Save Check-In</button>
-      <div style="height:6px;"></div>
-      <button class="btn ghost" id="cancelCheckinBtn" type="button">Cancel</button>
-      <div style="height:6px;"></div>
-      <button class="btn ghost" id="clearCheckinsBtn" type="button">Clear all check-ins</button>
+      <button class="btn green" id="checkinHeroBtn">Check In</button>
     </div>
+  </div>
 
-    <!-- Recent check-ins -->
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div style="font-size:16px;font-weight:800;">Recent Check-Ins</div>
+  <div class="card" id="checkinCard">
+    <div class="card-title">Daily Check-In</div>
+    <div class="card-sub">A quick record of how you're doing today.</div>
+    <div class="label">How's your mood?</div>
+    <div class="mood-grid" id="moodGrid">
+      <button class="mood-btn" data-mood="Great"><span class="emoji">😊</span>Great</button>
+      <button class="mood-btn" data-mood="Good"><span class="emoji">🙂</span>Good</button>
+      <button class="mood-btn" data-mood="OK"><span class="emoji">😐</span>OK</button>
+      <button class="mood-btn" data-mood="Tired"><span class="emoji">😴</span>Tired</button>
+      <button class="mood-btn" data-mood="Low"><span class="emoji">😔</span>Low</button>
+      <button class="mood-btn" data-mood="Anxious"><span class="emoji">😟</span>Anxious</button>
+    </div>
+    <div class="sp12"></div>
+    <div class="label">Pain level</div>
+    <div class="pain-display">
+      <div class="small">0 = no pain · 10 = severe</div>
+      <div class="pain-val" id="painVal">0</div>
+    </div>
+    <input type="range" id="painInput" min="0" max="10" value="0" />
+    <div class="sp12"></div>
+    <div class="label">Notes (optional)</div>
+    <div class="input-mic-wrap">
+      <textarea id="notesInput" placeholder="Speak or type anything on your mind today…"></textarea>
+      <button class="mic-btn-inline" data-target="notesInput" title="Speak notes" style="align-self:flex-start;margin-top:4px;">🎙️</button>
+    </div>
+    <div class="sp12"></div>
+    <button class="btn green" id="saveCheckinBtn">Save Check-In</button>
+    <div class="sp8"></div>
+    <button class="btn ghost" id="cancelCheckinBtn">Cancel</button>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-num" id="statCheckins">0</div><div class="stat-label">Check-ins</div></div>
+    <div class="stat-box"><div class="stat-num" id="statReminders">0</div><div class="stat-label">Reminders</div></div>
+  </div>
+
+  <!-- Daily Tip Card -->
+  <div class="card" id="dailyTipCard" style="background:linear-gradient(135deg,rgba(46,204,138,.08),rgba(26,107,74,.12));border-color:rgba(46,204,138,.2);">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:28px;flex-shrink:0;" id="tipEmoji">💡</div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:4px;">DAILY TIP</div>
+        <div style="font-size:14px;line-height:1.5;font-family:'Lora',serif;" id="tipText">Loading your tip for today…</div>
       </div>
-      <ul class="list" id="checkinList"></ul>
-      <div class="small" id="checkinEmpty">No check-ins yet.</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <button class="quick-action-btn" onclick="showTab('chat')">
+      <span style="font-size:24px;">💬</span>
+      <span class="qa-label">Chat with AI</span>
+    </button>
+    <button class="quick-action-btn" onclick="showTab('reminders')">
+      <span style="font-size:24px;">🔔</span>
+      <span class="qa-label">Reminders</span>
+    </button>
+  </div>
+
+  <!-- Trends Chart — only shown when data exists -->
+  <div class="card" id="trendsCard" style="display:none;">
+    <div class="card-title">Wellness Trends</div>
+    <div class="card-sub" style="margin-bottom:10px;">Your mood &amp; pain over the past 14 days.</div>
+    <div class="chart-tabs">
+      <button class="chart-tab active" data-chart="both">Both</button>
+      <button class="chart-tab" data-chart="mood">Mood</button>
+      <button class="chart-tab" data-chart="pain">Pain</button>
+    </div>
+    <div class="chart-wrap">
+      <canvas class="chart-canvas" id="trendsCanvas" height="160"></canvas>
+      <div class="no-data-msg hidden" id="trendsNoData">No check-in data yet.<br>Complete a few check-ins to see your trends.</div>
+    </div>
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2ecc8a;"></div>Mood score</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e8c97e;"></div>Pain level</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:0;">📋 Recent Check-Ins</div>
+      <button class="btn ghost" id="clearCheckinsBtn" style="width:auto;padding:6px 10px;font-size:11px;">Clear All</button>
+    </div>
+    <div id="checkinEmpty" style="text-align:center;padding:24px 0;">
+      <div style="font-size:40px;margin-bottom:10px;">🌱</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No check-ins yet</div>
+      <div style="font-size:13px;color:var(--muted);">Tap <strong>Check In</strong> above to record how you're feeling today.</div>
+    </div>
+    <ul class="list" id="checkinList"></ul>
+  </div>
+</section>
+
+<!-- ══════════════ REMINDERS ══════════════ -->
+<section class="grid hidden" id="view-reminders">
+  <div class="card">
+    <div class="card-title">Add Reminder</div>
+    <div class="card-sub">Medications, hydration, appointments — anything you need to remember.</div>
+    <div class="label">Reminder title</div>
+    <div class="input-mic-wrap">
+      <input id="remTitle" placeholder="Type or tap 🎙️ to speak…" />
+      <button class="mic-btn-inline" data-target="remTitle" title="Speak reminder">🎙️</button>
+    </div>
+    <div class="sp8"></div>
+    <div class="label">Time</div>
+    <input id="remTime" type="time" />
+    <div class="sp8"></div>
+    <div class="label">Category</div>
+    <select id="remCat">
+      <option value="💊">💊 Medication</option>
+      <option value="💧">💧 Hydration</option>
+      <option value="🏥">🏥 Appointment</option>
+      <option value="🚶">🚶 Exercise</option>
+      <option value="🍽️">🍽️ Meal</option>
+      <option value="📞">📞 Call someone</option>
+      <option value="⭐">⭐ Other</option>
+    </select>
+    <div class="sp8"></div>
+    <label style="display:flex;align-items:center;font-size:14px;cursor:pointer;padding:10px 0;">
+      <input type="checkbox" id="remUrgent" /> 
+      <span>🚨 <strong>Urgent</strong> — must dismiss full-screen alert</span>
+    </label>
+    <div class="sp4"></div>
+    <button class="btn green" id="addReminderBtn">Add Reminder</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:0;">Saved Reminders</div>
+      <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:8px 12px;font-size:13px;">Clear All</button>
+    </div>
+    <div class="small" style="margin-bottom:10px;" id="notifPermStatus"></div>
+    <ul class="list" id="remList"></ul>
+    <p class="small" id="remEmpty">No reminders yet.</p>
+  </div>
+</section>
+
+<!-- ══════════════ CHAT ══════════════ -->
+<section class="grid hidden" id="view-chat">
+  <div class="card api-key-card" id="apiKeyCard">
+    <div class="card-title" style="color:var(--gold);">🔑 AI Chat Setup</div>
+    <div class="card-sub">Enter your API key. Stored only on this device.</div>
+
+    <!-- AI Provider Toggle -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="ai-provider-btn active" id="providerClaude" data-provider="claude">
+        🟣 Claude
+      </button>
+      <button class="ai-provider-btn" id="providerDeepSeek" data-provider="deepseek">
+        🔵 DeepSeek
+      </button>
+    </div>
+    <div class="label" id="apiKeyLabel">Anthropic API Key</div>
+    <div class="api-key-input-wrap">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" />
+      <button class="toggle-key-btn" id="toggleKeyBtn">👁</button>
+    </div>
+    <div class="sp8"></div>
+    <button class="btn gold" id="saveApiKeyBtn">Save Key &amp; Enable AI Chat</button>
+    <div class="sp8"></div>
+    <button class="btn ghost" id="clearApiKeyBtn" style="font-size:13px;padding:9px;display:none;">🗑 Remove Saved Key</button>
+    <p class="small" id="apiKeyStatus"></p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="card-title" style="margin-bottom:0;">Companion Chat</div>
+      <button class="btn ghost" id="clearChatBtn" style="width:auto;padding:7px 12px;font-size:12px;">Clear</button>
+    </div>
+    <p class="small" style="margin-bottom:10px;">Chat with your AI companion — warm, patient, and always here.</p>
+    <div class="chat-starter-chips" id="starterChips">
+      <div class="chip" data-msg="How are you today?">👋 Say hello</div>
+      <div class="chip" data-msg="I'm feeling lonely today.">💙 Feeling lonely</div>
+      <div class="chip" data-msg="Tell me a fun fact!">💡 Fun fact</div>
+      <div class="chip" data-msg="I'm in a bit of pain today.">🤕 Pain check</div>
+      <div class="chip" data-msg="Can we do a memory exercise?">🧠 Memory game</div>
+    </div>
+    <div class="chatlog" id="chatLog"></div>
+    <div class="chat-input-row">
+      <button class="mic-btn" id="chatMicBtn" title="Speak your message">🎙️</button>
+      <input id="chatInput" placeholder="Type or tap 🎙️ to speak…" autocomplete="off" />
+      <button class="btn green send-btn" id="sendChatBtn">➤</button>
+    </div>
+    <div id="voiceStatusBar" class="voice-status-bar hidden">
+      <span class="voice-pulse"></span>
+      <span id="voiceStatusText">Listening…</span>
+      <button id="voiceStopBtn">✕ Stop</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ GAMES ══════════════ -->
+<section class="grid hidden" id="view-games">
+  <div class="score-bar">
+    <div><div class="small">Today's Score</div><div class="score-num" id="scoreNum">0</div></div>
+    <div style="text-align:right;"><div class="small">Streak</div><div class="score-num" id="streakNum">🔥 0</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Brain Games</div>
+    <div class="card-sub">Keep your mind sharp with trivia, memory prompts, and word games.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn green" id="triviaBtn" style="flex:1;min-width:110px;">🧠 Trivia</button>
+      <button class="btn ghost" id="memoryBtn" style="flex:1;min-width:110px;">💭 Memory</button>
+      <button class="btn ghost" id="wordBtn" style="flex:1;min-width:110px;">🔤 Words</button>
+    </div>
+  </div>
+  <div class="game-card" id="gameArea" style="display:none;">
+    <div class="game-question" id="gameQuestion"></div>
+    <div class="game-options" id="gameOptions"></div>
+    <div id="gameAnswer" style="display:none;margin-top:12px;padding:12px;background:rgba(46,204,138,.08);border:1px solid rgba(46,204,138,.2);border-radius:12px;font-size:14px;line-height:1.5;"></div>
+    <div class="sp8"></div>
+    <button class="btn green" id="nextGameBtn" style="display:none;">Next →</button>
+  </div>
+</section>
+
+<!-- ══════════════ CONTACTS ══════════════ -->
+<section class="grid hidden" id="view-contacts">
+  <div class="card">
+    <div class="card-title">Add Contact</div>
+    <div class="card-sub">Save family, friends, or caregivers for quick calling.</div>
+    <div class="label">Name</div>
+    <input id="cName" placeholder="e.g., Mary (daughter)" />
+    <div class="sp8"></div>
+    <div class="label">Phone number</div>
+    <input id="cPhone" placeholder="e.g., 12253334444" inputmode="tel" />
+    <div class="sp8"></div>
+    <div class="label">Relationship</div>
+    <select id="cRel">
+      <option value="Family">Family</option>
+      <option value="Friend">Friend</option>
+      <option value="Doctor">Doctor</option>
+      <option value="Caregiver">Caregiver</option>
+      <option value="Neighbor">Neighbor</option>
+      <option value="Other">Other</option>
+    </select>
+    <div class="sp12"></div>
+    <button class="btn green" id="addContactBtn">Add Contact</button>
+  </div>
+  <div class="card">
+    <div class="card-title">My Contacts</div>
+    <div id="contactList"><p class="small" id="contactEmpty">No contacts yet.</p></div>
+  </div>
+  <div class="card" style="border-color:rgba(224,82,82,.2);background:rgba(224,82,82,.04);">
+    <div class="card-title" style="color:var(--red);">🆘 Emergency SOS</div>
+    <div class="card-sub">Set a primary emergency number. This button will immediately dial it.</div>
+    <div class="label">Primary emergency number</div>
+    <input id="emPhone" placeholder="e.g., 911 or a family number" inputmode="tel" />
+    <div class="sp8"></div>
+    <button class="btn ghost" id="savePhoneBtn">Save Emergency Number</button>
+    <div class="sp12"></div>
+    <button class="btn red" id="callNowBtn" style="font-size:17px;padding:16px;">🆘 Call Emergency Number</button>
+    <p class="small" id="phoneSavedMsg" style="margin-top:8px;text-align:center;"></p>
+  </div>
+</section>
+
+<!-- ══════════════ ME PAGE ══════════════ -->
+<section class="grid hidden" id="view-me">
+
+  <!-- Hero -->
+  <div class="me-hero">
+    <button class="me-edit-btn" id="editMeBtn">✏️ Edit</button>
+    <div class="me-avatar" id="meAvatar">
+      <span id="meAvatarEmoji">👤</span>
+    </div>
+    <div class="me-name" id="meNameDisplay">Your Name</div>
+    <div class="me-dob" id="meDobDisplay"></div>
+  </div>
+
+  <!-- Primary Caregiver SOS -->
+  <div id="caregiverBtnWrap">
+    <button class="caregiver-btn" id="caregiverCallBtn">
+      <span style="font-size:28px;">📞</span>
+      <span>Call My Caregiver</span>
+    </button>
+  </div>
+
+  <!-- Personal Info -->
+  <div class="card">
+    <div class="info-section">
+      <div class="section-head">👤 Personal</div>
+      <div class="info-row"><span class="info-icon">🎂</span><div class="info-body"><div class="info-label">Date of Birth</div><div class="info-val" id="diDob">—</div></div></div>
+      <div class="info-row"><span class="info-icon">🩸</span><div class="info-body"><div class="info-label">Blood Type</div><div class="info-val" id="diBlood">—</div></div></div>
     </div>
 
-    <!-- Today summary -->
-    <div class="card">
-      <div class="label">Today</div>
-      <div id="todaySummary" style="font-size:15px;line-height:1.5;color:var(--text);"></div>
-    </div>
-  </section>
+    <div class="divider"></div>
 
-  <!-- REMINDERS -->
-  <section class="grid hidden" id="view-reminders">
-    <div class="card">
-      <div style="font-size:18px;font-weight:800;">Reminders</div>
-      <p class="small">Add medication, hydration, or appointment reminders. Stored on this device.</p>
-      <div class="label">Reminder title</div>
-      <input id="remTitle" placeholder="e.g., Take blood pressure medicine" />
-      <div style="height:10px;"></div>
-      <div class="label">Time (optional)</div>
-      <input id="remTime" placeholder="e.g., 8:00 AM" />
-      <div style="height:10px;"></div>
-      <button class="btn blue" id="addReminderBtn">Add Reminder</button>
+    <div class="info-section">
+      <div class="section-head">🏠 Addresses</div>
+      <div class="info-row"><span class="info-icon">🏠</span><div class="info-body"><div class="info-label">Home Address</div><div class="info-val" id="diHome">—</div></div></div>
+      <div class="info-row"><span class="info-icon">📬</span><div class="info-body"><div class="info-label">Mailing Address</div><div class="info-val" id="diMail">—</div></div></div>
     </div>
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <div style="font-size:16px;font-weight:800;">Saved Reminders</div>
-        <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:10px 12px;">Clear All</button>
+    <div class="divider"></div>
+
+    <div class="info-section">
+      <div class="section-head">🏥 Medical</div>
+      <div class="info-row"><span class="info-icon">⚠️</span><div class="info-body"><div class="info-label">Allergies</div><div class="info-val" id="diAllergies">—</div></div></div>
+      <div class="info-row"><span class="info-icon">💊</span><div class="info-body"><div class="info-label">Conditions</div><div class="info-val" id="diConditions">—</div></div></div>
+      <div class="info-row"><span class="info-icon">👨‍⚕️</span><div class="info-body"><div class="info-label">Primary Doctor</div><div class="info-val" id="diDoctor">—</div></div></div>
+      <div class="info-row"><span class="info-icon">📞</span><div class="info-body"><div class="info-label">Doctor's Phone</div><div class="info-val" id="diDoctorPhone">—</div></div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="info-section">
+      <div class="section-head">👨‍👩‍👧 Family</div>
+      <div class="info-val" id="diFamilyList" style="font-size:14px;line-height:1.8;"></div>
+    </div>
+  </div>
+
+  <!-- Caregiver Portal Link -->
+  <div class="card" style="border-color:rgba(46,204,138,.2);background:rgba(46,204,138,.03);">
+    <div class="card-title" style="color:var(--green);">👨‍👩‍👧 Caregiver Portal</div>
+    <div class="card-sub">Share this with a family member so they can check in on you remotely. They'll need the PIN you set.</div>
+    <div style="padding:12px 14px;background:rgba(0,0,0,.2);border:1px solid var(--line2);border-radius:14px;font-size:13px;font-family:monospace;word-break:break-all;color:var(--muted);" id="caregiverPortalUrl">Add your site URL here after deploying.</div>
+    <div class="sp8"></div>
+    <button class="btn green" id="openCaregiverBtn" style="font-size:14px;">👁 Open Caregiver View</button>
+    <div class="sp8"></div>
+    <p class="small" id="caregiverPinStatus"></p>
+  </div>
+
+  <!-- Voice Settings -->
+  <div class="card" id="voiceSettingsCard" style="border-color:rgba(46,204,138,.2);">
+    <div class="card-title">🎙️ Voice Settings</div>
+    <div class="card-sub">Customize how voice works throughout the app. All settings are saved to this device.</div>
+
+    <div class="voice-toggle-row">
+      <div class="voice-toggle-info">
+        <div class="voice-toggle-label">🎙️ Voice Input</div>
+        <div class="voice-toggle-sub">Tap the mic button to speak instead of type</div>
       </div>
-      <ul class="list" id="remList"></ul>
-      <div class="small" id="remEmpty" style="margin-top:8px;">No reminders yet.</div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="voiceInputToggle" />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
-  </section>
 
-  <!-- CHAT -->
-  <section class="grid hidden" id="view-chat">
-    <div class="card">
-      <div style="font-size:18px;font-weight:800;">Companion Chat</div>
-      <p class="small">This is a local starter chat. Next step is wiring this to a real AI (cloud) and saving chat history to a backend.</p>
-      <div class="label">Message</div>
-      <input id="chatInput" placeholder="Type a message…" />
-      <div style="height:10px;"></div>
-      <button class="btn blue" id="sendChatBtn">Send</button>
-      <div class="chatlog" id="chatLog"></div>
+    <div class="voice-toggle-row">
+      <div class="voice-toggle-info">
+        <div class="voice-toggle-label">🔊 Read Responses Aloud</div>
+        <div class="voice-toggle-sub">Claude's replies are spoken out loud</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="voiceOutputToggle" />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
-  </section>
 
-  <!-- GAMES -->
-  <section class="grid hidden" id="view-games">
-    <div class="card">
-      <div style="font-size:18px;font-weight:800;">Brain Games</div>
-      <p class="small">Starter: quick memory prompt. We can add real games next (word match, trivia, memory cards).</p>
-      <button class="btn blue" id="gameBtn">Give me a quick prompt</button>
-      <div id="gameOut" style="margin-top:12px;font-size:15px;line-height:1.5;"></div>
+    <div class="voice-toggle-row">
+      <div class="voice-toggle-info">
+        <div class="voice-toggle-label">⚡ Auto-Send After Speaking</div>
+        <div class="voice-toggle-sub">Message sends automatically when you stop talking</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="voiceAutoSendToggle" />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
-  </section>
 
-  <!-- CONTACTS -->
-  <section class="grid hidden" id="view-contacts">
-    <div class="card">
-      <div style="font-size:18px;font-weight:800;">Emergency Contact</div>
-      <p class="small">Set an emergency phone number. The “Call Now” button will dial it.</p>
-      <div class="label">Phone number</div>
-      <input id="emPhone" placeholder="e.g., 12253334444" inputmode="tel" />
-      <div style="height:10px;"></div>
-      <button class="btn blue" id="savePhoneBtn">Save Number</button>
-      <div style="height:10px;"></div>
-      <button class="btn red" id="callNowBtn">Call Now</button>
-      <div class="small" id="phoneSavedMsg" style="margin-top:10px;"></div>
+    <div class="voice-toggle-row">
+      <div class="voice-toggle-info">
+        <div class="voice-toggle-label">📝 Voice in Check-In & Reminders</div>
+        <div class="voice-toggle-sub">Use mic buttons in forms throughout the app</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="voiceFormsToggle" />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
-  </section>
 
-  <!-- TAB BAR -->
-  <nav class="tabs" role="navigation" aria-label="ElderConnect Tabs">
-    <div class="tabbtn active" data-tab="home">Home</div>
-    <div class="tabbtn" data-tab="reminders">Reminders</div>
-    <div class="tabbtn" data-tab="chat">Chat</div>
-    <div class="tabbtn" data-tab="games">Games</div>
-    <div class="tabbtn" data-tab="contacts">Contacts</div>
-  </nav>
+    <div class="divider"></div>
+    <div class="label">Voice Speed</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <span class="small">Slow</span>
+      <input type="range" id="voiceSpeedSlider" min="0.5" max="1.5" step="0.1" value="0.9" style="flex:1;" />
+      <span class="small">Fast</span>
+    </div>
+    <div class="small" style="text-align:center;" id="voiceSpeedLabel">Speed: 0.9×</div>
+    <div class="sp8"></div>
+    <div class="label">Voice Pitch</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <span class="small">Low</span>
+      <input type="range" id="voicePitchSlider" min="0.5" max="2" step="0.1" value="1" style="flex:1;" />
+      <span class="small">High</span>
+    </div>
+    <div class="small" style="text-align:center;" id="voicePitchLabel">Pitch: 1.0×</div>
+    <div class="sp12"></div>
+    <button class="btn green" id="testVoiceBtn">🔊 Test Voice</button>
+    <div class="sp8"></div>
+    <p class="small" id="voiceSupportMsg" style="text-align:center;"></p>
+  </div>
 
-  <script>
-    // Service worker
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/service-worker.js");
-      });
+</section>
+
+<!-- ══════════════ TAB BAR ══════════════ -->
+<nav class="tabs hidden" id="mainNav" role="navigation" aria-label="ElderXonnect Tabs">
+  <div class="tabbtn active" data-tab="home"><span class="icon">🏠</span>Home</div>
+  <div class="tabbtn" data-tab="reminders"><span class="icon">🔔</span>Remind</div>
+  <div class="tabbtn" data-tab="chat"><span class="icon">💬</span>Chat</div>
+  <div class="tabbtn" data-tab="games"><span class="icon">🧠</span>Games</div>
+  <div class="tabbtn" data-tab="contacts"><span class="icon">👥</span>People</div>
+</nav>
+
+<!-- ══════════════ SETTINGS DRAWER ══════════════ -->
+<div class="settings-drawer-backdrop hidden" id="settingsDrawer">
+  <div class="settings-drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">⚙️ Voice Settings</div>
+    <p class="drawer-sub">Customize how voice works throughout the app.</p>
+
+    <div class="drawer-row">
+      <div class="drawer-row-left">
+        <span class="drawer-row-icon">🎙️</span>
+        <div>
+          <div class="drawer-row-label">Voice Input</div>
+          <div class="drawer-row-sub">Tap the mic button to speak instead of type</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="qsVoiceInput" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="drawer-row">
+      <div class="drawer-row-left">
+        <span class="drawer-row-icon">🔊</span>
+        <div>
+          <div class="drawer-row-label">Read Responses Aloud</div>
+          <div class="drawer-row-sub">Claude speaks its replies out loud</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="qsVoiceOutput" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="drawer-row">
+      <div class="drawer-row-left">
+        <span class="drawer-row-icon">⚡</span>
+        <div>
+          <div class="drawer-row-label">Auto-Send After Speaking</div>
+          <div class="drawer-row-sub">Message sends when you stop talking</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="qsAutoSend" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="drawer-row">
+      <div class="drawer-row-left">
+        <span class="drawer-row-icon">📝</span>
+        <div>
+          <div class="drawer-row-label">Voice in Forms</div>
+          <div class="drawer-row-sub">Mic buttons on reminders &amp; check-ins</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="qsVoiceForms" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <button class="drawer-more-link" id="drawerMoreLink">More settings (speed, pitch, full profile) →</button>
+  </div>
+</div>
+
+</div>
+<div class="modal-backdrop hidden" id="meModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit My Profile</div>
+      <button class="modal-close" id="meModalClose">✕</button>
+    </div>
+
+    <div class="label">Full Name</div>
+    <input id="meName" placeholder="Your full name" />
+    <div class="sp8"></div>
+
+    <div class="label">Date of Birth</div>
+    <input id="meDob" type="date" />
+    <div class="sp8"></div>
+
+    <div class="label">Blood Type</div>
+    <select id="meBlood">
+      <option value="">Unknown</option>
+      <option value="A+">A+</option><option value="A-">A-</option>
+      <option value="B+">B+</option><option value="B-">B-</option>
+      <option value="AB+">AB+</option><option value="AB-">AB-</option>
+      <option value="O+">O+</option><option value="O-">O-</option>
+    </select>
+    <div class="sp12"></div>
+
+    <div class="label">Home Address</div>
+    <textarea id="meHomeAddr" placeholder="Street, City, State, ZIP" style="min-height:64px;"></textarea>
+    <div class="sp8"></div>
+
+    <div class="label">Mailing Address (if different)</div>
+    <textarea id="meMailAddr" placeholder="Leave blank if same as home" style="min-height:64px;"></textarea>
+    <div class="sp12"></div>
+
+    <div class="label">Allergies</div>
+    <input id="meAllergies" placeholder="e.g., Penicillin, Peanuts" />
+    <div class="sp8"></div>
+
+    <div class="label">Medical Conditions</div>
+    <input id="meConditions" placeholder="e.g., Diabetes, Hypertension" />
+    <div class="sp8"></div>
+
+    <div class="label">Primary Doctor Name</div>
+    <input id="meDoctor" placeholder="Dr. Smith" />
+    <div class="sp8"></div>
+
+    <div class="label">Doctor's Phone</div>
+    <input id="meDoctorPhone" placeholder="e.g., 15043334444" inputmode="tel" />
+    <div class="sp12"></div>
+
+    <div class="label">Primary Caregiver Name</div>
+    <input id="meCaregiverName" placeholder="e.g., Susan (daughter)" />
+    <div class="sp8"></div>
+
+    <div class="label">Primary Caregiver Phone</div>
+    <input id="meCaregiverPhone" placeholder="e.g., 15043334444" inputmode="tel" />
+    <div class="sp12"></div>
+
+    <div class="label">Family Members (one per line)</div>
+    <textarea id="meFamilyList" placeholder="e.g., Susan - daughter&#10;Tom - son&#10;Mary - sister" style="min-height:96px;"></textarea>
+    <div class="sp16"></div>
+
+    <div class="label">Caregiver Access PIN (4 digits)</div>
+    <input id="meCaregiverPin" placeholder="e.g., 1234 — family uses this to view your info" maxlength="4" inputmode="numeric" />
+    <div class="sp16"></div>
+
+    <button class="btn green" id="saveMeBtn">Save Profile</button>
+    <div class="sp8"></div>
+    <button class="btn ghost" id="cancelMeBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ URGENT OVERLAY ══════════════ -->
+<div class="urgent-overlay hidden" id="urgentOverlay">
+  <div class="urgent-icon">🚨</div>
+  <div class="urgent-title" id="urgentTitle">Urgent Reminder</div>
+  <div class="urgent-body" id="urgentBody">Please take your medication now.</div>
+  <button class="urgent-dismiss" id="urgentDismiss">✅ Done — Dismiss</button>
+  <div class="urgent-time" id="urgentTime"></div>
+</div>
+
+<!-- ══════════════ NOTIFICATION BANNER ══════════════ -->
+<div class="notif-banner hidden" id="notifBanner">
+  <div class="notif-banner-icon" id="notifBannerIcon">🔔</div>
+  <div class="notif-banner-body">
+    <div class="notif-banner-title" id="notifBannerTitle">Reminder</div>
+    <div class="notif-banner-msg" id="notifBannerMsg"></div>
+  </div>
+  <button class="notif-banner-close" id="notifBannerClose">✕</button>
+</div>
+
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════
+// ════════════════════════════════════
+//  AUTH ENGINE — simplified
+// ════════════════════════════════════
+
+const Auth = {
+  getUsers(){ try{ return JSON.parse(localStorage.getItem('auth_users'))||[]; }catch(e){ return []; } },
+  saveUsers(u){ localStorage.setItem('auth_users', JSON.stringify(u)); },
+  getSession(){ try{ return JSON.parse(localStorage.getItem('auth_session')); }catch(e){ return null; } },
+  setSession(u){ localStorage.setItem('auth_session', JSON.stringify({...u, ts:Date.now()})); },
+  isSessionValid(){
+    try{
+      const s = this.getSession();
+      return s && (Date.now() - s.ts) < 12*60*60*1000;
+    }catch(e){ return false; }
+  },
+  hashPin(pin){
+    let h=0;
+    for(let i=0;i<pin.length;i++){ h=((h<<5)-h)+pin.charCodeAt(i); h|=0; }
+    return h.toString(36);
+  }
+};
+
+let loginPin = '';
+let newPin = '';
+
+function setPinDots(pin, prefix){
+  for(let i=0;i<4;i++){
+    const d = document.getElementById(prefix+i);
+    if(d){
+      d.classList.toggle('filled', i<pin.length);
+      d.classList.remove('error');
     }
+  }
+}
 
-    // ---------- Storage helpers ----------
-    const S = {
-      get(key, fallback) {
-        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-        catch { return fallback; }
+function shakeDots(prefix){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById(prefix+i);
+    if(d){ d.classList.add('error'); setTimeout(()=>d.classList.remove('error'),600); }
+  }
+}
+
+function showErr(id, msg){ const e=document.getElementById(id); if(e) e.textContent=msg; }
+
+// ── SHOW / HIDE PANELS ──
+function showReturning(){
+  const users = Auth.getUsers();
+  const user = users[0];
+  document.getElementById('authReturning').style.display = 'block';
+  document.getElementById('authNewUser').style.display = 'none';
+  if(user){
+    document.getElementById('authReturnName').textContent = user.name;
+    const hasBio = user.credentialId && window.PublicKeyCredential;
+    document.getElementById('biometricLoginBtn').style.display = hasBio ? 'flex' : 'none';
+    document.getElementById('authDivider').style.display = hasBio ? 'flex' : 'none';
+  }
+  loginPin='';
+  setPinDots(loginPin,'ld');
+}
+
+function showNewUser(){
+  document.getElementById('authReturning').style.display = 'none';
+  document.getElementById('authNewUser').style.display = 'block';
+  newPin='';
+  setPinDots(newPin,'sd');
+  showErr('newUserError','');
+}
+
+document.getElementById('showNewUserBtn').addEventListener('click', showNewUser);
+document.getElementById('showReturningBtn').addEventListener('click', showReturning);
+
+// ── LOGIN PIN PAD ──
+document.querySelectorAll('.pin-key[data-val]').forEach(k=>{
+  k.addEventListener('click', function(){
+    if(loginPin.length>=4) return;
+    loginPin += this.dataset.val;
+    setPinDots(loginPin,'ld');
+    if(loginPin.length===4) setTimeout(checkPin, 150);
+  });
+});
+document.getElementById('loginDelBtn').addEventListener('click',()=>{
+  loginPin=loginPin.slice(0,-1);
+  setPinDots(loginPin,'ld');
+  showErr('loginError','');
+});
+
+function checkPin(){
+  const users = Auth.getUsers();
+  const user = users[0];
+  if(!user){ showErr('loginError','No account found. Please create one.'); loginPin=''; setPinDots(loginPin,'ld'); return; }
+  if(Auth.hashPin(loginPin)===user.pinHash){
+    Auth.setSession(user);
+    enterApp(user);
+  } else {
+    showErr('loginError','Wrong PIN. Try again.');
+    shakeDots('ld');
+    loginPin='';
+    setTimeout(()=>setPinDots(loginPin,'ld'),600);
+  }
+}
+
+// ── BIOMETRIC LOGIN ──
+document.getElementById('biometricLoginBtn').addEventListener('click', async function(){
+  const users = Auth.getUsers();
+  const user = users[0];
+  if(!user || !user.credentialId){ showErr('loginError','No biometric registered.'); return; }
+  try {
+    const credId = Uint8Array.from(atob(user.credentialId), c=>c.charCodeAt(0));
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+    const result = await navigator.credentials.get({
+      publicKey:{ challenge, allowCredentials:[{type:'public-key',id:credId}], userVerification:'preferred', timeout:60000 }
+    });
+    if(result){ Auth.setSession(user); enterApp(user); }
+  } catch(e){ showErr('loginError','Biometric failed. Use your PIN.'); }
+});
+
+// ── NEW USER PIN PAD ──
+document.querySelectorAll('.pin-key[data-new]').forEach(k=>{
+  k.addEventListener('click', function(){
+    if(newPin.length>=4) return;
+    newPin += this.dataset.new;
+    setPinDots(newPin,'sd');
+  });
+});
+document.getElementById('newDelBtn').addEventListener('click',()=>{
+  newPin=newPin.slice(0,-1);
+  setPinDots(newPin,'sd');
+});
+
+// ── CREATE ACCOUNT ──
+document.getElementById('createAccountBtn').addEventListener('click', function(){
+  const name = document.getElementById('setupName').value.trim();
+  const username = document.getElementById('setupUsername').value.trim().toLowerCase().replace(/\s+/g,'');
+  showErr('newUserError','');
+
+  if(!name){ showErr('newUserError','⚠️ Please enter your full name.'); return; }
+  if(username.length<3){ showErr('newUserError','⚠️ Username needs at least 3 characters.'); return; }
+  if(newPin.length<4){ showErr('newUserError','⚠️ Please enter a 4-digit PIN below.'); return; }
+
+  const users = Auth.getUsers();
+  if(users.find(u=>u.username===username)){ showErr('newUserError','⚠️ Username taken. Try another.'); return; }
+
+  const newUser = { name, username, pinHash:Auth.hashPin(newPin), created:Date.now() };
+  users.push(newUser);
+  Auth.saveUsers(users);
+  Auth.setSession(newUser);
+
+  // Offer biometric after account creation
+  if(window.PublicKeyCredential && window.crypto && window.crypto.getRandomValues){
+    if(confirm('Account created! Would you like to set up fingerprint or Face ID for faster login?')){
+      setupBiometric(newUser).then(()=>enterApp(newUser)).catch(()=>enterApp(newUser));
+      return;
+    }
+  }
+  enterApp(newUser);
+});
+
+async function setupBiometric(user){
+  try {
+    const userId = new Uint8Array(16);
+    window.crypto.getRandomValues(userId);
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{ name:'ElderXonnect' },
+        user:{ id:userId, name:user.username, displayName:user.name },
+        pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+        authenticatorSelection:{ userVerification:'preferred' },
+        timeout:60000
+      }
+    });
+    const users = Auth.getUsers();
+    const idx = users.findIndex(u=>u.username===user.username);
+    if(idx>=0){
+      users[idx].credentialId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+      Auth.saveUsers(users);
+      Auth.setSession(users[idx]);
+    }
+    alert('✅ Biometric login set up! Next time just tap the fingerprint button.');
+  } catch(e){ /* skip */ }
+}
+
+// ── ENTER APP ──
+function enterApp(user){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('mainNav').classList.remove('hidden');
+  const greet = document.querySelector('#mainApp .brand p');
+  if(greet && user) greet.textContent = 'Welcome, '+user.name.split(' ')[0]+' 👋';
+
+  // Wire settings gear now that mainApp is visible
+  const drawer = document.getElementById('settingsDrawer');
+  const gearBtn = document.getElementById('openSettingsBtn');
+  if(gearBtn && drawer){
+    gearBtn.onclick = function(e){
+      e.stopPropagation();
+      syncQuickSettings();
+      drawer.classList.remove('hidden');
+    };
+    drawer.onclick = function(e){
+      if(e.target === drawer) drawer.classList.add('hidden');
+    };
+  }
+}
+
+// ── BOOT ──
+try {
+  if(Auth.isSessionValid()){
+    enterApp(Auth.getSession());
+  } else {
+    const users = Auth.getUsers();
+    if(users.length>0){ showReturning(); }
+    else { showNewUser(); }
+  }
+} catch(e){
+  console.error('Auth boot error:',e);
+  showNewUser();
+}
+
+// ════════════════════════════════════
+//  END AUTH ENGINE
+// ════════════════════════════════════
+// ════════════════════════════════════
+const S = {
+  get(k,fb){ try{return JSON.parse(localStorage.getItem(k))??fb}catch{return fb} },
+  set(k,v){ localStorage.setItem(k,JSON.stringify(v)) }
+};
+function esc(s){ return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) }
+let _toast;
+function toast(msg,dur=2400){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(_toast);_toast=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function fmtDate(ts){ return new Date(ts).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function moodBadge(m){
+  const g=['Great','Good'],mid=['OK','Tired'];
+  const cls=g.includes(m)?'good':mid.includes(m)?'ok':'bad';
+  return `<span class="badge ${cls}">${esc(m)}</span>`;
+}
+function fmt12(t){ if(!t)return''; const[h,m]=t.split(':').map(Number),ap=h>=12?'PM':'AM',h12=h%12||12; return `${h12}:${String(m).padStart(2,'0')} ${ap}`; }
+
+// ════════════════════════════════════
+//  TABS — includes ME view
+// ════════════════════════════════════
+const VIEWS=['home','reminders','chat','games','contacts','me'];
+function showTab(name){
+  VIEWS.forEach(k=>document.getElementById('view-'+k).classList.toggle('hidden',k!==name));
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+}
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+document.getElementById('meFabBtn').addEventListener('click',()=>showTab('me'));
+
+// ════════════════════════════════════
+//  STATUS & DATE
+// ════════════════════════════════════
+function refreshStatus(){
+  const on=navigator.onLine;
+  document.getElementById('dotEl').className='dot'+(on?'':' offline');
+  document.getElementById('statusText').textContent=on?'Online':'Offline';
+}
+window.addEventListener('online',refreshStatus);
+window.addEventListener('offline',refreshStatus);
+refreshStatus();
+document.getElementById('todayDateEl').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+
+// ════════════════════════════════════
+//  CHECK-IN
+// ════════════════════════════════════
+let selectedMood=null;
+document.querySelectorAll('.mood-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected'); selectedMood=b.dataset.mood;
+  });
+});
+const painInput=document.getElementById('painInput'),painVal=document.getElementById('painVal');
+painInput.addEventListener('input',()=>{ const v=painInput.value; painVal.textContent=v; painVal.className='pain-val pain-color-'+v; });
+document.getElementById('checkinHeroBtn').addEventListener('click',()=>{
+  document.getElementById('checkinCard').classList.add('open');
+  document.getElementById('checkinHeroCard').style.opacity='.4';
+  document.getElementById('checkinCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+function closeCheckin(){
+  document.getElementById('checkinCard').classList.remove('open');
+  document.getElementById('checkinHeroCard').style.opacity='1';
+  selectedMood=null;
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  painInput.value='0'; painVal.textContent='0'; painVal.className='pain-val';
+  document.getElementById('notesInput').value='';
+}
+document.getElementById('cancelCheckinBtn').addEventListener('click',closeCheckin);
+document.getElementById('saveCheckinBtn').addEventListener('click',()=>{
+  if(!selectedMood){toast('⚠️ Please select a mood first');return;}
+  const entry={ts:Date.now(),mood:selectedMood,pain:Number(painInput.value),notes:document.getElementById('notesInput').value.trim()};
+  const list=S.get('checkins_v2',[]); list.unshift(entry); S.set('checkins_v2',list);
+  closeCheckin(); renderCheckins(); refreshHomeStats(); refreshChart(); toast('✅ Check-in saved!');
+});
+document.getElementById('clearCheckinsBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all check-ins?'))return;
+  S.set('checkins_v2',[]); renderCheckins(); refreshHomeStats(); toast('🗑️ Cleared');
+});
+function renderCheckins(){
+  const list=S.get('checkins_v2',[]);
+  const ul=document.getElementById('checkinList'),empty=document.getElementById('checkinEmpty');
+  document.getElementById('lastCheckinLabel').textContent=list.length?'Last check-in: '+fmtDate(list[0].ts):'Last check-in: none yet';
+  ul.innerHTML='';
+  empty.style.display=list.length?'none':'block';
+
+  // Show trends card only when there's data
+  const trendsCard = document.getElementById('trendsCard');
+  if(trendsCard) trendsCard.style.display = list.length >= 2 ? 'block' : 'none';
+
+  const moodEmoji = {'Great':'😊','Good':'🙂','OK':'😐','Tired':'😴','Low':'😔','Anxious':'😟'};
+
+  list.slice(0,7).forEach((c,idx)=>{
+    const li=document.createElement('li');
+    li.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line2);';
+    const emoji = moodEmoji[c.mood] || '💙';
+    li.innerHTML=`
+      <div style="width:42px;height:42px;border-radius:14px;background:rgba(46,204,138,.1);border:1px solid rgba(46,204,138,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${emoji}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:14px;">${esc(c.mood||'—')} <span style="color:var(--muted);font-weight:400;font-size:12px;">· Pain ${c.pain??'0'}/10</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(fmtDate(c.ts))}${c.notes?` · "${esc(c.notes.slice(0,40))}${c.notes.length>40?'…':''}"`:''}</div>
+      </div>
+      <button class="btn ghost" style="width:auto;padding:6px 10px;font-size:12px;flex-shrink:0;" data-idx="${idx}">✕</button>
+    `;
+    li.querySelector('button').addEventListener('click',()=>{
+      const l=S.get('checkins_v2',[]); l.splice(idx,1); S.set('checkins_v2',l); renderCheckins(); refreshHomeStats(); refreshChart();
+    });
+    ul.appendChild(li);
+  });
+}
+
+// ── DAILY TIP ──
+const DAILY_TIPS = [
+  { emoji:'💧', text:'Staying hydrated helps with energy and mood. Try to drink a glass of water now!' },
+  { emoji:'🚶', text:'Even a short 5-minute walk can lift your spirits and ease stiffness.' },
+  { emoji:'🌬️', text:'Take 3 slow deep breaths. In for 4 counts, hold for 4, out for 4. Feel the calm.' },
+  { emoji:'📞', text:'Connecting with someone you love today can brighten both your days.' },
+  { emoji:'🎵', text:'Listening to a favorite song is a great mood booster — what\'s yours?' },
+  { emoji:'🌞', text:'Getting a few minutes of natural light each day is great for your wellbeing.' },
+  { emoji:'😄', text:'Laughter is the best medicine! Try watching something funny today.' },
+  { emoji:'🍎', text:'A healthy snack like fruit or nuts gives your brain and body steady energy.' },
+  { emoji:'✍️', text:'Writing down one thing you\'re grateful for can shift your whole day.' },
+  { emoji:'🧘', text:'Gentle stretching for just 5 minutes can ease tension and improve your mood.' },
+];
+(function showDailyTip(){
+  const tip = DAILY_TIPS[new Date().getDate() % DAILY_TIPS.length];
+  const el = document.getElementById('tipText');
+  const em = document.getElementById('tipEmoji');
+  if(el) el.textContent = tip.text;
+  if(em) em.textContent = tip.emoji;
+})();
+function refreshHomeStats(){
+  document.getElementById('statCheckins').textContent=S.get('checkins_v2',[]).length;
+  document.getElementById('statReminders').textContent=S.get('reminders',[]).length;
+}
+
+// ════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════
+let notifGranted=false;
+let bannerTimer=null;
+let urgentEscalationTimers={};
+
+async function requestNotifPermission(){
+  if(!('Notification' in window)){
+    document.getElementById('notifPermStatus').textContent='⚠️ Notifications not supported in this browser.';
+    return false;
+  }
+  if(Notification.permission==='granted'){ notifGranted=true; return true; }
+  if(Notification.permission==='denied'){
+    document.getElementById('notifPermStatus').textContent='❌ Notifications blocked. Enable them in your browser/phone settings.';
+    return false;
+  }
+  const perm=await Notification.requestPermission();
+  notifGranted=perm==='granted';
+  document.getElementById('notifPermStatus').textContent=notifGranted?'✅ Notifications enabled!':'⚠️ Notifications not enabled.';
+  return notifGranted;
+}
+
+function showBanner(title, msg, urgent=false, reminderId=null){
+  const banner=document.getElementById('notifBanner');
+  document.getElementById('notifBannerIcon').textContent=urgent?'🚨':'🔔';
+  document.getElementById('notifBannerTitle').textContent=title;
+  document.getElementById('notifBannerMsg').textContent=msg;
+  banner.className='notif-banner'+(urgent?' urgent':'');
+  clearTimeout(bannerTimer);
+  if(!urgent){ bannerTimer=setTimeout(()=>banner.classList.add('hidden'),6000); }
+
+  // If urgent and not dismissed in 5 min → full screen
+  if(urgent && reminderId){
+    urgentEscalationTimers[reminderId]=setTimeout(()=>{
+      showUrgentOverlay(title,msg);
+    }, 5*60*1000);
+  }
+}
+
+document.getElementById('notifBannerClose').addEventListener('click',()=>{
+  document.getElementById('notifBanner').classList.add('hidden');
+});
+
+function showUrgentOverlay(title, body){
+  document.getElementById('urgentTitle').textContent=title;
+  document.getElementById('urgentBody').textContent=body;
+  document.getElementById('urgentTime').textContent='Tap the button below to confirm you\'ve done this.';
+  document.getElementById('urgentOverlay').classList.remove('hidden');
+  // Vibrate
+  if(navigator.vibrate) navigator.vibrate([400,150,400,150,400]);
+  // Play alert sound
+  playAlertSound();
+}
+
+document.getElementById('urgentDismiss').addEventListener('click',()=>{
+  document.getElementById('urgentOverlay').classList.add('hidden');
+  document.getElementById('notifBanner').classList.add('hidden');
+  toast('✅ Marked as done!');
+});
+
+function playAlertSound(){
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    function beep(freq,start,dur){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value=freq; o.type='sine';
+      g.gain.setValueAtTime(0.4,ctx.currentTime+start);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
+      o.start(ctx.currentTime+start); o.stop(ctx.currentTime+start+dur+0.05);
+    }
+    beep(880,0,.2); beep(1100,.25,.2); beep(880,.5,.2); beep(1100,.75,.3);
+  } catch(e){}
+}
+
+// Schedule in-app reminders (poll every 30s)
+function checkReminders(){
+  const reminders=S.get('reminders',[]);
+  if(!reminders.length) return;
+  const now=new Date();
+  const hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  reminders.forEach(r=>{
+    if(!r.time) return;
+    const key='fired_'+r.created+'_'+hm;
+    if(S.get(key,false)) return; // already fired this minute
+    if(r.time===hm){
+      S.set(key,true);
+      const title=r.cat+' '+r.title;
+      const msg=r.time?'Time: '+fmt12(r.time):'';
+      if(r.urgent){
+        showBanner(title,msg,true,r.created);
+        showUrgentOverlay(title,r.title);
+      } else {
+        showBanner(title,msg,false);
+        if(notifGranted){
+          new Notification('ElderXonnect: '+title,{body:msg||r.title,icon:'/icon-192.png',tag:'rem-'+r.created});
+        }
+      }
+    }
+  });
+}
+setInterval(checkReminders,30000);
+
+// ════════════════════════════════════
+//  REMINDERS
+// ════════════════════════════════════
+document.getElementById('addReminderBtn').addEventListener('click',async()=>{
+  const title=document.getElementById('remTitle').value.trim();
+  const time=document.getElementById('remTime').value;
+  const cat=document.getElementById('remCat').value;
+  const urgent=document.getElementById('remUrgent').checked;
+  if(!title){toast('⚠️ Enter a reminder title');return;}
+  if(time){ await requestNotifPermission(); }
+  const list=S.get('reminders',[]);
+  list.push({title,time,cat,urgent,created:Date.now()});
+  S.set('reminders',list);
+  document.getElementById('remTitle').value='';
+  document.getElementById('remTime').value='';
+  document.getElementById('remUrgent').checked=false;
+  renderReminders(); refreshHomeStats(); toast('🔔 Reminder added!');
+});
+document.getElementById('clearRemindersBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all reminders?'))return;
+  S.set('reminders',[]); renderReminders(); refreshHomeStats(); toast('🗑️ Cleared');
+});
+function renderReminders(){
+  const list=S.get('reminders',[]);
+  const ul=document.getElementById('remList'),empty=document.getElementById('remEmpty');
+  ul.innerHTML=''; empty.style.display=list.length?'none':'block';
+  list.forEach((r,idx)=>{
+    const li=document.createElement('li');
+    const left=document.createElement('div'); left.style.cssText='display:flex;align-items:center;gap:10px;flex:1;';
+    left.innerHTML=`<span class="rem-item-icon">${esc(r.cat||'⭐')}</span><div><div style="font-weight:600;">${esc(r.title)}${r.urgent?'<span class="urgent-badge">URGENT</span>':''}</div><div class="small">${r.time?fmt12(r.time):'No time set'}</div></div>`;
+    const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:12px;flex-shrink:0;'; del.textContent='✕';
+    del.addEventListener('click',()=>{ const l=S.get('reminders',[]).filter((_,i)=>i!==idx); S.set('reminders',l); renderReminders(); refreshHomeStats(); });
+    li.appendChild(left); li.appendChild(del); ul.appendChild(li);
+  });
+}
+
+// ════════════════════════════════════
+//  ME PAGE
+// ════════════════════════════════════
+function loadMeProfile(){
+  const p=S.get('me_profile',{});
+  document.getElementById('meNameDisplay').textContent=p.name||'Tap ✏️ Edit to set up your profile';
+  document.getElementById('meDobDisplay').textContent=p.dob?'Born: '+new Date(p.dob+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'}):'';
+  document.getElementById('diDob').textContent=p.dob?new Date(p.dob+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'}):'—';
+  document.getElementById('diBlood').textContent=p.blood||'—';
+  document.getElementById('diHome').textContent=p.homeAddr||'—';
+  document.getElementById('diMail').textContent=p.mailAddr||p.homeAddr||'—';
+  document.getElementById('diAllergies').textContent=p.allergies||'—';
+  document.getElementById('diConditions').textContent=p.conditions||'—';
+  document.getElementById('diDoctor').textContent=p.doctor||'—';
+  document.getElementById('diDoctorPhone').textContent=p.doctorPhone||'—';
+
+  // Family list
+  const fam=document.getElementById('diFamilyList');
+  if(p.familyList){
+    fam.innerHTML=p.familyList.split('\n').filter(l=>l.trim()).map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--line2);">👤 ${esc(l.trim())}</div>`).join('');
+  } else { fam.textContent='No family members added yet.'; fam.style.color='var(--muted)'; }
+
+  // Caregiver button
+  const btn=document.getElementById('caregiverCallBtn');
+  const wrap=document.getElementById('caregiverBtnWrap');
+  if(p.caregiverPhone){
+    const name=p.caregiverName||'My Caregiver';
+    btn.innerHTML=`<span style="font-size:28px;">📞</span><span>Call ${esc(name)}</span>`;
+    btn.onclick=()=>window.location.href='tel:'+p.caregiverPhone;
+    wrap.style.display='block';
+  } else {
+    wrap.style.display='none';
+  }
+
+  // Avatar emoji based on name
+  if(p.name) document.getElementById('meAvatarEmoji').textContent=p.name.charAt(0).toUpperCase()||'👤';
+}
+
+function openMeModal(){
+  const p=S.get('me_profile',{});
+  document.getElementById('meName').value=p.name||'';
+  document.getElementById('meDob').value=p.dob||'';
+  document.getElementById('meBlood').value=p.blood||'';
+  document.getElementById('meHomeAddr').value=p.homeAddr||'';
+  document.getElementById('meMailAddr').value=p.mailAddr||'';
+  document.getElementById('meAllergies').value=p.allergies||'';
+  document.getElementById('meConditions').value=p.conditions||'';
+  document.getElementById('meDoctor').value=p.doctor||'';
+  document.getElementById('meDoctorPhone').value=p.doctorPhone||'';
+  document.getElementById('meCaregiverName').value=p.caregiverName||'';
+  document.getElementById('meCaregiverPhone').value=p.caregiverPhone||'';
+  document.getElementById('meCaregiverPin').value=p.caregiverPin||'';
+  document.getElementById('meFamilyList').value=p.familyList||'';
+  document.getElementById('meModal').classList.remove('hidden');
+}
+
+function closeMeModal(){ document.getElementById('meModal').classList.add('hidden'); }
+
+document.getElementById('editMeBtn').addEventListener('click',openMeModal);
+document.getElementById('meFabBtn').addEventListener('click',()=>{ showTab('me'); });
+document.getElementById('meModalClose').addEventListener('click',closeMeModal);
+document.getElementById('cancelMeBtn').addEventListener('click',closeMeModal);
+document.getElementById('meModal').addEventListener('click',e=>{ if(e.target===document.getElementById('meModal'))closeMeModal(); });
+
+document.getElementById('saveMeBtn').addEventListener('click',()=>{
+  const p={
+    name:document.getElementById('meName').value.trim(),
+    dob:document.getElementById('meDob').value,
+    blood:document.getElementById('meBlood').value,
+    homeAddr:document.getElementById('meHomeAddr').value.trim(),
+    mailAddr:document.getElementById('meMailAddr').value.trim(),
+    allergies:document.getElementById('meAllergies').value.trim(),
+    conditions:document.getElementById('meConditions').value.trim(),
+    doctor:document.getElementById('meDoctor').value.trim(),
+    doctorPhone:document.getElementById('meDoctorPhone').value.trim(),
+    caregiverName:document.getElementById('meCaregiverName').value.trim(),
+    caregiverPhone:document.getElementById('meCaregiverPhone').value.trim(),
+    caregiverPin:document.getElementById('meCaregiverPin').value.trim(),
+    familyList:document.getElementById('meFamilyList').value.trim(),
+  };
+  S.set('me_profile',p);
+  loadMeProfile();
+  closeMeModal();
+  toast('✅ Profile saved!');
+});
+
+// ════════════════════════════════════
+//  CONTACTS
+// ════════════════════════════════════
+document.getElementById('addContactBtn').addEventListener('click',()=>{
+  const name=document.getElementById('cName').value.trim(),phone=document.getElementById('cPhone').value.trim().replace(/\s+/g,''),rel=document.getElementById('cRel').value;
+  if(!name){toast('⚠️ Enter a name');return;} if(!phone){toast('⚠️ Enter a phone number');return;}
+  const list=S.get('contacts',[]); list.push({name,phone,rel,created:Date.now()}); S.set('contacts',list);
+  document.getElementById('cName').value=''; document.getElementById('cPhone').value='';
+  renderContacts(); toast('👥 Contact added!');
+});
+function relEmoji(r){ return{Family:'👨‍👩‍👧',Friend:'👋',Doctor:'🏥',Caregiver:'🤝',Neighbor:'🏡',Other:'⭐'}[r]||'👤'; }
+function renderContacts(){
+  const list=S.get('contacts',[]),c=document.getElementById('contactList'),empty=document.getElementById('contactEmpty');
+  c.innerHTML=''; empty.style.display=list.length?'none':'block';
+  list.forEach((ct,idx)=>{
+    const div=document.createElement('div'); div.className='contact-card';
+    div.innerHTML=`<div class="contact-avatar">${relEmoji(ct.rel)}</div><div class="contact-info"><div class="contact-name">${esc(ct.name)}</div><div class="contact-rel">${esc(ct.rel)} · ${esc(ct.phone)}</div></div><div class="contact-actions"><button class="icon-btn call" data-phone="${esc(ct.phone)}">📞</button><button class="icon-btn" data-idx="${idx}">🗑️</button></div>`;
+    c.appendChild(div);
+  });
+  c.appendChild(empty);
+  c.querySelectorAll('.icon-btn.call').forEach(b=>b.addEventListener('click',()=>window.location.href='tel:'+b.dataset.phone));
+  c.querySelectorAll('.icon-btn[data-idx]').forEach(b=>b.addEventListener('click',()=>{
+    if(b.classList.contains('call'))return;
+    const l=S.get('contacts',[]).filter((_,i)=>i!==Number(b.dataset.idx)); S.set('contacts',l); renderContacts(); toast('🗑️ Removed');
+  }));
+}
+function refreshPhone(){
+  const s=S.get('em_phone','');
+  document.getElementById('emPhone').value=s||'';
+  document.getElementById('phoneSavedMsg').textContent=s?'✅ Saved: '+s:'No emergency number set.';
+}
+document.getElementById('savePhoneBtn').addEventListener('click',()=>{
+  const r=document.getElementById('emPhone').value.trim().replace(/\s+/g,'');
+  if(!r){toast('⚠️ Enter a number');return;}
+  S.set('em_phone',r); refreshPhone(); toast('✅ Emergency number saved');
+});
+document.getElementById('callNowBtn').addEventListener('click',()=>{
+  const s=S.get('em_phone',''); if(!s){toast('⚠️ No emergency number saved');return;}
+  window.location.href='tel:'+s;
+});
+
+// ════════════════════════════════════
+//  CHAT — REAL AI
+// ════════════════════════════════════
+let chatHistory=[];
+document.getElementById('toggleKeyBtn').addEventListener('click',()=>{ const i=document.getElementById('apiKeyInput'); i.type=i.type==='password'?'text':'password'; });
+
+// ── AI PROVIDER TOGGLE ──
+let currentProvider = S.get('ai_provider', 'claude');
+
+function setProvider(p){
+  currentProvider = p;
+  S.set('ai_provider', p);
+  document.querySelectorAll('.ai-provider-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.provider === p);
+  });
+  const label = document.getElementById('apiKeyLabel');
+  if(label) label.textContent = p === 'deepseek' ? 'DeepSeek API Key' : 'Anthropic API Key';
+  const keyField = document.getElementById('apiKeyInput');
+  const saved = S.get(p === 'deepseek' ? 'deepseek_key' : 'anthropic_key', '');
+  if(keyField) keyField.value = saved;
+  const status = document.getElementById('apiKeyStatus');
+  if(status) status.textContent = saved ? '✅ Key saved. Start chatting!' : '';
+  const clearBtn = document.getElementById('clearApiKeyBtn');
+  if(clearBtn) clearBtn.style.display = saved ? 'block' : 'none';
+}
+
+document.querySelectorAll('.ai-provider-btn').forEach(b=>{
+  b.addEventListener('click', ()=> setProvider(b.dataset.provider));
+});
+
+document.getElementById('saveApiKeyBtn').addEventListener('click',()=>{
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(!k){ toast('⚠️ Please paste your API key first'); return; }
+  const storageKey = currentProvider === 'deepseek' ? 'deepseek_key' : 'anthropic_key';
+  S.set(storageKey, k);
+  document.getElementById('apiKeyStatus').textContent='✅ Key saved. Start chatting!';
+  document.getElementById('clearApiKeyBtn').style.display='block';
+  toast(`✅ ${currentProvider === 'deepseek' ? 'DeepSeek' : 'Claude'} enabled!`);
+});
+
+document.getElementById('clearApiKeyBtn').addEventListener('click',()=>{
+  const storageKey = currentProvider === 'deepseek' ? 'deepseek_key' : 'anthropic_key';
+  S.set(storageKey, '');
+  document.getElementById('apiKeyInput').value='';
+  document.getElementById('apiKeyStatus').textContent='Key removed. Paste a new one above.';
+  document.getElementById('clearApiKeyBtn').style.display='none';
+  toast('🗑 API key removed');
+});
+
+// Init provider state on load
+setProvider(currentProvider);
+
+function buildSystemPrompt(){
+  const checkins=S.get('checkins_v2',[]),reminders=S.get('reminders',[]),p=S.get('me_profile',{});
+  const last3=checkins.slice(0,3).map(c=>`${fmtDate(c.ts)}: mood=${c.mood}, pain=${c.pain}/10${c.notes?', notes: '+c.notes:''}`).join('\n');
+  return `You are ElderXonnect Companion, a warm, patient, caring AI assistant for elderly users. Provide emotional support, companionship, gentle cognitive engagement, and health reminders.
+
+Guidelines:
+- Speak warmly, clearly, and simply. Avoid jargon.
+- Be patient, empathetic, and encouraging.
+- Keep responses concise — 2-4 sentences, unless asked for more.
+- If someone mentions severe pain or emergency symptoms, urge them to call emergency services.
+- Occasionally ask a gentle follow-up question.
+
+User profile: ${p.name?'Name: '+p.name:'Unknown'}${p.dob?', DOB: '+p.dob:''}${p.conditions?', Conditions: '+p.conditions:''}${p.allergies?', Allergies: '+p.allergies:''}
+
+Recent check-ins:
+${last3||'No recent check-ins.'}
+
+Reminders: ${reminders.length?reminders.map(r=>r.title+(r.time?' at '+fmt12(r.time):'')).join(', '):'None'}
+Today: ${new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}`;
+}
+
+document.querySelectorAll('.chip').forEach(c=>{ c.addEventListener('click',()=>{ document.getElementById('chatInput').value=c.dataset.msg; sendChat(); }); });
+
+function localReply(t){
+  const s=t.toLowerCase();
+  if(s.includes('lonely')||s.includes('alone')) return "I'm right here with you. 💙 You're not alone. Want to talk about something that made you smile recently?";
+  if(s.includes('pain')||s.includes('hurt')) return "I'm sorry to hear you're in pain. 💙 If it's severe, please consider calling your doctor. Can you tell me more?";
+  if(s.includes('hello')||s.includes('hi')||s.includes('hey')) return "Hello! 😊 It's so lovely to hear from you. How are you feeling today?";
+  if(s.includes('thank')) return "You're so welcome! I'm always here for you. 💚";
+  if(s.includes('fun fact')||s.includes('tell me')) return "Here's one: Honeybees can recognize human faces! Scientists found they use the same process as people. 🐝 Isn't that amazing?";
+  return "Thank you for sharing that with me. 💙 I'm here and listening. What else is on your mind?";
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput'),msg=input.value.trim(); if(!msg)return;
+  input.value=''; addBubble(msg,'me'); document.getElementById('starterChips').style.display='none';
+  const tid='t'+Date.now(); addBubble('<div class="typing-dots"><span></span><span></span><span></span></div>','ai typing',tid);
+  chatHistory.push({role:'user',content:msg});
+
+  const provider = S.get('ai_provider', 'claude');
+  const key = provider === 'deepseek' ? S.get('deepseek_key','') : S.get('anthropic_key','');
+
+  if(!key){
+    await new Promise(r=>setTimeout(r,600)); removeEl(tid);
+    const r=localReply(msg); addBubble(r,'ai'); chatHistory.push({role:'assistant',content:r}); return;
+  }
+  try{
+    const resp=await fetch('https://elderxonnect-proxy.bbciii.workers.dev/',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': key,
+        'x-ai-provider': provider,
       },
-      set(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-      }
-    };
-
-    // ---------- Tabs ----------
-    const views = {
-      home: document.getElementById("view-home"),
-      reminders: document.getElementById("view-reminders"),
-      chat: document.getElementById("view-chat"),
-      games: document.getElementById("view-games"),
-      contacts: document.getElementById("view-contacts"),
-    };
-
-    function showTab(name) {
-      Object.entries(views).forEach(([k, el]) => {
-        el.classList.toggle("hidden", k !== name);
-      });
-      document.querySelectorAll(".tabbtn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === name);
-      });
-    }
-
-    document.querySelectorAll(".tabbtn").forEach(btn => {
-      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+      body:JSON.stringify({model: provider==='deepseek'?'deepseek-v4-flash':'claude-haiku-4-5-20251001', max_tokens:1000, system:buildSystemPrompt(), messages:chatHistory.slice(-20)})
     });
-
-    // ---------- Check-In v2 ----------
-    let selectedMood = null;
-
-    const moodSelectedEl   = document.getElementById("moodSelected");
-    const moodGoodBtn      = document.getElementById("moodGood");
-    const moodOkBtn        = document.getElementById("moodOk");
-    const moodNotGreatBtn  = document.getElementById("moodNotGreat");
-    const painInput        = document.getElementById("painInput");
-    const notesInput       = document.getElementById("notesInput");
-    const saveCheckinBtn   = document.getElementById("saveCheckinBtn");
-    const cancelCheckinBtn = document.getElementById("cancelCheckinBtn");
-    const clearCheckinsBtn = document.getElementById("clearCheckinsBtn");
-    const checkinList      = document.getElementById("checkinList");
-    const checkinEmpty     = document.getElementById("checkinEmpty");
-    const lastCheckinV2El  = document.getElementById("lastCheckinV2");
-    const checkinCard      = document.getElementById("checkinCard");
-    const checkinBtn       = document.getElementById("checkinBtn");
-
-   if (checkinBtn) {
-  checkinBtn.onclick = () => {
-    // Once the user starts again, go back to normal blue style
-    checkinBtn.classList.remove("attention");
-    showCheckinV2();
-  };
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+resp.status);}
+    const data=await resp.json();
+    const reply=data.content?.map(b=>b.type==='text'?b.text:'').join('').trim()||'I had trouble responding. Please try again.';
+    removeEl(tid); addBubble(reply,'ai'); chatHistory.push({role:'assistant',content:reply});
+  }catch(e){ removeEl(tid); addBubble('Sorry, I couldn\'t connect. ('+e.message+')','ai'); }
 }
 
+function addBubble(html,cls,id){
+  const log=document.getElementById('chatLog'),div=document.createElement('div');
+  div.className='bubble '+cls; if(id)div.id=id; div.innerHTML=html;
+  log.appendChild(div); log.scrollTop=log.scrollHeight;
+  // Speak AI responses if voice output is on
+  if(cls==='ai' && !id){
+    const tmp=document.createElement('div'); tmp.innerHTML=html;
+    const text=(tmp.textContent||tmp.innerText||'').trim();
+    if(text) setTimeout(()=>speak(text), 100);
+  }
+}
+function removeEl(id){ const e=document.getElementById(id); if(e)e.remove(); }
+document.getElementById('sendChatBtn').addEventListener('click',sendChat);
+document.getElementById('chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();} });
+document.getElementById('clearChatBtn').addEventListener('click',()=>{ chatHistory=[]; document.getElementById('chatLog').innerHTML=''; document.getElementById('starterChips').style.display='flex'; toast('💬 Chat cleared'); });
 
-    function fmtCheckin(ts) {
-      const d = new Date(ts);
-      return d.toLocaleString(undefined, {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
-    }
-
-    function setMood(mood) {
-      selectedMood = mood;
-      if (moodSelectedEl) moodSelectedEl.textContent = `Selected: ${mood}`;
-
-      const all = [moodGoodBtn, moodOkBtn, moodNotGreatBtn].filter(Boolean);
-      all.forEach(b => {
-        b.style.background = "rgba(255,255,255,.06)";
-        b.style.borderColor = "rgba(255,255,255,.10)";
-      });
-
-      const active =
-        mood === "Good" ? moodGoodBtn :
-        mood === "OK" ? moodOkBtn :
-        moodNotGreatBtn;
-
-      if (active) {
-        active.style.background = "rgba(11,95,255,.22)";
-        active.style.borderColor = "rgba(11,95,255,.35)";
-      }
-    }
-
-    if (moodGoodBtn)     moodGoodBtn.onclick     = () => setMood("Good");
-    if (moodOkBtn)       moodOkBtn.onclick       = () => setMood("OK");
-    if (moodNotGreatBtn) moodNotGreatBtn.onclick = () => setMood("Not great");
-
-    function getCheckinsV2() {
-      return S.get("checkins_v2", []);
-    }
-
-    function saveCheckinsV2(list) {
-      S.set("checkins_v2", list);
-    }
-
-    function refreshLastCheckinV2() {
-      const checkins = getCheckinsV2();
-      if (!lastCheckinV2El) return;
-      lastCheckinV2El.textContent = checkins.length
-        ? "Last check-in: " + fmtCheckin(checkins[0].ts)
-        : "Last check-in: none yet";
-    }
-
-    function renderCheckinsV2() {
-      if (!checkinList || !checkinEmpty) return;
-
-      const checkins = getCheckinsV2();
-      checkinList.innerHTML = "";
-      checkinEmpty.style.display = checkins.length ? "none" : "block";
-
-      checkins.slice(0, 7).forEach((c, idx) => {
-        const li = document.createElement("li");
-        const wrap = document.createElement("div");
-        wrap.style.flex = "1";
-
-        wrap.innerHTML =
-          `<div style="font-weight:750;">${fmtCheckin(c.ts)}</div>` +
-          `<div class="small">Mood: <b>${escapeHtml(c.mood || "—")}</b> • Pain: <b>${escapeHtml(c.pain ?? "—")}</b></div>` +
-          (c.notes ? `<div class="small">${escapeHtml(c.notes)}</div>` : "");
-
-        const del = document.createElement("button");
-        del.className = "btn ghost";
-        del.textContent = "Delete";
-        del.onclick = () => {
-          const list = getCheckinsV2();
-          list.splice(idx, 1);
-          saveCheckinsV2(list);
-          renderCheckinsV2();
-          refreshLastCheckinV2();
-          refreshHome();
-        };
-
-        li.appendChild(wrap);
-        li.appendChild(del);
-        checkinList.appendChild(li);
-      });
-    }
-
-    function resetCheckinForm() {
-      painInput.value = "0";
-      notesInput.value = "";
-      selectedMood = null;
-      if (moodSelectedEl) moodSelectedEl.textContent = "Selected: none";
-      const all = [moodGoodBtn, moodOkBtn, moodNotGreatBtn].filter(Boolean);
-      all.forEach(b => {
-        b.style.background = "rgba(255,255,255,.06)";
-        b.style.borderColor = "rgba(255,255,255,.10)";
-      });
-    }
-
-    function saveCheckinV2() {
-      if (!selectedMood) return alert("Select a mood first.");
-
-      const pain = Number(painInput.value);
-      if (!Number.isFinite(pain) || pain < 0 || pain > 10) {
-        return alert("Pain must be between 0 and 10.");
-      }
-
-      const notes = notesInput.value.trim();
-
-      const entry = {
-        ts: Date.now(),
-        mood: selectedMood,
-        pain,
-        notes
-      };
-
-      const list = getCheckinsV2();
-      list.unshift(entry);
-      saveCheckinsV2(list);
-
-      resetCheckinForm();
-      renderCheckinsV2();
-      refreshLastCheckinV2();
-      refreshHome();
-
-      alert("Check-in saved.");
-    }
-
-  if (cancelCheckinBtn) {
-  cancelCheckinBtn.onclick = () => {
-    resetCheckinForm();
-
-    // Turn home button yellow
-    if (checkinBtn) {
-      checkinBtn.classList.add("attention");
-    }
-
-    alert("Check-in canceled. Tap 'Check In Now' to try again.");
-
-    // Go back to Home screen
-    showTab("home");
-
-    // Scroll user to top so button is visible
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 50);
-  };
+// ════════════════════════════════════
+//  GAMES
+// ════════════════════════════════════
+let gameScore=0,gameStreak=0;
+const TRIVIA=[
+  {q:'What is the capital of France?',opts:['London','Berlin','Paris','Madrid'],ans:2},
+  {q:'How many days are in a leap year?',opts:['364','365','366','367'],ans:2},
+  {q:'Which planet is known as the Red Planet?',opts:['Venus','Mars','Jupiter','Saturn'],ans:1},
+  {q:'What is 7 × 8?',opts:['54','56','58','64'],ans:1},
+  {q:'In which ocean is Hawaii located?',opts:['Atlantic','Indian','Arctic','Pacific'],ans:3},
+  {q:'What is the largest mammal in the world?',opts:['Elephant','Blue Whale','Giraffe','Hippo'],ans:1},
+  {q:'How many continents are there?',opts:['5','6','7','8'],ans:2},
+  {q:'What colour is a ruby?',opts:['Blue','Green','Red','Yellow'],ans:2},
+  {q:'Which instrument has black and white keys?',opts:['Violin','Trumpet','Piano','Guitar'],ans:2},
+  {q:'What do bees make?',opts:['Milk','Honey','Wax only','Silk'],ans:1},
+];
+const MEMORY_PROMPTS=['Close your eyes and picture your childhood home. What was your favourite room, and why?','Think of a meal that always brings back warm memories. Who made it, and what did it taste like?','Name 5 songs from your youth that still make you feel something.','Recall a moment when you felt truly proud of yourself. What happened?','Picture your best friend from school. What did you used to do together?'];
+const WORD_GAMES=[
+  {q:"Name 5 things in a kitchen — one for each letter A, B, C, D, E.",ans:"Examples: Apple, Bowl, Cup, Drawer, Egg!"},
+  {q:"Can you think of 4 words that rhyme with 'CAKE'?",ans:"Bake, Lake, Take, Make, Rake, Wake…"},
+  {q:"Unscramble this word: R-O-W-E-L-F",ans:"Answer: FLOWER 🌸"},
+  {q:"Name an animal for every letter of your first name.",ans:"Any animal works — Ant, Bear, Cat, Dog, Elephant…"},
+  {q:"Can you name 5 fruits that are red or orange?",ans:"Apple, Strawberry, Cherry, Orange, Peach, Mango…"},
+];
+function updateScore(){ document.getElementById('scoreNum').textContent=gameScore; document.getElementById('streakNum').textContent='🔥 '+gameStreak; }
+document.getElementById('triviaBtn').addEventListener('click',startTrivia);
+document.getElementById('memoryBtn').addEventListener('click',startMemory);
+document.getElementById('wordBtn').addEventListener('click',startWord);
+document.getElementById('nextGameBtn').addEventListener('click',startTrivia);
+function startTrivia(){
+  const q=TRIVIA[Math.floor(Math.random()*TRIVIA.length)];
+  const area=document.getElementById('gameArea'); area.style.display='block';
+  document.getElementById('gameQuestion').textContent=q.q;
+  document.getElementById('gameAnswer').style.display='none';
+  document.getElementById('nextGameBtn').style.display='none';
+  document.getElementById('nextGameBtn').textContent='Next Trivia →';
+  document.getElementById('nextGameBtn').onclick=startTrivia;
+  const opts=document.getElementById('gameOptions'); opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button'); btn.className='game-option'; btn.textContent=o;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.game-option').forEach(b=>b.style.pointerEvents='none');
+      if(i===q.ans){btn.classList.add('correct');gameScore+=10;gameStreak++;toast('🎉 Correct! +10');}
+      else{btn.classList.add('wrong');document.querySelectorAll('.game-option')[q.ans].classList.add('correct');gameStreak=0;toast('❌ Not quite!');}
+      updateScore(); document.getElementById('nextGameBtn').style.display='block';
+    });
+    opts.appendChild(btn);
+  });
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function startMemory(){
+  const p=MEMORY_PROMPTS[Math.floor(Math.random()*MEMORY_PROMPTS.length)];
+  const area=document.getElementById('gameArea'); area.style.display='block';
+  document.getElementById('gameQuestion').textContent=p;
+  document.getElementById('gameOptions').innerHTML='';
+  document.getElementById('gameAnswer').style.display='none';
+  document.getElementById('nextGameBtn').style.display='block';
+  document.getElementById('nextGameBtn').textContent='Another Prompt →';
+  document.getElementById('nextGameBtn').onclick=startMemory;
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function startWord(){
+  const w=WORD_GAMES[Math.floor(Math.random()*WORD_GAMES.length)];
+  const area=document.getElementById('gameArea'); area.style.display='block';
+  document.getElementById('gameQuestion').textContent=w.q;
+  const ansDiv=document.getElementById('gameAnswer'); ansDiv.style.display='none'; ansDiv.textContent=w.ans;
+  const opts=document.getElementById('gameOptions'); opts.innerHTML='';
+  const rb=document.createElement('button'); rb.className='btn ghost'; rb.textContent='💡 Reveal Answer'; rb.style.marginTop='6px';
+  rb.addEventListener('click',()=>{ ansDiv.style.display='block'; rb.remove(); document.getElementById('nextGameBtn').style.display='block'; document.getElementById('nextGameBtn').textContent='Another Word Game →'; document.getElementById('nextGameBtn').onclick=startWord; });
+  opts.appendChild(rb); document.getElementById('nextGameBtn').style.display='none';
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+// ════════════════════════════════════
+//  SERVICE WORKER
+// ════════════════════════════════════
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js').catch(()=>{}));
+}
 
+// ════════════════════════════════════
+//  TRENDS CHART
+// ════════════════════════════════════
+let currentChartMode = 'both';
 
+const MOOD_SCORES = { Great:5, Good:4, OK:3, Tired:2, Low:1, Anxious:1 };
 
-    if (clearCheckinsBtn) {
-      clearCheckinsBtn.onclick = () => {
-        if (!confirm("Clear all check-ins?")) return;
-        saveCheckinsV2([]);
-        renderCheckinsV2();
-        refreshLastCheckinV2();
-        refreshHome();
-      };
-    }
-
-    // ---------- Reminders ----------
-    const remTitle = document.getElementById("remTitle");
-    const remTime  = document.getElementById("remTime");
-    const remList  = document.getElementById("remList");
-    const remEmpty = document.getElementById("remEmpty");
-
-    function renderReminders() {
-      const reminders = S.get("reminders", []);
-      remList.innerHTML = "";
-      remEmpty.style.display = reminders.length ? "none" : "block";
-
-      reminders.forEach((r, idx) => {
-        const li = document.createElement("li");
-        const left = document.createElement("div");
-        left.innerHTML =
-          `<div style="font-weight:750;">${escapeHtml(r.title)}</div>` +
-          (r.time ? `<div class="small">${escapeHtml(r.time)}</div>` : `<div class="small">No time set</div>`);
-
-        const del = document.createElement("button");
-        del.className = "btn ghost";
-        del.style.width = "auto";
-        del.style.padding = "10px 12px";
-        del.textContent = "Delete";
-        del.addEventListener("click", () => {
-          const updated = S.get("reminders", []).filter((_, i) => i !== idx);
-          S.set("reminders", updated);
-          renderReminders();
-          refreshHome();
-        });
-
-        li.appendChild(left);
-        li.appendChild(del);
-        remList.appendChild(li);
-      });
-    }
-
-    document.getElementById("addReminderBtn").addEventListener("click", () => {
-      const title = remTitle.value.trim();
-      const time  = remTime.value.trim();
-      if (!title) return alert("Enter a reminder title.");
-
-      const reminders = S.get("reminders", []);
-      reminders.push({ title, time, created: Date.now() });
-      S.set("reminders", reminders);
-
-      remTitle.value = "";
-      remTime.value  = "";
-      renderReminders();
-      refreshHome();
+function getLast14Days() {
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({
+      label: d.toLocaleDateString(undefined, {month:'short', day:'numeric'}),
+      dateStr: d.toISOString().slice(0,10)
     });
+  }
+  return days;
+}
 
-    document.getElementById("clearRemindersBtn").addEventListener("click", () => {
-      if (!confirm("Clear all reminders?")) return;
-      S.set("reminders", []);
-      renderReminders();
-      refreshHome();
+function buildChartData() {
+  const checkins = S.get('checkins_v2', []);
+  const days = getLast14Days();
+  const moodData = [], painData = [];
+
+  days.forEach(day => {
+    const dayCheckins = checkins.filter(c => {
+      const d = new Date(c.ts);
+      return d.toISOString().slice(0,10) === day.dateStr;
     });
-
-    // ---------- Chat (local starter) ----------
-    const chatInput = document.getElementById("chatInput");
-    const chatLog   = document.getElementById("chatLog");
-
-    function pushBubble(text, who) {
-      const div = document.createElement("div");
-      div.className = "bubble " + who;
-      div.textContent = text;
-      chatLog.appendChild(div);
-      chatLog.scrollTop = chatLog.scrollHeight;
+    if (dayCheckins.length) {
+      const avgMood = dayCheckins.reduce((s,c) => s + (MOOD_SCORES[c.mood]||3), 0) / dayCheckins.length;
+      const avgPain = dayCheckins.reduce((s,c) => s + (c.pain||0), 0) / dayCheckins.length;
+      moodData.push(avgMood);
+      painData.push(avgPain);
+    } else {
+      moodData.push(null);
+      painData.push(null);
     }
+  });
+  return { days, moodData, painData };
+}
 
-    function simpleCompanionReply(userText) {
-      const t = userText.toLowerCase();
-      if (t.includes("lonely") || t.includes("alone")) return "I’m here with you. Want to talk about something that made you smile recently?";
-      if (t.includes("pain") || t.includes("hurt")) return "I’m sorry you’re feeling that. If this is urgent, consider calling your doctor or emergency contact. Do you want to describe where it hurts?";
-      if (t.includes("weather")) return "I can’t fetch live weather in this offline starter, but I can help you plan for your day. Are you going out today?";
-      return "Thanks for sharing. Tell me more—what’s on your mind right now?";
+function drawChart(mode) {
+  const canvas = document.getElementById('trendsCanvas');
+  const noData = document.getElementById('trendsNoData');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const { days, moodData, painData } = buildChartData();
+  const hasData = moodData.some(v => v !== null);
+  if (!hasData) {
+    canvas.classList.add('hidden');
+    noData.classList.remove('hidden');
+    return;
+  }
+  canvas.classList.remove('hidden');
+  noData.classList.add('hidden');
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || canvas.offsetWidth || 320;
+  const H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top:16, right:16, bottom:32, left:32 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top - PAD.bottom;
+  const N = days.length;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = PAD.top + (cH / 5) * i;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(PAD.left + cW, y);
+    ctx.stroke();
+  }
+
+  // X axis labels (every 3 days)
+  ctx.fillStyle = 'rgba(122,155,134,0.8)';
+  ctx.font = `${Math.max(9, W/52)}px DM Sans, sans-serif`;
+  ctx.textAlign = 'center';
+  days.forEach((d, i) => {
+    if (i % 3 === 0 || i === N-1) {
+      const x = PAD.left + (i / (N-1)) * cW;
+      ctx.fillText(d.label, x, H - 6);
     }
+  });
 
-    document.getElementById("sendChatBtn").addEventListener("click", () => {
-      const msg = chatInput.value.trim();
-      if (!msg) return;
-      pushBubble(msg, "me");
-      chatInput.value = "";
-      setTimeout(() => pushBubble(simpleCompanionReply(msg), "ai"), 250);
+  function drawLine(data, minVal, maxVal, color, fillColor) {
+    const points = [];
+    data.forEach((v, i) => {
+      if (v === null) return;
+      const x = PAD.left + (i / (N-1)) * cW;
+      const y = PAD.top + cH - ((v - minVal) / (maxVal - minVal)) * cH;
+      points.push({ x, y, i });
     });
+    if (points.length < 1) return;
 
-    // ---------- Games ----------
-    const prompts = [
-      "Name three things you’re grateful for today.",
-      "What’s one happy memory from childhood you can describe in detail?",
-      "Try this: list 5 animals starting with different letters.",
-      "What song always lifts your mood, and why?",
-      "Name 5 U.S. states you’d like to visit (or revisit)."
-    ];
-    document.getElementById("gameBtn").addEventListener("click", () => {
-      const p = prompts[Math.floor(Math.random() * prompts.length)];
-      document.getElementById("gameOut").textContent = p;
+    // Fill gradient
+    if (points.length >= 2) {
+      const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + cH);
+      grad.addColorStop(0, fillColor);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, PAD.top + cH);
+      ctx.lineTo(points[0].x, points[0].y);
+      for (let j = 1; j < points.length; j++) {
+        const cp = { x: (points[j-1].x + points[j].x) / 2, y: (points[j-1].y + points[j].y) / 2 };
+        ctx.quadraticCurveTo(points[j-1].x, points[j-1].y, cp.x, cp.y);
+      }
+      ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+      ctx.lineTo(points[points.length-1].x, PAD.top + cH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let j = 1; j < points.length; j++) {
+        const cp = { x: (points[j-1].x + points[j].x) / 2, y: (points[j-1].y + points[j].y) / 2 };
+        ctx.quadraticCurveTo(points[j-1].x, points[j-1].y, cp.x, cp.y);
+      }
+      ctx.lineTo(points[points.length-1].x, points[points.length-1].y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // Dots
+    points.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(14,26,20,0.8)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     });
+  }
 
-    // ---------- Contacts / Emergency ----------
-    const emPhone       = document.getElementById("emPhone");
-    const phoneSavedMsg = document.getElementById("phoneSavedMsg");
+  if (mode === 'both' || mode === 'mood') {
+    drawLine(moodData, 0, 5, '#2ecc8a', 'rgba(46,204,138,0.15)');
+  }
+  if (mode === 'both' || mode === 'pain') {
+    drawLine(painData, 0, 10, '#e8c97e', 'rgba(232,201,126,0.12)');
+  }
+}
 
-    function refreshPhone() {
-      const saved = S.get("em_phone", "");
-      emPhone.value = saved || "";
-      phoneSavedMsg.textContent = saved ? `Saved: ${saved}` : "No number saved yet.";
+document.querySelectorAll('.chart-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentChartMode = tab.dataset.chart;
+    drawChart(currentChartMode);
+  });
+});
+
+function refreshChart() { drawChart(currentChartMode); }
+window.addEventListener('resize', () => drawChart(currentChartMode));
+
+// ════════════════════════════════════
+//  CAREGIVER PORTAL
+// ════════════════════════════════════
+function initCaregiverPortal() {
+  const pin = S.get('me_profile', {}).caregiverPin;
+  const status = document.getElementById('caregiverPinStatus');
+  const urlEl = document.getElementById('caregiverPortalUrl');
+  if (pin) {
+    status.textContent = '✅ PIN set. Share caregiver.html with family.';
+  } else {
+    status.textContent = '⚠️ No PIN set yet — edit your profile to add one.';
+  }
+  // Try to build the URL
+  const base = window.location.origin + window.location.pathname.replace('index.html','');
+  if (base && !base.includes('localhost') && !base.includes('127.0.0.1') && !base.includes('blob:')) {
+    urlEl.textContent = base + 'caregiver.html';
+  }
+}
+
+document.getElementById('openCaregiverBtn').addEventListener('click', () => {
+  window.open('caregiver.html', '_blank');
+});
+
+// Patch saveMeBtn to also save PIN
+const _origSaveMe = document.getElementById('saveMeBtn').onclick;
+document.getElementById('saveMeBtn').addEventListener('click', () => {
+  // PIN is saved as part of me_profile in saveMeBtn handler below
+});
+
+// Patch openMeModal to load PIN
+const _origOpenModal = openMeModal;
+
+// ════════════════════════════════════
+//  VOICE ENGINE
+// ════════════════════════════════════
+
+// ── Settings ──
+const VS = {
+  get(k,fb){ return S.get('voice_'+k, fb); },
+  set(k,v){ S.set('voice_'+k, v); }
+};
+
+function loadVoiceSettings(){
+  const vi  = VS.get('input', false);
+  const vo  = VS.get('output', false);
+  const vas = VS.get('autosend', false);
+  const vf  = VS.get('forms', false);
+  const spd = VS.get('speed', 0.9);
+  const pit = VS.get('pitch', 1.0);
+
+  document.getElementById('voiceInputToggle').checked  = vi;
+  document.getElementById('voiceOutputToggle').checked = vo;
+  document.getElementById('voiceAutoSendToggle').checked = vas;
+  document.getElementById('voiceFormsToggle').checked  = vf;
+  document.getElementById('voiceSpeedSlider').value    = spd;
+  document.getElementById('voicePitchSlider').value    = pit;
+  document.getElementById('voiceSpeedLabel').textContent = 'Speed: '+spd+'×';
+  document.getElementById('voicePitchLabel').textContent = 'Pitch: '+pit+'×';
+
+  applyVoiceUI(vi, vf);
+  checkVoiceSupport();
+  // Sync quick settings panel if it exists
+  if(document.getElementById('qsVoiceInput')) syncQuickSettings();
+}
+
+function applyVoiceUI(inputOn, formsOn){
+  // Main chat mic
+  const chatMic = document.getElementById('chatMicBtn');
+  if(chatMic) chatMic.style.display = inputOn ? 'flex' : 'none';
+  // Inline form mics
+  document.querySelectorAll('.mic-btn-inline').forEach(b=>{
+    b.classList.toggle('hidden', !formsOn);
+  });
+}
+
+function checkVoiceSupport(){
+  const msg = document.getElementById('voiceSupportMsg');
+  const hasSpeech = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  const hasTTS    = 'speechSynthesis' in window;
+  if(!hasSpeech && !hasTTS){ msg.textContent = '⚠️ Your browser does not support voice features. Try Chrome or Safari.'; msg.style.color='var(--red)'; }
+  else if(!hasSpeech){ msg.textContent = '⚠️ Voice input not supported. Try Chrome. Voice output works fine.'; msg.style.color='var(--gold)'; }
+  else { msg.textContent = '✅ Voice features are supported on this device.'; msg.style.color='var(--green)'; }
+}
+
+// Save toggles
+['voiceInputToggle','voiceOutputToggle','voiceAutoSendToggle','voiceFormsToggle'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', e=>{
+    const key = id.replace('voice','').replace('Toggle','').toLowerCase();
+    VS.set(key === 'input' ? 'input' : key === 'output' ? 'output' : key === 'autosend' ? 'autosend' : 'forms', e.target.checked);
+    applyVoiceUI(
+      document.getElementById('voiceInputToggle').checked,
+      document.getElementById('voiceFormsToggle').checked
+    );
+    toast(e.target.checked ? '✅ Voice setting enabled' : '🔇 Voice setting disabled');
+  });
+});
+
+document.getElementById('voiceSpeedSlider').addEventListener('input', e=>{
+  VS.set('speed', e.target.value);
+  document.getElementById('voiceSpeedLabel').textContent = 'Speed: '+e.target.value+'×';
+});
+document.getElementById('voicePitchSlider').addEventListener('input', e=>{
+  VS.set('pitch', e.target.value);
+  document.getElementById('voicePitchLabel').textContent = 'Pitch: '+e.target.value+'×';
+});
+
+// ── TEXT TO SPEECH ──
+function speak(text){
+  if(!VS.get('output', false)) return;
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate  = parseFloat(VS.get('speed', 0.9));
+  utt.pitch = parseFloat(VS.get('pitch', 1.0));
+  utt.volume = 1;
+  // Prefer a natural English voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v=>v.lang.startsWith('en') && v.localService) || voices.find(v=>v.lang.startsWith('en')) || voices[0];
+  if(preferred) utt.voice = preferred;
+  window.speechSynthesis.speak(utt);
+}
+
+// Ensure voices are loaded
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = ()=>{ window.speechSynthesis.getVoices(); };
+}
+
+document.getElementById('testVoiceBtn').addEventListener('click',()=>{
+  const name = S.get('me_profile',{}).name || 'there';
+  const wasOn = VS.get('output', false);
+  // Temporarily enable for test
+  VS.set('output', true);
+  speak(`Hello ${name}! This is how I will sound when reading responses to you. You can adjust the speed and pitch above.`);
+  if(!wasOn) setTimeout(()=>VS.set('output', wasOn), 500);
+});
+
+// ── SPEECH RECOGNITION ──
+let recognition = null;
+let recognitionTarget = null; // 'chat' | input element id
+let recognitionActive = false;
+
+function buildRecognition(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.continuous = false;
+  r.interimResults = true;
+  r.lang = 'en-US';
+  return r;
+}
+
+function startVoice(targetId){
+  if(recognitionActive){ stopVoice(); return; }
+  if(!VS.get('input', false)){
+    toast('⚠️ Enable Voice Input in Me → Voice Settings first');
+    showTab('me');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){ toast('⚠️ Voice not supported in this browser. Try Chrome.'); return; }
+
+  recognition = buildRecognition();
+  recognitionTarget = targetId;
+  recognitionActive = true;
+
+  // UI feedback
+  const btn = targetId === 'chat'
+    ? document.getElementById('chatMicBtn')
+    : document.querySelector(`.mic-btn-inline[data-target="${targetId}"]`);
+  if(btn) btn.classList.add('listening');
+
+  if(targetId === 'chat'){
+    const bar = document.getElementById('voiceStatusBar');
+    bar.classList.remove('hidden');
+    document.getElementById('voiceStatusText').textContent = 'Listening…';
+  } else {
+    toast('🎙️ Listening… speak now');
+  }
+
+  let finalTranscript = '';
+
+  recognition.onresult = (e)=>{
+    let interim = '';
+    finalTranscript = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
     }
-
-    document.getElementById("savePhoneBtn").addEventListener("click", () => {
-      const raw = emPhone.value.trim();
-      if (!raw) return alert("Enter a phone number first.");
-      const ok = /^(\+)?[0-9]{7,15}$/.test(raw.replace(/\s+/g, ""));
-      if (!ok) return alert("Enter digits only (optionally start with +). Example: 12253334444");
-      S.set("em_phone", raw.replace(/\s+/g, ""));
-      refreshPhone();
-      alert("Emergency number saved.");
-    });
-
-    document.getElementById("callNowBtn").addEventListener("click", () => {
-      const saved = S.get("em_phone", "");
-      if (!saved) return alert("No emergency number saved. Add one first.");
-      window.location.href = `tel:${saved}`;
-    });
-
-    // ---------- Offline status pill ----------
-    const statusPill = document.getElementById("statusPill");
-    function refreshOnlineStatus() {
-      statusPill.textContent = (navigator.onLine ? "Online" : "Offline") + " • Local storage";
+    const display = finalTranscript || interim;
+    if(targetId === 'chat'){
+      document.getElementById('chatInput').value = display;
+      document.getElementById('voiceStatusText').textContent = display ? `"${display}"` : 'Listening…';
+    } else {
+      const el = document.getElementById(targetId);
+      if(el) el.value = display;
     }
-    window.addEventListener("online", refreshOnlineStatus);
-    window.addEventListener("offline", refreshOnlineStatus);
+  };
 
-    // ---------- Utilities ----------
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>'\"]/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"
-      }[c]));
+  recognition.onend = ()=>{
+    recognitionActive = false;
+    if(btn) btn.classList.remove('listening');
+    if(targetId === 'chat'){
+      document.getElementById('voiceStatusBar').classList.add('hidden');
+      if(finalTranscript && VS.get('autosend', false)){
+        document.getElementById('chatInput').value = finalTranscript;
+        sendChat();
+      }
+    } else {
+      if(finalTranscript) toast('✅ Text captured!');
     }
+    recognition = null;
+  };
 
-    // ---------- Home summary ----------
-    function refreshHome() {
-      const reminders = S.get("reminders", []);
-      const emPhoneVal = S.get("em_phone", "");
-      const checkins = getCheckinsV2();
+  recognition.onerror = (e)=>{
+    recognitionActive = false;
+    if(btn) btn.classList.remove('listening');
+    document.getElementById('voiceStatusBar').classList.add('hidden');
+    const msgs = {
+      'not-allowed': '⚠️ Microphone permission denied. Check browser settings.',
+      'no-speech':   '⚠️ No speech detected. Please try again.',
+      'network':     '⚠️ Network error. Check your connection.',
+    };
+    toast(msgs[e.error] || '⚠️ Voice error: '+e.error);
+    recognition = null;
+  };
 
-      const todaySummaryEl = document.getElementById("todaySummary");
-      const last = checkins[0];
+  try { recognition.start(); }
+  catch(e){ toast('⚠️ Could not start microphone: '+e.message); recognitionActive=false; }
+}
 
-      todaySummaryEl.innerHTML =
-        `<div><span class="small">Reminders saved:</span> <b>${reminders.length}</b></div>` +
-        `<div style="margin-top:6px;"><span class="small">Emergency number:</span> <b>${emPhoneVal ? emPhoneVal : "not set"}</b></div>` +
-        (last
-          ? `<div style="margin-top:6px;" class="small">Last check-in pain: <b>${escapeHtml(last.pain ?? "—")}</b>, mood: <b>${escapeHtml(last.mood || "—")}</b></div>`
-          : ``) +
-        `<div style="margin-top:10px;" class="small">Add to Home Screen: Share → Add to Home Screen.</div>`;
-    }
+function stopVoice(){
+  if(recognition){ try{recognition.stop();}catch(e){} }
+  recognitionActive = false;
+  document.getElementById('voiceStatusBar').classList.add('hidden');
+  document.getElementById('chatMicBtn')?.classList.remove('listening');
+}
 
-    // ---------- Initial render ----------
-    refreshOnlineStatus();
-    renderReminders();
-    refreshPhone();
-    renderCheckinsV2();
-    refreshLastCheckinV2();
-    refreshHome();
-  </script>
+// ── WIRE UP BUTTONS ──
+document.getElementById('chatMicBtn').addEventListener('click',()=> startVoice('chat'));
+document.getElementById('voiceStopBtn').addEventListener('click', stopVoice);
+
+// Inline mic buttons (reminder title, check-in notes, etc.)
+document.querySelectorAll('.mic-btn-inline').forEach(btn=>{
+  btn.addEventListener('click',()=> startVoice(btn.dataset.target));
+});
+
+loadVoiceSettings();
+
+// ── QUICK SETTINGS (Home page) — kept in sync with Me page toggles ──
+function syncQuickSettings(){
+  document.getElementById('qsVoiceInput').checked  = VS.get('input',   false);
+  document.getElementById('qsVoiceOutput').checked = VS.get('output',  false);
+  document.getElementById('qsAutoSend').checked    = VS.get('autosend',false);
+  document.getElementById('qsVoiceForms').checked  = VS.get('forms',   false);
+}
+
+// Map quick setting id → storage key
+const QS_MAP = {
+  qsVoiceInput:  'input',
+  qsVoiceOutput: 'output',
+  qsAutoSend:    'autosend',
+  qsVoiceForms:  'forms',
+};
+// Also mirror keys back to the Me-page toggles
+const ME_MAP = {
+  input:    'voiceInputToggle',
+  output:   'voiceOutputToggle',
+  autosend: 'voiceAutoSendToggle',
+  forms:    'voiceFormsToggle',
+};
+
+Object.entries(QS_MAP).forEach(([qsId, key])=>{
+  document.getElementById(qsId).addEventListener('change', e=>{
+    VS.set(key, e.target.checked);
+    // Sync Me-page toggle
+    const meToggle = document.getElementById(ME_MAP[key]);
+    if(meToggle) meToggle.checked = e.target.checked;
+    applyVoiceUI(
+      document.getElementById('qsVoiceInput').checked,
+      document.getElementById('qsVoiceForms').checked
+    );
+    toast(e.target.checked ? '✅ ' + qsId.replace('qs','').replace(/([A-Z])/g,' $1').trim() + ' ON'
+                           : '🔇 ' + qsId.replace('qs','').replace(/([A-Z])/g,' $1').trim() + ' OFF');
+  });
+});
+
+// Sync Me-page toggles back to Quick Settings when Me-page is changed
+['voiceInputToggle','voiceOutputToggle','voiceAutoSendToggle','voiceFormsToggle'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', syncQuickSettings);
+});
+
+document.getElementById('qsTestVoiceBtn').addEventListener('click',()=>{
+  document.getElementById('testVoiceBtn').click();
+});
+
+// ── SETTINGS DRAWER ──
+const settingsDrawer = document.getElementById('settingsDrawer');
+
+document.getElementById('openSettingsBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  syncQuickSettings();
+  settingsDrawer.classList.remove('hidden');
+});
+
+settingsDrawer.addEventListener('click', function(e){
+  if(e.target === settingsDrawer) settingsDrawer.classList.add('hidden');
+});
+document.getElementById('drawerMoreLink').addEventListener('click', ()=>{
+  settingsDrawer.classList.add('hidden');
+  showTab('me');
+  setTimeout(()=>document.getElementById('voiceSettingsCard')?.scrollIntoView({behavior:'smooth',block:'start'}), 150);
+});
+
+syncQuickSettings();
+
+// ════════════════════════════════════
+//  END VOICE ENGINE
+// ════════════════════════════════════
+renderCheckins();
+renderReminders();
+renderContacts();
+refreshHomeStats();
+refreshPhone();
+updateScore();
+loadMeProfile();
+initCaregiverPortal();
+refreshChart();
+// Request notification permission on load (gentle)
+if('Notification' in window && Notification.permission==='granted') notifGranted=true;
+</script>
 </body>
 </html>
+
