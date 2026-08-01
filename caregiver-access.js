@@ -3,6 +3,7 @@
   'use strict';
 
   const CFG_KEY = 'elderxonnect_supabase_config';
+  const PORTAL_URL = 'https://elderxonnect-pwa.vercel.app/caregiver.html';
   let client = null;
   let session = null;
 
@@ -48,6 +49,15 @@
     el.style.color = error ? '#e05252' : '';
   }
 
+  async function copyPortalLink() {
+    try {
+      await navigator.clipboard.writeText(PORTAL_URL);
+      status('✅ Caregiver portal link copied');
+    } catch {
+      window.prompt('Copy this caregiver portal link:', PORTAL_URL);
+    }
+  }
+
   async function refreshInvites() {
     await init();
     const list = document.getElementById('caregiverInviteList');
@@ -73,9 +83,13 @@
       <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)">
         <div style="font-weight:700">${esc(item.caregiver_email)}</div>
         <div class="small" style="margin-top:3px">Status: ${esc(item.status)} · Invited ${new Date(item.invited_at).toLocaleString()}</div>
-        <button class="btn ghost revokeCaregiver" data-id="${esc(item.id)}" style="margin-top:8px">Revoke Access</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <button class="btn ghost copyCaregiverLink" type="button">Copy Portal Link</button>
+          <button class="btn ghost revokeCaregiver" data-id="${esc(item.id)}" type="button">Revoke Access</button>
+        </div>
       </div>`).join('');
 
+    list.querySelectorAll('.copyCaregiverLink').forEach((button) => button.addEventListener('click', copyPortalLink));
     list.querySelectorAll('.revokeCaregiver').forEach((button) => {
       button.addEventListener('click', async () => {
         const ok = window.confirm('Revoke this caregiver’s access?');
@@ -97,18 +111,31 @@
       if (!email || !email.includes('@')) throw new Error('Enter a valid caregiver email address.');
       if (email === String(session.user.email || '').toLowerCase()) throw new Error('Use a different email for the caregiver account.');
 
-      const { error } = await client.from('caregiver_access').upsert({
+      status('Creating invitation…');
+      const { data: invitation, error } = await client.from('caregiver_access').upsert({
         elder_id: session.user.id,
         caregiver_email: email,
         caregiver_id: null,
         status: 'pending',
         accepted_at: null
-      }, { onConflict: 'elder_id,caregiver_email' });
+      }, { onConflict: 'elder_id,caregiver_email' }).select('id').single();
       if (error) throw error;
 
+      let emailSent = false;
+      try {
+        const result = await client.functions.invoke('send-caregiver-invite', {
+          body: { invitationId: invitation.id, caregiverEmail: email, portalUrl: PORTAL_URL }
+        });
+        if (result.error) throw result.error;
+        emailSent = Boolean(result.data?.sent);
+      } catch (mailError) {
+        console.warn('Invitation email function unavailable:', mailError);
+      }
+
       input.value = '';
-      const portal = `${location.origin}/caregiver.html`;
-      status(`✅ Invitation created. Send the caregiver this link: ${portal}`);
+      status(emailSent
+        ? `✅ Invitation emailed to ${email}`
+        : `✅ Invitation created for ${email}. Email delivery is not configured yet; use Copy Portal Link below.`);
       await refreshInvites();
     } catch (error) {
       status(`⚠️ ${error.message || error}`, true);
@@ -123,16 +150,18 @@
     card.id = 'caregiverAccessCard';
     card.innerHTML = `
       <div class="card-title">👥 Caregiver Access</div>
-      <div class="card-sub">Invite a caregiver to create their own account and view your shared information without using your password.</div>
+      <div class="card-sub">Invite a caregiver to use their own account for secure, read-only access.</div>
       <div class="label">Caregiver email</div>
       <input id="caregiverInviteEmail" type="email" autocomplete="email" placeholder="caregiver@example.com">
-      <div class="sp8"></div><button class="btn green" id="sendCaregiverInvite">Create Invitation</button>
+      <div class="sp8"></div><button class="btn green" id="sendCaregiverInvite" type="button">Email Invitation</button>
+      <div class="sp8"></div><button class="btn ghost" id="copyCaregiverPortal" type="button">Copy Caregiver Portal Link</button>
       <p class="small" id="caregiverAccessStatus" style="margin-top:10px"></p>
       <div class="divider"></div>
       <div class="label">Invitations and access</div>
       <div id="caregiverInviteList"><div class="small">Loading…</div></div>`;
     me.appendChild(card);
     document.getElementById('sendCaregiverInvite').addEventListener('click', sendInvite);
+    document.getElementById('copyCaregiverPortal').addEventListener('click', copyPortalLink);
     refreshInvites().catch((error) => status(`⚠️ ${error.message || error}`, true));
   }
 
