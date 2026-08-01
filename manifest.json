@@ -1,12 +1,14 @@
 {
-  "name": "ElderConnect",
-  "short_name": "ElderConnect",
+  "name": "ElderXonnect",
+  "short_name": "ElderXonnect",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#0b5fff",
+  "background_color": "#0e1a14",
+  "theme_color": "#1a6b4a",
+  "description": "Daily companion, reminders, and support for seniors.",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
