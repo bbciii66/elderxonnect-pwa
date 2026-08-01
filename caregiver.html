@@ -9,40 +9,44 @@
     :root{--bg:#0e1a14;--card:#162219;--green:#2ecc8a;--gold:#e8c97e;--text:#e8ede9;--muted:#91aa99;--line:rgba(255,255,255,.09);--red:#ff7777}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:22px 14px 40px;max-width:720px;margin:auto}
     h1{font-size:26px;margin:0 0 4px}h2{font-size:18px;margin:0 0 12px}.sub{color:var(--muted);margin:0 0 18px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:13px}
-    label{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0b1510;color:var(--text);font-size:17px}
-    button,.call{width:100%;border:0;border-radius:12px;padding:13px;font-weight:750;font-size:15px;background:var(--green);color:#071209;margin-top:10px;text-align:center;text-decoration:none;display:block}.secondary{background:#26372d;color:var(--text)}.hidden{display:none!important}
+    label{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}input,select{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0b1510;color:var(--text);font-size:17px}
+    button,.call{width:100%;border:0;border-radius:12px;padding:13px;font-weight:750;font-size:15px;background:var(--green);color:#071209;margin-top:10px;text-align:center;text-decoration:none;display:block}.secondary{background:#26372d;color:var(--text)}.gold{background:var(--gold);color:#1a1507}.hidden{display:none!important}
     .error{color:var(--red);font-size:13px;margin-top:9px}.status{color:var(--muted);font-size:13px;line-height:1.4}.row{padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.key{color:var(--muted);font-size:12px}.value{font-size:15px;margin-top:3px;white-space:pre-wrap;overflow-wrap:anywhere}.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(46,204,138,.14);color:var(--green);font-size:12px;margin-left:6px}.urgent{background:rgba(255,119,119,.14);color:var(--red)}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#101b14;border-radius:14px;padding:12px;text-align:center}.stat strong{display:block;font-size:23px}.stat span{color:var(--muted);font-size:11px}.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.updated{color:var(--muted);font-size:12px}.empty{color:var(--muted);padding:4px 0}.notice{color:var(--gold);font-size:13px;line-height:1.45}
-    @media(max-width:480px){.grid{grid-template-columns:1fr}.topline{display:block}.updated{margin-top:4px}}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#101b14;border-radius:14px;padding:12px;text-align:center}.stat strong{display:block;font-size:23px}.stat span{color:var(--muted);font-size:11px}.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.updated{color:var(--muted);font-size:12px}.empty{color:var(--muted);padding:4px 0}.notice{color:var(--gold);font-size:13px;line-height:1.45}.buttonGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media(max-width:480px){.grid,.buttonGrid{grid-template-columns:1fr}.topline{display:block}.updated{margin-top:4px}}
   </style>
 </head>
 <body>
   <h1>ElderXonnect Caregiver</h1>
-  <p class="sub">Secure, read-only cloud dashboard.</p>
+  <p class="sub">Secure, read-only access granted by the person you care for.</p>
 
   <section class="card" id="loginCard">
-    <div class="notice">Phase 1 uses the ElderXonnect account email and password. Separate caregiver invitations will be added next.</div>
-    <label for="email">Email</label><input id="email" type="email" autocomplete="email" />
+    <div class="notice">Use your own caregiver account. Do not use or share the elder’s password.</div>
+    <label for="email">Caregiver email</label><input id="email" type="email" autocomplete="email" />
     <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="8" />
-    <button id="signIn">Sign In</button>
-    <div class="error" id="error"></div>
-    <div class="status" id="loginStatus"></div>
+    <div class="buttonGrid"><button id="signIn">Sign In</button><button id="createAccount" class="secondary">Create Account</button></div>
+    <div class="error" id="error"></div><div class="status" id="loginStatus"></div>
+  </section>
+
+  <section class="card hidden" id="accessCard">
+    <h2>Caregiver Invitations</h2>
+    <div class="status" id="signedInAs"></div>
+    <div id="invitationList" style="margin-top:10px"></div>
+    <button id="signOutAccess" class="secondary">Sign Out</button>
   </section>
 
   <main id="portal" class="hidden">
     <section class="card">
       <div class="topline"><div><strong id="personName">Care Overview</strong><div class="status" id="accountEmail"></div></div><div class="updated" id="updated"></div></div>
-      <div class="grid" style="margin-top:14px">
-        <div class="stat"><strong id="checkinCount">0</strong><span>Recent check-ins</span></div>
-        <div class="stat"><strong id="reminderCount">0</strong><span>Reminders</span></div>
-        <div class="stat"><strong id="urgentCount">0</strong><span>Urgent items</span></div>
-      </div>
+      <label for="elderSelect" id="elderSelectLabel" class="hidden">Person</label><select id="elderSelect" class="hidden"></select>
+      <div class="grid" style="margin-top:14px"><div class="stat"><strong id="checkinCount">0</strong><span>Recent check-ins</span></div><div class="stat"><strong id="reminderCount">0</strong><span>Reminders</span></div><div class="stat"><strong id="urgentCount">0</strong><span>Urgent items</span></div></div>
       <button id="refresh">Refresh Cloud Data</button>
     </section>
     <section class="card"><h2>Latest Check-In</h2><div id="latestCheckin"></div></section>
     <section class="card"><h2>Reminders</h2><div id="reminders"></div></section>
     <section class="card"><h2>Medical & Profile Summary</h2><div id="profile"></div></section>
     <section class="card"><h2>Contacts</h2><div id="contacts"></div></section>
+    <button id="backToAccess" class="secondary">Caregiver Access</button>
     <button id="signOut" class="secondary">Sign Out</button>
   </main>
 
@@ -50,78 +54,26 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const CFG_KEY='elderxonnect_supabase_config';
-    const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
     const row=(k,v)=>`<div class="row"><div class="key">${esc(k)}</div><div class="value">${esc(v||'—')}</div></div>`;
     const cfg=()=>{try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch{return {}}};
-    let client=null,session=null;
-
-    function showError(err){document.getElementById('error').textContent=err?.message||String(err)}
-    async function init(){
-      const c=cfg();
-      if(!c.url||!c.key) throw new Error('Cloud configuration is unavailable. Reload the page and try again.');
-      client=supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true}});
-      const result=await client.auth.getSession();
-      session=result.data.session;
-      if(session) await openPortal();
-    }
-    async function signIn(){
-      try{
-        showError('');
-        document.getElementById('loginStatus').textContent='Signing in…';
-        const email=document.getElementById('email').value.trim();
-        const password=document.getElementById('password').value;
-        if(!email||password.length<8) throw new Error('Enter the account email and password.');
-        const result=await client.auth.signInWithPassword({email,password});
-        if(result.error) throw result.error;
-        session=result.data.session;
-        await openPortal();
-      }catch(e){document.getElementById('loginStatus').textContent='';showError(e)}
-    }
-    async function openPortal(){
-      document.getElementById('loginCard').classList.add('hidden');
-      document.getElementById('portal').classList.remove('hidden');
-      document.getElementById('accountEmail').textContent=session.user.email;
-      await loadDashboard();
-    }
-    async function query(table,select='*',options={}){
-      let q=client.from(table).select(select);
-      if(options.order) q=q.order(options.order,{ascending:options.ascending??false});
-      if(options.limit) q=q.limit(options.limit);
-      const r=await q;if(r.error) throw r.error;return r.data;
-    }
-    async function loadDashboard(){
-      const refresh=document.getElementById('refresh');
-      refresh.disabled=true;refresh.textContent='Refreshing…';
-      try{
-        const [profiles,checkins,reminders,contacts]=await Promise.all([
-          query('profiles','profile_data'),query('checkins','*',{order:'occurred_at',limit:14}),query('reminders','*',{order:'created_at',ascending:true}),query('contacts','*',{order:'created_at',ascending:true})
-        ]);
-        const p=profiles?.[0]?.profile_data||{};
-        document.getElementById('personName').textContent=p.name?`${p.name} — Care Overview`:'Care Overview';
-        document.getElementById('checkinCount').textContent=checkins.length;
-        document.getElementById('reminderCount').textContent=reminders.length;
-        document.getElementById('urgentCount').textContent=reminders.filter(r=>r.urgent).length;
-        document.getElementById('updated').textContent=`Updated ${new Date().toLocaleString()}`;
-        renderLatest(checkins[0]);renderReminders(reminders);renderProfile(p);renderContacts(contacts);
-      }catch(e){alert(`Could not load caregiver data: ${e.message||e}`)}finally{refresh.disabled=false;refresh.textContent='Refresh Cloud Data'}
-    }
-    function renderLatest(c){
-      document.getElementById('latestCheckin').innerHTML=c?`<div class="row"><div><strong>${esc(c.mood||'—')}</strong><span class="badge">Pain ${Number(c.pain||0)}/10</span></div><div class="key">${new Date(c.occurred_at).toLocaleString()}</div><div class="value">${esc(c.notes||'No notes')}</div></div>`:'<div class="empty">No check-ins have been recorded.</div>';
-    }
-    function renderReminders(items){
-      document.getElementById('reminders').innerHTML=items.length?items.map(r=>`<div class="row"><div><strong>${esc(r.category||'⭐')} ${esc(r.title)}</strong>${r.urgent?'<span class="badge urgent">Urgent</span>':''}</div><div class="key">${esc(r.reminder_time?.slice(0,5)||'No time set')}</div></div>`).join(''):'<div class="empty">No reminders are saved.</div>';
-    }
-    function renderProfile(p){
-      document.getElementById('profile').innerHTML=[row('Name',p.name),row('Date of birth',p.dob),row('Blood type',p.blood),row('Allergies',p.allergies),row('Medical conditions',p.conditions),row('Doctor',p.doctor),row('Doctor phone',p.doctorPhone),row('Home address',p.homeAddr),row('Primary caregiver',p.caregiverName),row('Caregiver phone',p.caregiverPhone)].join('');
-    }
-    function renderContacts(items){
-      document.getElementById('contacts').innerHTML=items.length?items.map(c=>`<div class="row"><strong>${esc(c.name)}</strong><div class="key">${esc(c.relationship||'Contact')}</div><div class="value">${esc(c.phone||'No phone')}</div>${c.phone?`<a class="call" href="tel:${esc(c.phone)}">Call ${esc(c.name)}</a>`:''}</div>`).join(''):'<div class="empty">No contacts are saved.</div>';
-    }
-    document.getElementById('signIn').onclick=signIn;
-    document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')signIn()});
-    document.getElementById('refresh').onclick=loadDashboard;
-    document.getElementById('signOut').onclick=async()=>{await client.auth.signOut();session=null;document.getElementById('portal').classList.add('hidden');document.getElementById('loginCard').classList.remove('hidden');document.getElementById('password').value='';document.getElementById('loginStatus').textContent='Signed out.'};
-    init().catch(showError);
+    let client=null,session=null,activeAccess=[],selectedElder=null;
+    const byId=(id)=>document.getElementById(id);
+    function showError(err){byId('error').textContent=err?.message||String(err||'')}
+    async function init(){const c=cfg();if(!c.url||!c.key)throw new Error('Cloud configuration is unavailable. Reload and try again.');client=supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true}});const result=await client.auth.getSession();session=result.data.session;if(session)await showAccess();}
+    async function auth(mode){try{showError('');byId('loginStatus').textContent=mode==='signup'?'Creating account…':'Signing in…';const email=byId('email').value.trim(),password=byId('password').value;if(!email||password.length<8)throw new Error('Enter an email and password of at least 8 characters.');const result=mode==='signup'?await client.auth.signUp({email,password}):await client.auth.signInWithPassword({email,password});if(result.error)throw result.error;session=result.data.session;if(!session){byId('loginStatus').textContent='Check your email to confirm the new caregiver account, then return here and sign in.';return;}await showAccess();}catch(e){byId('loginStatus').textContent='';showError(e)}}
+    async function showAccess(){byId('loginCard').classList.add('hidden');byId('portal').classList.add('hidden');byId('accessCard').classList.remove('hidden');byId('signedInAs').textContent=`Signed in as ${session.user.email}`;await loadInvitations();}
+    async function loadInvitations(){const r=await client.from('caregiver_access').select('id,elder_id,caregiver_email,status,invited_at,accepted_at').order('invited_at',{ascending:false});if(r.error)throw r.error;const items=r.data||[],pending=items.filter(x=>x.status==='pending'),active=items.filter(x=>x.status==='active'&&x.caregiver_id!==null);activeAccess=active;const parts=[];pending.forEach(x=>parts.push(`<div class="row"><strong>Invitation waiting</strong><div class="key">Created ${new Date(x.invited_at).toLocaleString()}</div><button class="acceptInvite gold" data-id="${esc(x.id)}">Accept Invitation</button></div>`));active.forEach(x=>parts.push(`<div class="row"><strong>Active access</strong><span class="badge">Read only</span><div class="key">Accepted ${x.accepted_at?new Date(x.accepted_at).toLocaleString():'recently'}</div><button class="openElder" data-elder="${esc(x.elder_id)}">Open Care Dashboard</button></div>`));byId('invitationList').innerHTML=parts.join('')||'<div class="empty">No caregiver invitation is linked to this email address.</div>';document.querySelectorAll('.acceptInvite').forEach(b=>b.onclick=()=>acceptInvite(b.dataset.id));document.querySelectorAll('.openElder').forEach(b=>b.onclick=()=>openDashboard(b.dataset.elder));}
+    async function acceptInvite(id){try{const r=await client.rpc('accept_caregiver_invitation',{invitation_id:id});if(r.error)throw r.error;await loadInvitations();}catch(e){alert(e.message||e)}}
+    async function openDashboard(elderId){selectedElder=elderId;byId('accessCard').classList.add('hidden');byId('portal').classList.remove('hidden');byId('accountEmail').textContent=`Caregiver: ${session.user.email}`;if(activeAccess.length>1){byId('elderSelectLabel').classList.remove('hidden');byId('elderSelect').classList.remove('hidden');byId('elderSelect').innerHTML=activeAccess.map(x=>`<option value="${esc(x.elder_id)}">Shared person ${esc(x.elder_id.slice(0,8))}</option>`).join('');byId('elderSelect').value=elderId;}await loadDashboard();}
+    async function query(table,select='*',options={}){let q=client.from(table).select(select).eq('user_id',selectedElder);if(options.order)q=q.order(options.order,{ascending:options.ascending??false});if(options.limit)q=q.limit(options.limit);const r=await q;if(r.error)throw r.error;return r.data;}
+    async function loadDashboard(){const refresh=byId('refresh');refresh.disabled=true;refresh.textContent='Refreshing…';try{const [profiles,checkins,reminders,contacts]=await Promise.all([query('profiles','profile_data,user_id'),query('checkins','*',{order:'occurred_at',limit:14}),query('reminders','*',{order:'created_at',ascending:true}),query('contacts','*',{order:'created_at',ascending:true})]);const p=profiles?.[0]?.profile_data||{};byId('personName').textContent=p.name?`${p.name} — Care Overview`:'Care Overview';byId('checkinCount').textContent=checkins.length;byId('reminderCount').textContent=reminders.length;byId('urgentCount').textContent=reminders.filter(r=>r.urgent).length;byId('updated').textContent=`Updated ${new Date().toLocaleString()}`;renderLatest(checkins[0]);renderReminders(reminders);renderProfile(p);renderContacts(contacts);}catch(e){alert(`Could not load caregiver data: ${e.message||e}`)}finally{refresh.disabled=false;refresh.textContent='Refresh Cloud Data'}}
+    function renderLatest(c){byId('latestCheckin').innerHTML=c?`<div class="row"><div><strong>${esc(c.mood||'—')}</strong><span class="badge">Pain ${Number(c.pain||0)}/10</span></div><div class="key">${new Date(c.occurred_at).toLocaleString()}</div><div class="value">${esc(c.notes||'No notes')}</div></div>`:'<div class="empty">No check-ins have been recorded.</div>'}
+    function renderReminders(items){byId('reminders').innerHTML=items.length?items.map(r=>`<div class="row"><div><strong>${esc(r.category||'⭐')} ${esc(r.title)}</strong>${r.urgent?'<span class="badge urgent">Urgent</span>':''}</div><div class="key">${esc(r.reminder_time?.slice(0,5)||'No time set')}</div></div>`).join(''):'<div class="empty">No reminders are saved.</div>'}
+    function renderProfile(p){byId('profile').innerHTML=[row('Name',p.name),row('Date of birth',p.dob),row('Blood type',p.blood),row('Allergies',p.allergies),row('Medical conditions',p.conditions),row('Doctor',p.doctor),row('Doctor phone',p.doctorPhone),row('Home address',p.homeAddr),row('Primary caregiver',p.caregiverName),row('Caregiver phone',p.caregiverPhone)].join('')}
+    function renderContacts(items){byId('contacts').innerHTML=items.length?items.map(c=>`<div class="row"><strong>${esc(c.name)}</strong><div class="key">${esc(c.relationship||'Contact')}</div><div class="value">${esc(c.phone||'No phone')}</div>${c.phone?`<a class="call" href="tel:${esc(c.phone)}">Call ${esc(c.name)}</a>`:''}</div>`).join(''):'<div class="empty">No contacts are saved.</div>'}
+    async function signOut(){await client.auth.signOut();session=null;selectedElder=null;byId('portal').classList.add('hidden');byId('accessCard').classList.add('hidden');byId('loginCard').classList.remove('hidden');byId('password').value='';byId('loginStatus').textContent='Signed out.'}
+    byId('signIn').onclick=()=>auth('signin');byId('createAccount').onclick=()=>auth('signup');byId('password').addEventListener('keydown',e=>{if(e.key==='Enter')auth('signin')});byId('refresh').onclick=loadDashboard;byId('backToAccess').onclick=showAccess;byId('signOut').onclick=signOut;byId('signOutAccess').onclick=signOut;byId('elderSelect').onchange=e=>openDashboard(e.target.value);init().catch(showError);
   </script>
 </body>
 </html>
