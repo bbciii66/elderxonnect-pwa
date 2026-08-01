@@ -112,6 +112,17 @@
     status.insertAdjacentElement('afterend', warning);
   }
 
+  // Fill the caregiver portal address from the currently deployed site.
+  function refreshCaregiverUrl() {
+    const urlEl = document.getElementById('caregiverPortalUrl');
+    if (!urlEl) return;
+    const base = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')}`;
+    const portalUrl = `${base}caregiver.html`;
+    urlEl.textContent = portalUrl;
+    urlEl.title = portalUrl;
+  }
+  refreshCaregiverUrl();
+
   // Prevent unbounded legacy fired_* entries from accumulating.
   try {
     const cutoff = Date.now() - (3 * 24 * 60 * 60 * 1000);
@@ -126,6 +137,7 @@
   }
 
   window.addEventListener('load', async () => {
+    refreshCaregiverUrl();
     if (!('serviceWorker' in navigator)) return;
     try {
       await navigator.serviceWorker.ready;
