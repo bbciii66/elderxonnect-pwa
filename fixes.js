@@ -2,6 +2,11 @@
 (() => {
   'use strict';
 
+  const readStore = (key, fallback) => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch { return fallback; }
+  };
+
   const localDateKey = (value) => {
     const d = value instanceof Date ? value : new Date(value);
     return [
@@ -27,9 +32,9 @@
   };
 
   window.buildChartData = function buildChartDataFixed() {
-    const checkins = window.S?.get('checkins_v2', []) || [];
+    const checkins = readStore('checkins_v2', []);
     const days = window.getLast14Days();
-    const moodScores = window.MOOD_SCORES || { Great: 5, Good: 4, OK: 3, Tired: 2, Low: 1, Anxious: 1 };
+    const moodScores = { Great: 5, Good: 4, OK: 3, Tired: 2, Low: 1, Anxious: 1 };
     const moodData = [];
     const painData = [];
 
@@ -69,10 +74,6 @@
 
     document.getElementById('urgentDismiss')?.addEventListener('click', () => {
       activeAlertKey = '';
-      if (window.urgentEscalationTimers) {
-        Object.values(window.urgentEscalationTimers).forEach((timer) => clearTimeout(timer));
-        Object.keys(window.urgentEscalationTimers).forEach((key) => delete window.urgentEscalationTimers[key]);
-      }
     });
   }
 
@@ -102,8 +103,9 @@
 
   // Make the limitations of browser-only reminders explicit.
   const status = document.getElementById('notifPermStatus');
-  if (status) {
+  if (status && !document.getElementById('backgroundReminderWarning')) {
     const warning = document.createElement('div');
+    warning.id = 'backgroundReminderWarning';
     warning.style.marginTop = '6px';
     warning.style.color = 'var(--gold)';
     warning.textContent = 'Reminder alerts require ElderXonnect to remain open or active. Background delivery is not yet guaranteed.';
@@ -123,7 +125,6 @@
     console.warn('Unable to clean old reminder flags:', error);
   }
 
-  // Report service-worker failures instead of silently hiding them.
   window.addEventListener('load', async () => {
     if (!('serviceWorker' in navigator)) return;
     try {
