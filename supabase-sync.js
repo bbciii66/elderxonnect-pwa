@@ -4,11 +4,14 @@
 
   const CFG_KEY = 'elderxonnect_supabase_config';
   const ID_KEY = 'elderxonnect_device_id';
+  const LAST_SYNC_KEY = 'elderxonnect_last_sync';
+  const READY_PREFIX = 'elderxonnect_cloud_ready_';
   const SYNC_KEYS = ['checkins_v2', 'reminders', 'contacts', 'me_profile'];
   let client = null;
   let session = null;
   let syncing = false;
   let saveTimer = null;
+  let watching = false;
 
   const parse = (key, fallback) => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -16,6 +19,9 @@
   };
   const store = (key, value) => localStorage.setItem(key, JSON.stringify(value));
   const uid = () => session?.user?.id || null;
+  const readyKey = () => `${READY_PREFIX}${uid() || 'signed-out'}`;
+  const isReady = () => Boolean(uid() && localStorage.getItem(readyKey()) === 'true');
+  const markReady = () => { if (uid()) localStorage.setItem(readyKey(), 'true'); };
   const deviceId = (() => {
     let value = localStorage.getItem(ID_KEY);
     if (!value) {
@@ -55,9 +61,10 @@
     const { data } = await client.auth.getSession();
     session = data.session;
     client.auth.onAuthStateChange((_event, nextSession) => {
+      const wasSignedOut = !session;
       session = nextSession;
       updateStatus();
-      if (session) pullAll().catch(reportError);
+      if (session && wasSignedOut) firstDeviceLoad().catch(reportError);
     });
     updateStatus();
     return client;
@@ -83,15 +90,43 @@
     });
   }
 
-  async function pushAll() {
+  function noteSync(message) {
+    const stamp = new Date().toISOString();
+    localStorage.setItem(LAST_SYNC_KEY, stamp);
+    updateStatus(message);
+  }
+
+  function hasMeaningfulProfile(profile) {
+    if (!profile || typeof profile !== 'object') return false;
+    return Object.values(profile).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (value && typeof value === 'object') return Object.keys(value).length > 0;
+      return String(value ?? '').trim().length > 0;
+    });
+  }
+
+  function hasLocalData() {
+    return hasMeaningfulProfile(parse('me_profile', {})) ||
+      parse('checkins_v2', []).length > 0 ||
+      parse('reminders', []).length > 0 ||
+      parse('contacts', []).length > 0;
+  }
+
+  async function pushAll({ force = false } = {}) {
     if (!client || !uid() || syncing) return;
+    if (!force && !isReady()) {
+      updateStatus('Cloud data must be loaded before this device can upload');
+      return;
+    }
     syncing = true;
-    updateStatus('Syncing…');
+    updateStatus('Uploading this device…');
     try {
       ensureIds();
       const userId = uid();
       const profile = parse('me_profile', {});
-      await throwIfError(client.from('profiles').upsert({ user_id: userId, profile_data: profile }, { onConflict: 'user_id' }));
+      if (force || hasMeaningfulProfile(profile)) {
+        await throwIfError(client.from('profiles').upsert({ user_id: userId, profile_data: profile }, { onConflict: 'user_id' }));
+      }
 
       const checkins = parse('checkins_v2', []).map((x, i) => ({
         user_id: userId, client_id: clientId('checkin', x, i), occurred_at: new Date(x.ts || Date.now()).toISOString(),
@@ -111,7 +146,8 @@
         relationship: x.rel || 'Other', created_at: new Date(x.created || Date.now()).toISOString()
       }));
       if (contacts.length) await throwIfError(client.from('contacts').upsert(contacts, { onConflict: 'user_id,client_id' }));
-      updateStatus('✅ Cloud sync complete');
+      markReady();
+      noteSync('✅ This device uploaded to cloud');
     } finally {
       syncing = false;
     }
@@ -137,23 +173,33 @@
       ]);
 
       if (profile?.profile_data) store('me_profile', profile.profile_data);
-      if (checkins?.length) store('checkins_v2', checkins.map(x => ({ clientId:x.client_id, ts:new Date(x.occurred_at).getTime(), mood:x.mood, pain:x.pain, notes:x.notes })));
-      if (reminders?.length) store('reminders', reminders.map(x => ({ clientId:x.client_id, title:x.title, time:x.reminder_time?.slice(0,5) || '', cat:x.category, urgent:x.urgent, created:new Date(x.created_at).getTime() })));
-      if (contacts?.length) store('contacts', contacts.map(x => ({ clientId:x.client_id, name:x.name, phone:x.phone, rel:x.relationship, created:new Date(x.created_at).getTime() })));
+      if (checkins) store('checkins_v2', checkins.map(x => ({ clientId:x.client_id, ts:new Date(x.occurred_at).getTime(), mood:x.mood, pain:x.pain, notes:x.notes })));
+      if (reminders) store('reminders', reminders.map(x => ({ clientId:x.client_id, title:x.title, time:x.reminder_time?.slice(0,5) || '', cat:x.category, urgent:x.urgent, created:new Date(x.created_at).getTime() })));
+      if (contacts) store('contacts', contacts.map(x => ({ clientId:x.client_id, name:x.name, phone:x.phone, rel:x.relationship, created:new Date(x.created_at).getTime() })));
 
+      markReady();
       window.renderCheckins?.(); window.renderReminders?.(); window.renderContacts?.();
       window.refreshHomeStats?.(); window.loadMeProfile?.(); window.refreshChart?.();
-      updateStatus('✅ Cloud data loaded');
+      noteSync('✅ Cloud data loaded safely');
     } finally { syncing = false; }
   }
 
+  async function firstDeviceLoad() {
+    if (!session || isReady()) return;
+    const localDataExisted = hasLocalData();
+    await pullAll();
+    if (localDataExisted) updateStatus('✅ Cloud data loaded first — use “Upload This Device” only if its older local data should replace cloud data');
+  }
+
   function schedulePush() {
-    if (!uid()) return;
+    if (!uid() || !isReady() || syncing) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => pushAll().catch(reportError), 700);
   }
 
   function watchLocalChanges() {
+    if (watching) return;
+    watching = true;
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function patchedSetItem(key, value) {
       original.call(this, key, value);
@@ -161,13 +207,20 @@
     };
   }
 
+  function formatLastSync() {
+    const value = localStorage.getItem(LAST_SYNC_KEY);
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : ` · Last synced ${date.toLocaleString()}`;
+  }
+
   function updateStatus(message) {
     const el = document.getElementById('cloudStatus');
     if (!el) return;
-    if (message) { el.textContent = message; return; }
+    if (message) { el.textContent = `${message}${formatLastSync()}`; return; }
     if (!configured()) el.textContent = 'Not configured';
     else if (!session) el.textContent = 'Configured — sign in to sync';
-    else el.textContent = `✅ Signed in as ${session.user.email}`;
+    else el.textContent = `✅ Signed in as ${session.user.email}${formatLastSync()}`;
   }
 
   function addPanel() {
@@ -190,6 +243,9 @@
         <button class="btn green" id="cloudSignIn">Sign In</button><button class="btn ghost" id="cloudSignUp">Create Account</button>
       </div>
       <div class="sp8"></div><button class="btn gold" id="cloudSyncNow">Sync Now</button>
+      <div class="sp8"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn ghost" id="cloudUseCloud">Use Cloud Data</button><button class="btn ghost" id="cloudUploadDevice">Upload This Device</button>
+      </div>
       <div class="sp8"></div><button class="btn ghost" id="cloudSignOut">Sign Out</button>
       <p class="small" id="cloudStatus" style="margin-top:10px"></p>`;
     me.appendChild(card);
@@ -204,7 +260,26 @@
     document.getElementById('cloudSignIn').onclick = () => authAction('signin');
     document.getElementById('cloudSignUp').onclick = () => authAction('signup');
     document.getElementById('cloudSignOut').onclick = async () => { if (client) await client.auth.signOut(); session = null; updateStatus(); };
-    document.getElementById('cloudSyncNow').onclick = async () => { await initClient(); if (!session) throw new Error('Sign in first'); await pushAll(); await pullAll(); };
+    document.getElementById('cloudSyncNow').onclick = async () => {
+      try {
+        await initClient();
+        if (!session) throw new Error('Sign in first');
+        if (!isReady()) await pullAll();
+        else { await pushAll(); await pullAll(); }
+      } catch (error) { reportError(error); }
+    };
+    document.getElementById('cloudUseCloud').onclick = async () => {
+      try { await initClient(); if (!session) throw new Error('Sign in first'); await pullAll(); }
+      catch (error) { reportError(error); }
+    };
+    document.getElementById('cloudUploadDevice').onclick = async () => {
+      try {
+        await initClient();
+        if (!session) throw new Error('Sign in first');
+        const ok = window.confirm('Upload this device to the cloud? This can replace the cloud profile with this device’s profile.');
+        if (ok) await pushAll({ force: true });
+      } catch (error) { reportError(error); }
+    };
     updateStatus();
   }
 
@@ -221,7 +296,7 @@
       if (result.error) throw result.error;
       session = result.data.session;
       updateStatus(type === 'signup' && !session ? 'Check your email to confirm the account' : '✅ Signed in');
-      if (session) { await pushAll(); await pullAll(); }
+      if (session) await firstDeviceLoad();
     } catch (error) { reportError(error); }
   }
 
@@ -231,8 +306,13 @@
 
   async function boot() {
     addPanel(); watchLocalChanges();
-    try { await initClient(); if (session) await pullAll(); }
-    catch (error) { reportError(error); }
+    try {
+      await initClient();
+      if (session) {
+        if (!isReady()) await firstDeviceLoad();
+        else updateStatus();
+      }
+    } catch (error) { reportError(error); }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
