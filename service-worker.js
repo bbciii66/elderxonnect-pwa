@@ -1,7 +1,8 @@
-const CACHE_NAME = "elderxonnect-v2";
+const CACHE_NAME = "elderxonnect-v3";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
+  "/supabase-sync.js",
   "/caregiver.html"
 ];
 
@@ -21,27 +22,22 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-async function injectRuntimeFixes(response) {
+async function injectRuntimeScripts(response) {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
 
-  const html = await response.text();
-  if (html.includes('src="/fixes.js"')) {
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
-  }
+  let html = await response.text();
+  const scripts = ["/fixes.js", "/supabase-sync.js"];
+  const tags = scripts
+    .filter((src) => !html.includes(`src="${src}"`))
+    .map((src) => `<script src="${src}" defer></script>`)
+    .join("\n");
 
-  const patched = html.replace(
-    "</body>",
-    '<script src="/fixes.js" defer></script>\n</body>'
-  );
+  if (tags) html = html.replace("</body>", `${tags}\n</body>`);
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
-  return new Response(patched, {
+  return new Response(html, {
     status: response.status,
     statusText: response.statusText,
     headers
@@ -58,10 +54,10 @@ self.addEventListener("fetch", (event) => {
         const networkResponse = await fetch(request, { cache: "no-store" });
         const cache = await caches.open(CACHE_NAME);
         cache.put("/index.html", networkResponse.clone());
-        return injectRuntimeFixes(networkResponse);
+        return injectRuntimeScripts(networkResponse);
       } catch (error) {
         const cached = await caches.match("/index.html") || await caches.match("/");
-        if (cached) return injectRuntimeFixes(cached);
+        if (cached) return injectRuntimeScripts(cached);
         throw error;
       }
     })());
