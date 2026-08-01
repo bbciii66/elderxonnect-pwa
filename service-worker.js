@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v5";
+const CACHE_NAME = "elderxonnect-v6";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
