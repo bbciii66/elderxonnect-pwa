@@ -1,7 +1,8 @@
-const CACHE_NAME = "elderxonnect-v3";
+const CACHE_NAME = "elderxonnect-v4";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
+  "/supabase-config.js",
   "/supabase-sync.js",
   "/caregiver.html"
 ];
@@ -27,7 +28,7 @@ async function injectRuntimeScripts(response) {
   if (!contentType.includes("text/html")) return response;
 
   let html = await response.text();
-  const scripts = ["/fixes.js", "/supabase-sync.js"];
+  const scripts = ["/fixes.js", "/supabase-config.js", "/supabase-sync.js"];
   const tags = scripts
     .filter((src) => !html.includes(`src="${src}"`))
     .map((src) => `<script src="${src}" defer></script>`)
