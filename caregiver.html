@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1a6b4a" />
+  <title>ElderXonnect Caregiver Portal</title>
+  <style>
+    :root{--bg:#0e1a14;--card:#162219;--green:#2ecc8a;--gold:#e8c97e;--text:#e8ede9;--muted:#7a9b86;--line:rgba(255,255,255,.09);--red:#e05252}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:24px 14px;max-width:620px;margin:auto}
+    h1{font-size:25px;margin:0 0 5px}.sub{color:var(--muted);margin:0 0 20px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+    label{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0b1510;color:var(--text);font-size:18px}
+    button{width:100%;border:0;border-radius:12px;padding:14px;font-weight:700;font-size:16px;background:var(--green);color:#071209;margin-top:10px}.hidden{display:none!important}.error{color:var(--red);font-size:13px;margin-top:8px}.row{padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.key{color:var(--muted);font-size:12px}.value{font-size:15px;margin-top:3px;white-space:pre-wrap}.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(46,204,138,.14);color:var(--green);font-size:12px;margin-left:6px}.warning{color:var(--gold);font-size:13px;line-height:1.45}
+  </style>
+</head>
+<body>
+  <h1>ElderXonnect Caregiver Portal</h1>
+  <p class="sub">View the profile and recent activity saved on this device.</p>
+
+  <section class="card" id="loginCard">
+    <label for="pin">Caregiver PIN</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" />
+    <button id="unlockBtn">Unlock</button>
+    <div class="error" id="error"></div>
+  </section>
+
+  <main id="portal" class="hidden">
+    <section class="card">
+      <div class="warning">This portal reads data stored in this browser only. It is not a remote caregiver dashboard and does not sync between devices.</div>
+    </section>
+    <section class="card"><h2>Profile</h2><div id="profile"></div></section>
+    <section class="card"><h2>Recent Check-Ins</h2><div id="checkins"></div></section>
+    <section class="card"><h2>Reminders</h2><div id="reminders"></div></section>
+    <button id="lockBtn" style="background:#26372d;color:var(--text)">Lock Portal</button>
+  </main>
+
+<script>
+const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+const esc=(value)=>String(value??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const row=(key,value)=>`<div class="row"><div class="key">${esc(key)}</div><div class="value">${esc(value||'—')}</div></div>`;
+function render(){
+  const p=read('me_profile',{}), checkins=read('checkins_v2',[]), reminders=read('reminders',[]);
+  document.getElementById('profile').innerHTML=[
+    row('Name',p.name),row('Date of birth',p.dob),row('Blood type',p.blood),row('Home address',p.homeAddr),row('Mailing address',p.mailAddr||p.homeAddr),row('Allergies',p.allergies),row('Medical conditions',p.conditions),row('Doctor',p.doctor),row('Doctor phone',p.doctorPhone),row('Primary caregiver',p.caregiverName),row('Caregiver phone',p.caregiverPhone),row('Family members',p.familyList)
+  ].join('');
+  document.getElementById('checkins').innerHTML=checkins.length?checkins.slice(0,14).map(c=>`<div class="row"><div><strong>${esc(c.mood||'—')}</strong><span class="badge">Pain ${Number(c.pain||0)}/10</span></div><div class="key">${new Date(c.ts).toLocaleString()}</div><div class="value">${esc(c.notes||'')}</div></div>`).join(''):'<div class="value">No check-ins saved.</div>';
+  document.getElementById('reminders').innerHTML=reminders.length?reminders.map(r=>`<div class="row"><div><strong>${esc(r.cat||'')} ${esc(r.title)}</strong>${r.urgent?'<span class="badge">Urgent</span>':''}</div><div class="key">${esc(r.time||'No time set')}</div></div>`).join(''):'<div class="value">No reminders saved.</div>';
+}
+function unlock(){
+  const profile=read('me_profile',{}), entered=document.getElementById('pin').value.trim();
+  if(!profile.caregiverPin){document.getElementById('error').textContent='No caregiver PIN has been set in the main app.';return;}
+  if(entered!==String(profile.caregiverPin)){document.getElementById('error').textContent='Incorrect PIN.';return;}
+  document.getElementById('error').textContent='';document.getElementById('loginCard').classList.add('hidden');document.getElementById('portal').classList.remove('hidden');render();
+}
+document.getElementById('unlockBtn').addEventListener('click',unlock);
+document.getElementById('pin').addEventListener('keydown',(e)=>{if(e.key==='Enter')unlock()});
+document.getElementById('lockBtn').addEventListener('click',()=>{document.getElementById('portal').classList.add('hidden');document.getElementById('loginCard').classList.remove('hidden');document.getElementById('pin').value=''});
+</script>
+</body>
+</html>
