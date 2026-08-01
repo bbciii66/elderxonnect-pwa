@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v6";
+const CACHE_NAME = "elderxonnect-v7";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -54,10 +54,11 @@ self.addEventListener("fetch", (event) => {
       try {
         const networkResponse = await fetch(request, { cache: "no-store" });
         const cache = await caches.open(CACHE_NAME);
-        cache.put("/index.html", networkResponse.clone());
+        cache.put(url.pathname === "/caregiver.html" ? "/caregiver.html" : "/index.html", networkResponse.clone());
         return injectRuntimeScripts(networkResponse);
       } catch (error) {
-        const cached = await caches.match("/index.html") || await caches.match("/");
+        const fallbackPath = url.pathname === "/caregiver.html" ? "/caregiver.html" : "/index.html";
+        const cached = await caches.match(fallbackPath) || await caches.match("/");
         if (cached) return injectRuntimeScripts(cached);
         throw error;
       }
