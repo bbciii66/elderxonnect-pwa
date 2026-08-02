@@ -1,12 +1,12 @@
-const CACHE_NAME = "elderxonnect-v26";
+const CACHE_NAME = "elderxonnect-v27";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
   "/supabase-config.js",
+  "/safe-cloud-reconcile.js",
   "/supabase-sync.js",
   "/recipient-account-restore.js",
   "/profile-name-backfill.js",
-  "/profile-name-publisher.js",
   "/profile-display-refresh.js",
   "/care-recipient-display-name-sync.js",
   "/care-recipient-profile-snapshot-sync.js",
@@ -67,10 +67,10 @@ function enhanceResponse(response, pathname) {
   return injectScripts(response, [
     "/fixes.js",
     "/supabase-config.js",
+    "/safe-cloud-reconcile.js",
     "/supabase-sync.js",
     "/recipient-account-restore.js",
     "/profile-name-backfill.js",
-    "/profile-name-publisher.js",
     "/profile-display-refresh.js",
     "/care-recipient-display-name-sync.js",
     "/care-recipient-profile-snapshot-sync.js",
