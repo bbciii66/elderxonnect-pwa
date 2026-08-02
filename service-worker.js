@@ -1,9 +1,10 @@
-const CACHE_NAME = "elderxonnect-v24";
+const CACHE_NAME = "elderxonnect-v25";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
   "/supabase-config.js",
   "/supabase-sync.js",
+  "/recipient-account-restore.js",
   "/profile-name-backfill.js",
   "/profile-name-publisher.js",
   "/profile-display-refresh.js",
@@ -67,6 +68,7 @@ function enhanceResponse(response, pathname) {
     "/fixes.js",
     "/supabase-config.js",
     "/supabase-sync.js",
+    "/recipient-account-restore.js",
     "/profile-name-backfill.js",
     "/profile-name-publisher.js",
     "/profile-display-refresh.js",
