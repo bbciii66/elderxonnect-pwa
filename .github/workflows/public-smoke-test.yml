@@ -1,0 +1,42 @@
+name: Public smoke test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Wait for Vercel and verify public app files
+        shell: bash
+        env:
+          APP_URL: https://elderxonnect-pwa.vercel.app
+        run: |
+          set -u
+          for attempt in $(seq 1 36); do
+            echo "Smoke-test attempt ${attempt}/36"
+
+            root="$(curl -fsS -H 'Cache-Control: no-cache' "${APP_URL}/?build=${GITHUB_SHA}" 2>/dev/null || true)"
+            caregiver="$(curl -fsS -H 'Cache-Control: no-cache' "${APP_URL}/caregiver.html?build=${GITHUB_SHA}" 2>/dev/null || true)"
+            router="$(curl -fsS -H 'Cache-Control: no-cache' "${APP_URL}/role-router.js?build=${GITHUB_SHA}" 2>/dev/null || true)"
+            care_list="$(curl -fsS -H 'Cache-Control: no-cache' "${APP_URL}/caregiver-care-list.js?build=${GITHUB_SHA}" 2>/dev/null || true)"
+
+            if grep -q 'ElderXonnect' <<<"${root}" \
+              && grep -q 'ElderXonnect Caregiver Portal' <<<"${caregiver}" \
+              && grep -q 'Manage My Care' <<<"${router}" \
+              && grep -q 'My Care List' <<<"${care_list}"; then
+              echo 'Public ElderXonnect smoke test passed.'
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo 'Vercel deployment did not pass the public smoke test within six minutes.' >&2
+          exit 1
