@@ -2,6 +2,9 @@
 -- The recipient can update only records where they are the elder_id.
 
 alter table public.caregiver_access
+add column if not exists recipient_display_name text;
+
+alter table public.caregiver_access
 add column if not exists recipient_profile jsonb not null default '{}'::jsonb;
 
 -- Backfill existing caregiver links from the recipient's current cloud profile.
