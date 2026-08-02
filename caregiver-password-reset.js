@@ -4,6 +4,7 @@
 
   const CFG_KEY = 'elderxonnect_supabase_config';
   const byId = (id) => document.getElementById(id);
+  let recoveryObserver = null;
 
   function getConfig() {
     try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); }
@@ -19,15 +20,35 @@
       || new URLSearchParams(location.search).get('recovery') === '1';
   }
 
+  function enforceRecoveryView() {
+    byId('loginCard')?.classList.remove('hidden');
+    byId('accessCard')?.classList.add('hidden');
+    byId('portal')?.classList.add('hidden');
+  }
+
   function showResetForm(client) {
     const loginCard = byId('loginCard');
-    if (!loginCard || byId('saveCaregiverPassword')) return;
+    if (!loginCard) return;
+
+    enforceRecoveryView();
+    document.documentElement.dataset.caregiverRecovery = 'true';
+
+    if (!recoveryObserver) {
+      recoveryObserver = new MutationObserver(enforceRecoveryView);
+      recoveryObserver.observe(document.body, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
+
+    if (byId('saveCaregiverPassword')) return;
 
     const email = emailFromUrl();
     loginCard.innerHTML = `
       <div style="margin:0 0 15px;padding:14px;border:1px solid rgba(46,204,138,.25);background:rgba(46,204,138,.07);border-radius:14px;line-height:1.45">
         <div style="font-weight:750;margin-bottom:7px;color:#2ecc8a">Set caregiver password</div>
-        <div style="font-size:13px;color:#b8c9bd">Enter a new password of at least 8 characters.</div>
+        <div style="font-size:13px;color:#b8c9bd">The secure email link verified your identity. Now choose the password you will use for future caregiver sign-ins.</div>
       </div>
       <label for="newCaregiverPassword">New password</label>
       <input id="newCaregiverPassword" type="password" autocomplete="new-password" minlength="8" />
@@ -53,6 +74,7 @@
         const result = await client.auth.updateUser({ password });
         if (result.error) throw result.error;
         await client.auth.signOut();
+        recoveryObserver?.disconnect();
         const next = new URL('/caregiver.html', location.origin);
         if (email) next.searchParams.set('email', email);
         next.searchParams.set('reset', 'done');
@@ -70,7 +92,7 @@
     const emailInput = byId('email');
     const loginCard = byId('loginCard');
     const buttonGrid = loginCard?.querySelector('.buttonGrid');
-    if (!emailInput || !loginCard || !buttonGrid || !window.supabase?.createClient) return;
+    if (!emailInput || !loginCard || !window.supabase?.createClient) return;
 
     const cfg = getConfig();
     if (!cfg.url || !cfg.key) return;
@@ -89,6 +111,8 @@
       showResetForm(client);
       return;
     }
+
+    if (!buttonGrid) return;
 
     if (!byId('forgotCaregiverPassword')) {
       const forgot = document.createElement('button');
