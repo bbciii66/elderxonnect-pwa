@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v16";
+const CACHE_NAME = "elderxonnect-v17";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -7,11 +7,13 @@ const STATIC_ASSETS = [
   "/caregiver-access.js",
   "/reminder-schedule.js",
   "/reminder-schedule-cloud.js",
+  "/role-router.js",
   "/caregiver-reminder-schedule.js",
   "/caregiver-onboarding.js",
   "/caregiver-onboarding-fix.js",
   "/caregiver-password-reset.js",
   "/caregiver-access-manager.js",
+  "/caregiver-care-list.js",
   "/caregiver.html"
 ];
 
@@ -50,7 +52,8 @@ function enhanceResponse(response, pathname) {
       "/caregiver-onboarding.js",
       "/caregiver-onboarding-fix.js",
       "/caregiver-password-reset.js",
-      "/caregiver-access-manager.js"
+      "/caregiver-access-manager.js",
+      "/caregiver-care-list.js"
     ]);
   }
   return injectScripts(response, [
@@ -59,7 +62,8 @@ function enhanceResponse(response, pathname) {
     "/supabase-sync.js",
     "/caregiver-access.js",
     "/reminder-schedule.js",
-    "/reminder-schedule-cloud.js"
+    "/reminder-schedule-cloud.js",
+    "/role-router.js"
   ]);
 }
 
