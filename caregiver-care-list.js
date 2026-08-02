@@ -174,7 +174,14 @@
 
       accessCard.querySelector('h2').textContent = 'My Care List';
       const signedIn = document.getElementById('signedInAs');
-      if (signedIn) signedIn.insertAdjacentHTML('beforeend', '<br><span style="color:#e8c97e">Choose a care recipient to open their read-only dashboard.</span>');
+      if (signedIn && !document.getElementById('careListHelp')) {
+        const lineBreak = document.createElement('br');
+        const help = document.createElement('span');
+        help.id = 'careListHelp';
+        help.style.color = '#e8c97e';
+        help.textContent = 'Choose a care recipient to open their read-only dashboard.';
+        signedIn.append(lineBreak, help);
+      }
 
       const activeMarkup = active.length
         ? active.map((access) => cardMarkup(
