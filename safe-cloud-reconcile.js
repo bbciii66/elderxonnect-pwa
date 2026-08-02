@@ -1,4 +1,4 @@
-/* Protect meaningful local care data from empty cloud records and reconcile it safely. */
+/* Protect meaningful local care data from empty or incomplete cloud records and reconcile it safely. */
 (() => {
   'use strict';
 
@@ -6,6 +6,10 @@
   const DEVICE_KEY = 'elderxonnect_device_id';
   const RECOVERY_KEY = 'elderxonnect_pending_local_recovery';
   const PROTECTED_KEYS = ['me_profile', 'checkins_v2', 'reminders', 'contacts'];
+  const PROFILE_FIELDS = [
+    'name', 'dob', 'blood', 'homeAddr', 'mailAddr', 'allergies', 'conditions',
+    'doctor', 'doctorPhone', 'caregiverName', 'caregiverPhone', 'familyList'
+  ];
   const nativeSetItem = Storage.prototype.setItem;
   const nativeGetItem = Storage.prototype.getItem;
   let reconciling = false;
@@ -20,15 +24,18 @@
     return parseText(nativeGetItem.call(localStorage, key), fallback);
   }
 
+  function profileRichness(profile) {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return 0;
+    return PROFILE_FIELDS.reduce((score, key) => {
+      const value = profile[key];
+      if (Array.isArray(value)) return score + (value.length ? 1 : 0);
+      if (value && typeof value === 'object') return score + (Object.keys(value).length ? 1 : 0);
+      return score + (String(value ?? '').trim() ? 1 : 0);
+    }, 0);
+  }
+
   function meaningfulValue(key, value) {
-    if (key === 'me_profile') {
-      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-      return Object.values(value).some((item) => {
-        if (Array.isArray(item)) return item.length > 0;
-        if (item && typeof item === 'object') return Object.keys(item).length > 0;
-        return String(item ?? '').trim().length > 0;
-      });
-    }
+    if (key === 'me_profile') return profileRichness(value) > 0;
     return Array.isArray(value) && value.length > 0;
   }
 
@@ -66,9 +73,15 @@
     if (this === localStorage && PROTECTED_KEYS.includes(key)) {
       const incoming = parseText(value, key === 'me_profile' ? {} : []);
       const current = parseText(nativeGetItem.call(this, key), key === 'me_profile' ? {} : []);
+      const emptyOverwrite = !meaningfulValue(key, incoming) && meaningfulValue(key, current);
+      const thinProfileOverwrite = key === 'me_profile'
+        && profileRichness(current) >= 3
+        && profileRichness(incoming) <= 1;
 
-      if (!meaningfulValue(key, incoming) && meaningfulValue(key, current)) {
-        backup(key, current, 'Blocked empty cloud overwrite');
+      if (emptyOverwrite || thinProfileOverwrite) {
+        backup(key, current, thinProfileOverwrite
+          ? 'Blocked incomplete cloud profile overwrite'
+          : 'Blocked empty cloud overwrite');
         markForRecovery(key);
         window.dispatchEvent(new CustomEvent('elderxonnect-empty-cloud-overwrite-blocked', {
           detail: { key }
@@ -151,8 +164,16 @@
 
     PROTECTED_KEYS.forEach((key) => {
       const localValue = parseKey(key, key === 'me_profile' ? {} : []);
-      if (meaningfulValue(key, localValue) && !meaningfulValue(key, cloudValues[key])) {
-        backup(key, localValue, 'Cloud record was empty');
+      let shouldRecover = meaningfulValue(key, localValue) && !meaningfulValue(key, cloudValues[key]);
+
+      if (key === 'me_profile') {
+        const localScore = profileRichness(localValue);
+        const cloudScore = profileRichness(cloudValues[key]);
+        shouldRecover = shouldRecover || (localScore >= 3 && cloudScore <= 1);
+      }
+
+      if (shouldRecover) {
+        backup(key, localValue, 'Cloud record was empty or incomplete');
         state[key] = true;
       }
     });
