@@ -46,11 +46,19 @@
     return state && typeof state === 'object' ? state : {};
   }
 
+  function saveRecoveryState(state) {
+    if (PROTECTED_KEYS.some((key) => state[key])) {
+      state.detectedAt = state.detectedAt || new Date().toISOString();
+      nativeSetItem.call(localStorage, RECOVERY_KEY, JSON.stringify(state));
+    } else {
+      localStorage.removeItem(RECOVERY_KEY);
+    }
+  }
+
   function markForRecovery(key) {
     const state = recoveryState();
     state[key] = true;
-    state.detectedAt = state.detectedAt || new Date().toISOString();
-    nativeSetItem.call(localStorage, RECOVERY_KEY, JSON.stringify(state));
+    saveRecoveryState(state);
     scheduleReconcile();
   }
 
@@ -118,11 +126,43 @@
     if (status) status.textContent = message;
   }
 
+  function identityMatches(session) {
+    const localSession = parseKey('auth_session', {});
+    const localUsers = parseKey('auth_users', []);
+    const expected = String(localSession?.cloudEmail || localUsers?.[0]?.cloudEmail || '').trim().toLowerCase();
+    const actual = String(session?.user?.email || '').trim().toLowerCase();
+    return !expected || !actual || expected === actual;
+  }
+
+  async function detectRecoveryNeeds(client, userId, state) {
+    const [profileRow, cloudCheckins, cloudReminders, cloudContacts] = await Promise.all([
+      check(client.from('profiles').select('profile_data').eq('user_id', userId).maybeSingle()),
+      check(client.from('checkins').select('id').eq('user_id', userId).limit(1)),
+      check(client.from('reminders').select('id').eq('user_id', userId).limit(1)),
+      check(client.from('contacts').select('id').eq('user_id', userId).limit(1))
+    ]);
+
+    const cloudValues = {
+      me_profile: profileRow?.profile_data || {},
+      checkins_v2: cloudCheckins || [],
+      reminders: cloudReminders || [],
+      contacts: cloudContacts || []
+    };
+
+    PROTECTED_KEYS.forEach((key) => {
+      const localValue = parseKey(key, key === 'me_profile' ? {} : []);
+      if (meaningfulValue(key, localValue) && !meaningfulValue(key, cloudValues[key])) {
+        backup(key, localValue, 'Cloud record was empty');
+        state[key] = true;
+      }
+    });
+
+    saveRecoveryState(state);
+    return state;
+  }
+
   async function reconcile() {
     if (reconciling) return;
-    const pending = recoveryState();
-    const keys = PROTECTED_KEYS.filter((key) => pending[key]);
-    if (!keys.length) return;
 
     const config = parseKey(CFG_KEY, {});
     if (!config.url || !config.key) return;
@@ -135,8 +175,14 @@
       });
       const sessionResult = await client.auth.getSession();
       if (sessionResult.error) throw sessionResult.error;
-      const userId = sessionResult.data?.session?.user?.id;
-      if (!userId) return;
+      const session = sessionResult.data?.session;
+      const userId = session?.user?.id;
+      if (!userId || !identityMatches(session)) return;
+
+      let pending = recoveryState();
+      pending = await detectRecoveryNeeds(client, userId, pending);
+      const keys = PROTECTED_KEYS.filter((key) => pending[key]);
+      if (!keys.length) return;
 
       setStatus('Preserving this device’s saved care information…');
 
@@ -227,6 +273,7 @@
     scheduleReconcile();
     window.addEventListener('focus', scheduleReconcile);
     window.addEventListener('pageshow', scheduleReconcile);
+    setInterval(scheduleReconcile, 30000);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
