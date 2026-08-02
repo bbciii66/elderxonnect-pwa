@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v11";
+const CACHE_NAME = "elderxonnect-v12";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   "/reminder-schedule-cloud.js",
   "/caregiver-reminder-schedule.js",
   "/caregiver-onboarding.js",
+  "/caregiver-onboarding-fix.js",
   "/caregiver.html"
 ];
 
@@ -42,7 +43,11 @@ async function injectScripts(response, scripts) {
 
 function enhanceResponse(response, pathname) {
   if (pathname === "/caregiver.html") {
-    return injectScripts(response, ["/caregiver-reminder-schedule.js", "/caregiver-onboarding.js"]);
+    return injectScripts(response, [
+      "/caregiver-reminder-schedule.js",
+      "/caregiver-onboarding.js",
+      "/caregiver-onboarding-fix.js"
+    ]);
   }
   return injectScripts(response, [
     "/fixes.js",
