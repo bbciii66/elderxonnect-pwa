@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v23";
+const CACHE_NAME = "elderxonnect-v24";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   "/profile-name-publisher.js",
   "/profile-display-refresh.js",
   "/care-recipient-display-name-sync.js",
+  "/care-recipient-profile-snapshot-sync.js",
   "/caregiver-access.js",
   "/reminder-schedule.js",
   "/reminder-schedule-cloud.js",
@@ -18,8 +19,7 @@ const STATIC_ASSETS = [
   "/caregiver-password-reset.js",
   "/caregiver-access-manager.js",
   "/caregiver-care-list.js",
-  "/caregiver-shared-profile.js",
-  "/caregiver-access-display-name.js",
+  "/caregiver-profile-snapshot.js",
   "/caregiver.html"
 ];
 
@@ -60,8 +60,7 @@ function enhanceResponse(response, pathname) {
       "/caregiver-password-reset.js",
       "/caregiver-access-manager.js",
       "/caregiver-care-list.js",
-      "/caregiver-shared-profile.js",
-      "/caregiver-access-display-name.js"
+      "/caregiver-profile-snapshot.js"
     ]);
   }
   return injectScripts(response, [
@@ -72,6 +71,7 @@ function enhanceResponse(response, pathname) {
     "/profile-name-publisher.js",
     "/profile-display-refresh.js",
     "/care-recipient-display-name-sync.js",
+    "/care-recipient-profile-snapshot-sync.js",
     "/caregiver-access.js",
     "/reminder-schedule.js",
     "/reminder-schedule-cloud.js",
