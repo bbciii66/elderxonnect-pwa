@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v21";
+const CACHE_NAME = "elderxonnect-v22";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -17,6 +17,7 @@ const STATIC_ASSETS = [
   "/caregiver-password-reset.js",
   "/caregiver-access-manager.js",
   "/caregiver-care-list.js",
+  "/caregiver-shared-profile.js",
   "/caregiver.html"
 ];
 
@@ -56,7 +57,8 @@ function enhanceResponse(response, pathname) {
       "/caregiver-onboarding-fix.js",
       "/caregiver-password-reset.js",
       "/caregiver-access-manager.js",
-      "/caregiver-care-list.js"
+      "/caregiver-care-list.js",
+      "/caregiver-shared-profile.js"
     ]);
   }
   return injectScripts(response, [
