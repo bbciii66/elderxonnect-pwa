@@ -18,6 +18,7 @@
     const emailInput = byId('email');
     const passwordInput = byId('password');
     const createButton = byId('createAccount');
+    const signInButton = byId('signIn');
     const status = byId('loginStatus');
     const error = byId('error');
     if (!emailInput || !passwordInput || !createButton || !window.supabase?.createClient) return;
@@ -32,9 +33,13 @@
     });
 
     createButton.onclick = async () => {
+      const originalText = createButton.textContent;
       try {
         error.textContent = '';
         status.textContent = 'Creating caregiver account…';
+        createButton.disabled = true;
+        createButton.textContent = 'Creating…';
+
         const email = emailInput.value.trim().toLowerCase();
         const password = passwordInput.value;
         if (!email || password.length < 8) throw new Error('Enter an email and password of at least 8 characters.');
@@ -49,14 +54,25 @@
         });
         if (result.error) throw result.error;
 
+        const identities = result.data?.user?.identities;
+        if (Array.isArray(identities) && identities.length === 0) {
+          status.textContent = 'This caregiver account already exists. Tap Sign In to Accept—no new confirmation email is needed.';
+          signInButton?.focus();
+          return;
+        }
+
         if (result.data.session) {
           location.assign(returnUrl.toString());
           return;
         }
-        status.textContent = 'Account created. Check your email, confirm the account, and the confirmation link will return you here.';
+
+        status.textContent = `Confirmation email sent to ${email}. Open that message, confirm the account, and the link will return you here.`;
       } catch (e) {
         status.textContent = '';
         error.textContent = e?.message || String(e);
+      } finally {
+        createButton.disabled = false;
+        createButton.textContent = originalText;
       }
     };
   }
