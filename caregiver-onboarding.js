@@ -2,6 +2,59 @@
 (() => {
   'use strict';
 
+  function ensureAcceptStatus() {
+    let el = document.getElementById('acceptInviteStatus');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'acceptInviteStatus';
+    el.className = 'status';
+    el.style.cssText = 'margin:10px 0;color:#e8c97e;line-height:1.45';
+    const list = document.getElementById('invitationList');
+    list?.parentElement?.insertBefore(el, list);
+    return el;
+  }
+
+  async function acceptWithFeedback(button) {
+    const status = ensureAcceptStatus();
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Accepting…';
+    status.textContent = 'Activating caregiver access…';
+
+    try {
+      if (!window.client && typeof client === 'undefined') {
+        throw new Error('Caregiver connection is not ready. Reload the page and try again.');
+      }
+      const sb = window.client || client;
+      const result = await sb.rpc('accept_caregiver_invitation', {
+        invitation_id: button.dataset.id
+      });
+      if (result.error) throw result.error;
+
+      status.style.color = '#2ecc8a';
+      status.textContent = '✅ Invitation accepted. Loading your care dashboard access…';
+      if (typeof loadInvitations === 'function') await loadInvitations();
+    } catch (error) {
+      console.error('Caregiver invitation acceptance failed:', error);
+      status.style.color = '#ff7777';
+      status.textContent = `⚠️ ${error?.message || String(error)}`;
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+
+  function wireAcceptButtons() {
+    document.querySelectorAll('.acceptInvite').forEach((button) => {
+      if (button.dataset.feedbackWired === 'true') return;
+      button.dataset.feedbackWired = 'true';
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        acceptWithFeedback(button);
+      }, true);
+    });
+  }
+
   function boot() {
     const emailInput = document.getElementById('email');
     const loginCard = document.getElementById('loginCard');
@@ -44,8 +97,10 @@
         help.textContent = 'Your account is confirmed. Tap Accept Invitation to activate secure read-only access.';
         invitationList.parentElement?.insertBefore(help, invitationList);
       }
+      wireAcceptButtons();
     });
     observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+    wireAcceptButtons();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
