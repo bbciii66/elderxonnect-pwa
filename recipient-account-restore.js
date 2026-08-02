@@ -5,6 +5,7 @@
   const CFG_KEY = 'elderxonnect_supabase_config';
   const READY_PREFIX = 'elderxonnect_cloud_ready_';
   const LAST_SYNC_KEY = 'elderxonnect_last_sync';
+  const FORCE_RESTORE = new URLSearchParams(window.location.search).get('restore') === '1';
   let restoring = false;
 
   function parse(key, fallback) {
@@ -25,28 +26,28 @@
     return hash.toString(36);
   }
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[char]);
-  }
-
   async function loadSupabase() {
     if (window.supabase?.createClient) return window.supabase;
+
     await new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-recipient-restore-supabase]');
+      const existing = [...document.scripts].find((script) =>
+        script.src.includes('@supabase/supabase-js')
+      );
+
       if (existing) {
+        if (window.supabase?.createClient) return resolve();
         existing.addEventListener('load', resolve, { once: true });
         existing.addEventListener('error', reject, { once: true });
         return;
       }
+
       const script = document.createElement('script');
-      script.dataset.recipientRestoreSupabase = '1';
       script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
       script.onload = resolve;
       script.onerror = () => reject(new Error('Could not load secure cloud sign-in.'));
       document.head.appendChild(script);
     });
+
     return window.supabase;
   }
 
@@ -54,6 +55,30 @@
     const result = await promise;
     if (result.error) throw result.error;
     return result.data;
+  }
+
+  function forceRestoreScreen() {
+    if (!FORCE_RESTORE) return;
+
+    const authScreen = document.getElementById('authScreen');
+    const mainApp = document.getElementById('mainApp');
+    const mainNav = document.getElementById('mainNav');
+    const returning = document.getElementById('authReturning');
+    const newUser = document.getElementById('authNewUser');
+    const restoreCard = document.getElementById('recipientAccountRestoreCard');
+
+    authScreen?.classList.remove('hidden');
+    if (authScreen) authScreen.style.display = 'block';
+    mainApp?.classList.add('hidden');
+    mainNav?.classList.add('hidden');
+    if (returning) returning.style.display = 'none';
+    if (newUser) newUser.style.display = 'none';
+    if (restoreCard) {
+      restoreCard.style.display = 'block';
+      restoreCard.style.marginTop = '0';
+    }
+
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   async function restoreAccount() {
@@ -123,14 +148,17 @@
       ]);
 
       const profile = profileRow?.profile_data && typeof profileRow.profile_data === 'object'
-        ? profileRow.profile_data
+        ? { ...profileRow.profile_data }
         : {};
       const metadataName = String(user.user_metadata?.full_name || user.user_metadata?.name || '').trim();
-      const emailName = email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const emailName = email.split('@')[0]
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase());
       const name = String(profile.name || metadataName || emailName || 'My Care').trim();
       const username = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase() || `user${Date.now()}`;
 
       if (!profile.name && name) profile.name = name;
+
       store('me_profile', profile);
       store('checkins_v2', (checkins || []).map((item) => ({
         clientId: item.client_id,
@@ -163,13 +191,16 @@
         cloudUserId: user.id,
         cloudEmail: user.email || email
       };
+
       store('auth_users', [localUser]);
       store('auth_session', { ...localUser, ts: Date.now() });
       localStorage.setItem(`${READY_PREFIX}${user.id}`, 'true');
       localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
 
-      status.textContent = `Account restored for ${escapeHtml(name)}. Opening My Care…`;
-      window.setTimeout(() => window.location.reload(), 500);
+      status.textContent = `Account restored for ${name}. Opening My Care…`;
+      window.setTimeout(() => {
+        window.location.replace('/?area=recipient&restored=1');
+      }, 500);
     } catch (error) {
       status.textContent = error?.message || String(error);
       status.style.color = 'var(--red)';
@@ -180,7 +211,11 @@
   }
 
   function addRestorePanel() {
-    if (document.getElementById('recipientAccountRestoreCard')) return;
+    if (document.getElementById('recipientAccountRestoreCard')) {
+      forceRestoreScreen();
+      return;
+    }
+
     const panel = document.querySelector('#authScreen .auth-panel');
     if (!panel) return;
 
@@ -189,9 +224,9 @@
     card.className = 'auth-card';
     card.style.marginTop = '14px';
     card.innerHTML = `
-      <div class="auth-card-title">Already have My Care?</div>
+      <div class="auth-card-title">Restore Existing My Care Account</div>
       <div class="auth-card-sub" style="margin-bottom:14px;line-height:1.5">
-        Restore your existing cloud account on this device. This does not create another account.
+        Sign into your existing cloud account, download its saved information, and choose a PIN for this device. This does not create another account.
       </div>
       <div class="label">My Care email</div>
       <input id="restoreRecipientEmail" type="email" autocomplete="email" placeholder="you@example.com" style="font-size:16px;margin-bottom:10px">
@@ -204,7 +239,9 @@
       <button class="btn gold" id="restoreRecipientAccount" type="button">Restore Existing My Care Account</button>
       <div class="auth-error" id="restoreRecipientStatus" style="margin-top:10px"></div>`;
 
-    panel.appendChild(card);
+    if (FORCE_RESTORE) panel.prepend(card);
+    else panel.appendChild(card);
+
     document.getElementById('restoreRecipientAccount').addEventListener('click', restoreAccount);
 
     ['restoreRecipientPin', 'restoreRecipientPinConfirm'].forEach((id) => {
@@ -217,11 +254,18 @@
     if (newLink) newLink.textContent = 'Set up a brand-new care recipient';
     const title = document.querySelector('#authNewUser .auth-card-title');
     if (title) title.textContent = 'Set Up a New Care Recipient';
+
+    forceRestoreScreen();
   }
 
   function boot() {
     addRestorePanel();
-    window.setTimeout(addRestorePanel, 500);
+    [100, 400, 1000].forEach((delay) => {
+      window.setTimeout(() => {
+        addRestorePanel();
+        forceRestoreScreen();
+      }, delay);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
