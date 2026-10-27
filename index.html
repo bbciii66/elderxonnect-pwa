@@ -26,7 +26,7 @@
       --red: #e05252;
       --red2: #c0392b;
       --text: #e8ede9;
-      --muted: #7a9b86;
+      --muted: #a9c7b4;
       --line: rgba(46,204,138,.12);
       --line2: rgba(255,255,255,.07);
       --radius: 20px;
@@ -67,14 +67,14 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .brand p { color: var(--muted); font-size: 12px; margin-top: 1px; font-weight: 300; }
+    .brand p { color: var(--muted); font-size: 15px; margin-top: 1px; font-weight: 400; }
 
     .status-dot {
       display: flex; align-items: center; gap: 6px;
       padding: 6px 11px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 14px;
       color: var(--muted);
       background: rgba(46,204,138,.04);
     }
@@ -95,7 +95,7 @@
       background: var(--gold);
       color: #1a1000;
       font-family: 'Lora', serif;
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
       border: 3px solid #fff;
       box-shadow: 0 4px 20px rgba(232,201,126,.5), 0 2px 8px rgba(0,0,0,.4);
@@ -136,7 +136,7 @@
       color: var(--muted);
       border-radius: 14px;
       padding: 8px 4px 6px;
-      font-size: 10px;
+      font-size: 14px;
       font-weight: 600;
       font-family: 'DM Sans', sans-serif;
       text-align: center;
@@ -158,7 +158,7 @@
     .ai-provider-btn {
       flex:1;padding:10px;border-radius:12px;
       background:rgba(255,255,255,.05);border:2px solid var(--line2);
-      color:var(--muted);font-size:13px;font-weight:600;
+      color:var(--muted);font-size:16px;font-weight:600;
       cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
     }
     .ai-provider-btn.active {
@@ -178,7 +178,7 @@
     }
     .quick-action-btn:hover { border-color:rgba(46,204,138,.3);background:rgba(46,204,138,.06); }
     .quick-action-btn:active { transform:scale(.96); }
-    .qa-label { font-size:13px;font-weight:600;color:var(--text); }
+    .qa-label { font-size:16px;font-weight:600;color:var(--text); }
 
     /* ── CARDS ── */
     .grid { display:flex;flex-direction:column;gap:14px; }
@@ -189,13 +189,13 @@
       padding: var(--pad);
       box-shadow: var(--shadow);
     }
-    .card-title { font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:4px; }
-    .card-sub { font-size:13px;color:var(--muted);font-weight:300;margin-bottom:14px;line-height:1.5; }
+    .card-title { font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:4px; }
+    .card-sub { font-size:16px;color:var(--muted);font-weight:300;margin-bottom:14px;line-height:1.5; }
 
     /* ── BUTTONS ── */
     .btn {
       border:0;border-radius:14px;padding:13px 16px;
-      font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;
+      font-size:18px;font-weight:600;font-family:'DM Sans',sans-serif;
       cursor:pointer;width:100%;transition:all .18s;
       -webkit-tap-highlight-color:transparent;
     }
@@ -208,11 +208,11 @@
     .btn:disabled { opacity:.5;cursor:not-allowed; }
 
     /* ── INPUTS ── */
-    .label { font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;letter-spacing:.3px;text-transform:uppercase; }
+    .label { font-size:14px;color:var(--muted);margin-bottom:5px;font-weight:500;letter-spacing:.3px;text-transform:uppercase; }
     input,textarea,select {
       width:100%;padding:12px 14px;border-radius:14px;
       border:1px solid var(--line2);background:rgba(0,0,0,.25);
-      color:var(--text);outline:none;font-size:15px;
+      color:var(--text);outline:none;font-size:18px;
       font-family:'DM Sans',sans-serif;transition:border-color .2s;
     }
     input:focus,textarea:focus { border-color:rgba(46,204,138,.4); }
@@ -228,29 +228,29 @@
       background:rgba(255,255,255,.02);animation:fadeIn .2s ease;
     }
     @keyframes fadeIn { from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none} }
-    .small { font-size:12px;color:var(--muted);line-height:1.5; }
+    .small { font-size:15px;color:var(--muted);line-height:1.5; }
     .hidden { display:none !important; }
     .divider { height:1px;background:var(--line2);margin:14px 0; }
     .sp8{height:8px}.sp12{height:12px}.sp16{height:16px}
 
     /* ── BADGES ── */
-    .badge { display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600; }
+    .badge { display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:999px;font-size:14px;font-weight:600; }
     .badge.good { background:rgba(46,204,138,.15);color:var(--green);border:1px solid rgba(46,204,138,.25); }
     .badge.ok { background:rgba(232,201,126,.15);color:var(--gold);border:1px solid rgba(232,201,126,.25); }
     .badge.bad { background:rgba(224,82,82,.15);color:var(--red);border:1px solid rgba(224,82,82,.25); }
 
     /* ── HOME ── */
     .checkin-hero { display:flex;align-items:center;justify-content:space-between;gap:14px; }
-    .checkin-hero-left .day { font-size:13px;color:var(--muted);margin-bottom:4px; }
+    .checkin-hero-left .day { font-size:16px;color:var(--muted);margin-bottom:4px; }
     .checkin-hero-left .prompt { font-family:'Lora',serif;font-size:19px;font-weight:600;line-height:1.3; }
-    .checkin-hero-left .last { font-size:12px;color:var(--muted);margin-top:6px; }
-    #checkinHeroBtn { max-width:120px;padding:12px 10px;font-size:14px; }
+    .checkin-hero-left .last { font-size:15px;color:var(--muted);margin-top:6px; }
+    #checkinHeroBtn { max-width:120px;padding:12px 10px;font-size:17px; }
     #checkinCard { display:none; }
     #checkinCard.open { display:block;animation:fadeIn .2s ease; }
     .mood-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px; }
     .mood-btn {
       border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text);
-      border-radius:14px;padding:10px 4px;font-size:12px;font-weight:500;
+      border-radius:14px;padding:10px 4px;font-size:15px;font-weight:500;
       cursor:pointer;text-align:center;transition:all .15s;
       font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;
     }
@@ -264,7 +264,7 @@
     .stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
     .stat-box { background:var(--card2);border:1px solid var(--line2);border-radius:16px;padding:14px;text-align:center; }
     .stat-box .stat-num { font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--green); }
-    .stat-box .stat-label { font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.4px; }
+    .stat-box .stat-label { font-size:14px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.4px; }
 
     /* ── ME PAGE ── */
     .me-hero {
@@ -293,17 +293,17 @@
     .me-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
     .me-avatar .edit-overlay {
       position:absolute;bottom:0;left:0;right:0;
-      background:rgba(0,0,0,.5);font-size:10px;
+      background:rgba(0,0,0,.5);font-size:14px;
       color:#fff;padding:3px 0;text-align:center;
     }
     .me-name { font-family:'Lora',serif;font-size:24px;font-weight:700;color:var(--gold); }
-    .me-dob { font-size:13px;color:var(--muted);margin-top:4px; }
+    .me-dob { font-size:16px;color:var(--muted);margin-top:4px; }
 
     .caregiver-btn {
       width:100%;padding:18px;
       background: linear-gradient(135deg, #e05252, #c0392b);
       border:0;border-radius:18px;
-      font-family:'Lora',serif;font-size:18px;font-weight:700;
+      font-family:'Lora',serif;font-size:20px;font-weight:700;
       color:#fff;cursor:pointer;
       display:flex;align-items:center;justify-content:center;gap:10px;
       box-shadow: 0 6px 24px rgba(224,82,82,.4);
@@ -319,7 +319,7 @@
 
     .info-section { margin-bottom:14px; }
     .info-section .section-head {
-      font-size:11px;font-weight:600;color:var(--gold);
+      font-size:14px;font-weight:600;color:var(--gold);
       text-transform:uppercase;letter-spacing:.6px;
       margin-bottom:8px;display:flex;align-items:center;gap:6px;
     }
@@ -331,17 +331,17 @@
       border-radius:14px;
       margin-bottom:6px;
     }
-    .info-row .info-icon { font-size:18px;flex-shrink:0;margin-top:1px; }
+    .info-row .info-icon { font-size:20px;flex-shrink:0;margin-top:1px; }
     .info-row .info-body { flex:1;min-width:0; }
-    .info-row .info-label { font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px; }
-    .info-row .info-val { font-size:15px;font-weight:500;margin-top:2px;word-break:break-word; }
+    .info-row .info-label { font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px; }
+    .info-row .info-val { font-size:18px;font-weight:500;margin-top:2px;word-break:break-word; }
     .info-row .info-val.empty { color:var(--muted);font-style:italic;font-weight:300; }
 
     .me-edit-btn {
       position:absolute;top:14px;right:14px;
       background:rgba(232,201,126,.15);border:1px solid rgba(232,201,126,.3);
       color:var(--gold);border-radius:999px;padding:6px 12px;
-      font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;
+      font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;
     }
 
     /* ── ME EDIT MODAL ── */
@@ -363,7 +363,7 @@
     @keyframes slideUp { from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1} }
     .modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
     .modal-title { font-family:'Lora',serif;font-size:20px;font-weight:700; }
-    .modal-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:16px; }
+    .modal-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:18px; }
 
     /* ── URGENT ALERT OVERLAY ── */
     .urgent-overlay {
@@ -381,14 +381,14 @@
       color:#fff;text-align:center;margin:16px 0 8px;
       text-shadow:0 0 20px rgba(224,82,82,.8);
     }
-    .urgent-body { font-size:18px;color:#ffb3b3;text-align:center;line-height:1.5;margin-bottom:30px; }
+    .urgent-body { font-size:20px;color:#ffb3b3;text-align:center;line-height:1.5;margin-bottom:30px; }
     .urgent-dismiss {
       width:100%;max-width:320px;padding:20px;
       background:var(--red);border:0;border-radius:18px;
       font-family:'Lora',serif;font-size:20px;font-weight:700;color:#fff;
       cursor:pointer;box-shadow:0 6px 24px rgba(224,82,82,.5);
     }
-    .urgent-time { font-size:13px;color:rgba(255,255,255,.4);margin-top:16px; }
+    .urgent-time { font-size:16px;color:rgba(255,255,255,.4);margin-top:16px; }
 
     /* ── NOTIFICATION BANNER ── */
     .notif-banner {
@@ -406,14 +406,14 @@
     .notif-banner.urgent { border-color:rgba(224,82,82,.5);background:rgba(50,10,10,.95); }
     .notif-banner-icon { font-size:28px;flex-shrink:0; }
     .notif-banner-body { flex:1;min-width:0; }
-    .notif-banner-title { font-weight:700;font-size:14px; }
-    .notif-banner-msg { font-size:13px;color:var(--muted);margin-top:2px; }
-    .notif-banner-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:13px;flex-shrink:0; }
+    .notif-banner-title { font-weight:700;font-size:17px; }
+    .notif-banner-msg { font-size:16px;color:var(--muted);margin-top:2px; }
+    .notif-banner-close { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--text);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;flex-shrink:0; }
 
     /* ── CHAT ── */
     .chatlog { display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;padding:4px 0;scroll-behavior:smooth; }
     .chatlog::-webkit-scrollbar{width:4px}.chatlog::-webkit-scrollbar-track{background:transparent}.chatlog::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
-    .bubble { max-width:88%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.5;animation:fadeIn .2s ease; }
+    .bubble { max-width:88%;padding:11px 14px;border-radius:18px;font-size:17px;line-height:1.5;animation:fadeIn .2s ease; }
     .bubble.me { margin-left:auto;background:var(--green2);border-bottom-right-radius:5px;color:#d4f0e5; }
     .bubble.ai { margin-right:auto;background:var(--card2);border:1px solid var(--line2);border-bottom-left-radius:5px; }
     .bubble.typing { margin-right:auto;background:var(--card2);border:1px solid var(--line2);border-bottom-left-radius:5px; }
@@ -422,14 +422,14 @@
     @keyframes typingDot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
     .chat-input-row { display:flex;gap:8px;align-items:flex-end;margin-top:12px; }
     .chat-input-row input { flex:1; }
-    .send-btn { width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border-radius:14px; }
-    .chip { padding:7px 12px;border:1px solid var(--line2);border-radius:999px;font-size:12px;color:var(--muted);cursor:pointer;background:rgba(255,255,255,.03);transition:all .15s;font-family:'DM Sans',sans-serif; }
+    .send-btn { width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border-radius:14px; }
+    .chip { padding:7px 12px;border:1px solid var(--line2);border-radius:999px;font-size:15px;color:var(--muted);cursor:pointer;background:rgba(255,255,255,.03);transition:all .15s;font-family:'DM Sans',sans-serif; }
     .chip:hover { border-color:rgba(46,204,138,.3);color:var(--green);background:rgba(46,204,138,.06); }
     .chat-starter-chips { display:flex;flex-wrap:wrap;gap:8px;margin:10px 0; }
     .api-key-card { border-color:rgba(232,201,126,.2);background:rgba(232,201,126,.04); }
     .api-key-input-wrap { position:relative; }
-    .api-key-input-wrap input { padding-right:42px;font-family:monospace;font-size:13px; }
-    .toggle-key-btn { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:4px; }
+    .api-key-input-wrap input { padding-right:42px;font-family:monospace;font-size:16px; }
+    .toggle-key-btn { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);padding:4px; }
 
     /* ── VOICE ── */
     .mic-btn {
@@ -451,7 +451,7 @@
     .mic-btn-inline {
       width:40px;height:40px;border-radius:12px;flex-shrink:0;
       background:rgba(46,204,138,.1);border:1px solid rgba(46,204,138,.2);
-      font-size:17px;cursor:pointer;transition:all .15s;
+      font-size:19px;cursor:pointer;transition:all .15s;
       display:flex;align-items:center;justify-content:center;
       -webkit-tap-highlight-color:transparent;
     }
@@ -462,7 +462,7 @@
       display:flex;align-items:center;gap:10px;
       padding:10px 14px;margin-top:8px;
       background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.25);
-      border-radius:14px;font-size:13px;
+      border-radius:14px;font-size:16px;
     }
     .voice-status-bar.hidden { display:none; }
     .voice-pulse {
@@ -470,7 +470,7 @@
       animation:micPulse .5s ease-in-out infinite alternate;
     }
     #voiceStatusText { flex:1;color:var(--text); }
-    #voiceStopBtn { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif; }
+    #voiceStopBtn { background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif; }
 
     /* Toggle switches */
     .voice-toggle-row {
@@ -479,8 +479,8 @@
     }
     .voice-toggle-row:last-of-type { border-bottom:none; }
     .voice-toggle-info { flex:1; }
-    .voice-toggle-label { font-size:14px;font-weight:600; }
-    .voice-toggle-sub { font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4; }
+    .voice-toggle-label { font-size:17px;font-weight:600; }
+    .voice-toggle-sub { font-size:15px;color:var(--muted);margin-top:2px;line-height:1.4; }
     .toggle-switch { position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0; }
     .toggle-switch input { opacity:0;width:0;height:0; }
     .toggle-slider {
@@ -501,17 +501,17 @@
       padding:7px 0;border-bottom:1px solid var(--line2);
     }
     .qs-left { display:flex;align-items:center;gap:8px;flex:1; }
-    .qs-icon { font-size:17px;flex-shrink:0; }
-    .qs-label { font-size:13px;font-weight:600; }
+    .qs-icon { font-size:19px;flex-shrink:0; }
+    .qs-label { font-size:16px;font-weight:600; }
     .qs-sub { display:none; }
 
     /* ── GAMES ── */
-    .score-bar { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card2);border:1px solid var(--line2);border-radius:14px;margin-bottom:12px;font-size:13px; }
+    .score-bar { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card2);border:1px solid var(--line2);border-radius:14px;margin-bottom:12px;font-size:16px; }
     .score-bar .score-num { font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--green); }
     .game-card { background:var(--card2);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-bottom:10px; }
-    .game-question { font-family:'Lora',serif;font-size:17px;line-height:1.5;margin-bottom:14px; }
+    .game-question { font-family:'Lora',serif;font-size:19px;line-height:1.5;margin-bottom:14px; }
     .game-options { display:flex;flex-direction:column;gap:8px; }
-    .game-option { padding:12px 14px;border:1px solid var(--line2);border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;transition:all .15s;text-align:left;color:var(--text);-webkit-tap-highlight-color:transparent; }
+    .game-option { padding:12px 14px;border:1px solid var(--line2);border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;font-size:17px;font-family:'DM Sans',sans-serif;transition:all .15s;text-align:left;color:var(--text);-webkit-tap-highlight-color:transparent; }
     .game-option:hover{border-color:rgba(46,204,138,.3);background:rgba(46,204,138,.06)}
     .game-option.correct{background:rgba(46,204,138,.18);border-color:rgba(46,204,138,.5);color:var(--green)}
     .game-option.wrong{background:rgba(224,82,82,.15);border-color:rgba(224,82,82,.4);color:var(--red)}
@@ -520,33 +520,33 @@
     .contact-card { display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line2);border-radius:16px;background:rgba(255,255,255,.02);margin-bottom:8px; }
     .contact-avatar { width:44px;height:44px;border-radius:50%;background:var(--green3);border:1px solid rgba(46,204,138,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
     .contact-info { flex:1;min-width:0; }
-    .contact-name { font-weight:600;font-size:15px; }
-    .contact-rel { font-size:12px;color:var(--muted);margin-top:2px; }
+    .contact-name { font-weight:600;font-size:18px; }
+    .contact-rel { font-size:15px;color:var(--muted);margin-top:2px; }
     .contact-actions { display:flex;gap:6px; }
-    .icon-btn { width:38px;height:38px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-tap-highlight-color:transparent; }
+    .icon-btn { width:38px;height:38px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-tap-highlight-color:transparent; }
     .icon-btn.call { background:rgba(46,204,138,.15);border-color:rgba(46,204,138,.3); }
 
     /* ── REMINDERS ── */
     .rem-item-icon { font-size:22px; }
-    .urgent-badge { background:rgba(224,82,82,.18);color:var(--red);border:1px solid rgba(224,82,82,.3);font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px; }
+    .urgent-badge { background:rgba(224,82,82,.18);color:var(--red);border:1px solid rgba(224,82,82,.3);font-size:14px;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px; }
 
     /* ── TRENDS CHART ── */
     .chart-wrap { position:relative; width:100%; }
     .chart-canvas { width:100%; border-radius:12px; display:block; }
     .chart-legend { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
-    .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:15px; color:var(--muted); }
     .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .chart-tabs { display:flex; gap:6px; margin-bottom:12px; }
-    .chart-tab { padding:6px 14px; border-radius:999px; font-size:12px; border:1px solid var(--line2); background:transparent; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .chart-tab { padding:6px 14px; border-radius:999px; font-size:15px; border:1px solid var(--line2); background:transparent; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
     .chart-tab.active { background:rgba(46,204,138,.15); color:var(--green); border-color:rgba(46,204,138,.3); }
-    .no-data-msg { text-align:center; padding:30px 0; color:var(--muted); font-size:13px; }
+    .no-data-msg { text-align:center; padding:30px 0; color:var(--muted); font-size:16px; }
 
     /* ── ME INLINE BUTTON ── */
     .me-fab-inline {
       width:48px;height:48px;border-radius:50%;
       background:linear-gradient(135deg,var(--gold),var(--gold-dark));
       border:2px solid var(--gold);
-      color:#1a1200;font-size:11px;font-weight:900;letter-spacing:.5px;
+      color:#1a1200;font-size:14px;font-weight:900;letter-spacing:.5px;
       cursor:pointer;display:flex;align-items:center;justify-content:center;
       flex-shrink:0;transition:all .15s;
       box-shadow:0 2px 12px rgba(232,201,126,.3);
@@ -593,7 +593,7 @@
       font-family:'Lora',serif;font-size:19px;font-weight:600;
       margin-bottom:4px;
     }
-    .drawer-sub { font-size:13px;color:var(--muted);margin-bottom:16px; }
+    .drawer-sub { font-size:16px;color:var(--muted);margin-bottom:16px; }
     .drawer-row {
       display:flex;align-items:center;justify-content:space-between;gap:12px;
       padding:12px 0;border-bottom:1px solid var(--line2);
@@ -601,11 +601,11 @@
     .drawer-row:last-of-type { border-bottom:none; }
     .drawer-row-left { display:flex;align-items:center;gap:12px;flex:1; }
     .drawer-row-icon { font-size:20px;flex-shrink:0; }
-    .drawer-row-label { font-size:14px;font-weight:600; }
-    .drawer-row-sub { font-size:12px;color:var(--muted);margin-top:1px;line-height:1.4; }
+    .drawer-row-label { font-size:17px;font-weight:600; }
+    .drawer-row-sub { font-size:15px;color:var(--muted);margin-top:1px;line-height:1.4; }
     .drawer-more-link {
       display:block;text-align:center;margin-top:14px;
-      font-size:13px;color:var(--green);cursor:pointer;
+      font-size:16px;color:var(--green);cursor:pointer;
       text-decoration:underline;text-underline-offset:3px;
       background:none;border:none;font-family:'DM Sans',sans-serif;
       width:100%;padding:4px;
@@ -646,7 +646,7 @@
       background:linear-gradient(135deg,#e8ede9,var(--green));
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
     }
-    .auth-sub { font-size:14px;color:var(--muted);margin-top:4px; }
+    .auth-sub { font-size:17px;color:var(--muted);margin-top:4px; }
 
     .auth-card {
       background:var(--card);border:1px solid var(--line2);
@@ -654,11 +654,11 @@
       box-shadow:var(--shadow);
     }
     .auth-card-title { font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:4px; }
-    .auth-card-sub { font-size:13px;color:var(--muted);line-height:1.5; }
-    .auth-error { color:var(--red);font-size:13px;min-height:18px;margin-top:8px;text-align:center; }
+    .auth-card-sub { font-size:16px;color:var(--muted);line-height:1.5; }
+    .auth-error { color:var(--red);font-size:16px;min-height:18px;margin-top:8px;text-align:center; }
     .auth-link {
       display:block;text-align:center;margin-top:12px;
-      font-size:13px;color:var(--muted);cursor:pointer;
+      font-size:16px;color:var(--muted);cursor:pointer;
       background:none;border:none;font-family:'DM Sans',sans-serif;
       text-decoration:underline;text-underline-offset:3px;width:100%;padding:4px;
     }
@@ -677,13 +677,13 @@
     .biometric-btn:hover { background:linear-gradient(135deg,rgba(46,204,138,.25),rgba(26,107,74,.3));border-color:rgba(46,204,138,.6); }
     .biometric-btn:active { transform:scale(.97); }
     .biometric-icon { font-size:40px;line-height:1; }
-    .biometric-label { font-size:16px;font-weight:700;color:var(--green);font-family:'Lora',serif; }
-    .biometric-sub { font-size:12px;color:var(--muted); }
+    .biometric-label { font-size:18px;font-weight:700;color:var(--green);font-family:'Lora',serif; }
+    .biometric-sub { font-size:15px;color:var(--muted); }
 
     /* Divider */
     .auth-divider {
       display:flex;align-items:center;gap:10px;
-      margin:16px 0;color:var(--muted);font-size:12px;
+      margin:16px 0;color:var(--muted);font-size:15px;
     }
     .auth-divider::before,.auth-divider::after { content:'';flex:1;height:1px;background:var(--line2); }
 
@@ -715,11 +715,22 @@
     .pin-key:active { transform:scale(.9);background:rgba(46,204,138,.25); }
     .pin-key-empty { background:transparent;border-color:transparent;cursor:default; }
     .pin-key-empty:hover { background:transparent;border-color:transparent; }
-    .pin-key-del { font-size:18px; }
+    .pin-key-del { font-size:20px; }
 
     /* ── TOAST ── */
-    #toast { position:fixed;bottom:108px;left:50%;transform:translateX(-50%) translateY(0);background:var(--card2);border:1px solid var(--line);color:var(--text);padding:11px 20px;border-radius:999px;font-size:14px;z-index:1100;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4); }
+    #toast { position:fixed;bottom:108px;left:50%;transform:translateX(-50%) translateY(0);background:var(--card2);border:1px solid var(--line);color:var(--text);padding:11px 20px;border-radius:999px;font-size:17px;z-index:1100;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4); }
     #toast.show { opacity:1;transform:translateX(-50%) translateY(-6px); }
+  
+    /* ── ELDER-FRIENDLY OVERRIDES (large targets, readable text) ── */
+    body { font-size: 18px; line-height: 1.5; }
+    button, .tabbtn, .btn, input, select, textarea { min-height: 56px; font-size: 18px; }
+    input, select, textarea { padding: 14px; }
+    .tabbtn { min-height: 64px; font-size: 14px; }
+    .tabbtn .icon { font-size: 26px; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+    body.text-xl { font-size: 22px; }
+    body.text-xl button, body.text-xl input, body.text-xl select, body.text-xl textarea { font-size: 22px; min-height: 64px; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body>
@@ -737,7 +748,7 @@
     <div id="authReturning">
       <div class="auth-card">
         <div class="auth-card-title">Welcome back 👋</div>
-        <div id="authReturnName" style="color:var(--green);font-size:18px;font-weight:700;margin:8px 0 16px;"></div>
+        <div id="authReturnName" style="color:var(--green);font-size:20px;font-weight:700;margin:8px 0 16px;"></div>
         <button class="biometric-btn" id="biometricLoginBtn" style="display:none;">
           <span class="biometric-icon">👆</span>
           <span class="biometric-label">Touch ID / Face ID</span>
@@ -775,9 +786,9 @@
         <div class="auth-card-title">Create Your Account</div>
         <div class="auth-card-sub" style="margin-bottom:16px;">Name, username, and a 4-digit PIN.</div>
         <div class="label">Your full name</div>
-        <input id="setupName" placeholder="e.g., Ben Crump" style="font-size:16px;margin-bottom:12px;"/>
+        <input id="setupName" placeholder="e.g., Ben Crump" style="font-size:18px;margin-bottom:12px;"/>
         <div class="label">Choose a username</div>
-        <input id="setupUsername" placeholder="e.g., ben66" style="font-size:16px;margin-bottom:16px;" autocomplete="off"/>
+        <input id="setupUsername" placeholder="e.g., ben66" style="font-size:18px;margin-bottom:16px;" autocomplete="off"/>
         <div class="auth-card-sub" style="margin-bottom:10px;">Choose a 4-digit PIN</div>
         <div class="pin-display">
           <div class="pin-dot" id="sd0"></div>
@@ -801,7 +812,7 @@
         </div>
         <div class="auth-error" id="newUserError"></div>
         <div class="sp12"></div>
-        <button class="btn green" id="createAccountBtn" style="font-size:16px;padding:14px;">Create Account →</button>
+        <button class="btn green" id="createAccountBtn" style="font-size:18px;padding:14px;">Create Account →</button>
         <button class="auth-link" id="showReturningBtn">← Already have an account</button>
       </div>
     </div>
@@ -828,6 +839,13 @@
 
 <!-- ══════════════ HOME ══════════════ -->
 <section class="grid" id="view-home">
+  <div class="card" id="circleCard">
+    <div class="card-title">👨‍👩‍👧 Family Circle</div>
+    <div class="card-sub">Send a quick message to your family or see shared tasks.</div>
+    <a class="btn green" href="/circle.html" style="display:block;text-align:center;text-decoration:none;line-height:56px;">Open Family Circle</a>
+    <div class="sp8"></div>
+    <button class="btn" id="bigTextBtn">🔠 Make text bigger</button>
+  </div>
   <div class="card" id="checkinHeroCard">
     <div class="checkin-hero">
       <div class="checkin-hero-left">
@@ -880,8 +898,8 @@
     <div style="display:flex;align-items:flex-start;gap:12px;">
       <div style="font-size:28px;flex-shrink:0;" id="tipEmoji">💡</div>
       <div>
-        <div style="font-size:12px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:4px;">DAILY TIP</div>
-        <div style="font-size:14px;line-height:1.5;font-family:'Lora',serif;" id="tipText">Loading your tip for today…</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:4px;">DAILY TIP</div>
+        <div style="font-size:17px;line-height:1.5;font-family:'Lora',serif;" id="tipText">Loading your tip for today…</div>
       </div>
     </div>
   </div>
@@ -920,12 +938,12 @@
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div class="card-title" style="margin-bottom:0;">📋 Recent Check-Ins</div>
-      <button class="btn ghost" id="clearCheckinsBtn" style="width:auto;padding:6px 10px;font-size:11px;">Clear All</button>
+      <button class="btn ghost" id="clearCheckinsBtn" style="width:auto;padding:6px 10px;font-size:14px;">Clear All</button>
     </div>
     <div id="checkinEmpty" style="text-align:center;padding:24px 0;">
       <div style="font-size:40px;margin-bottom:10px;">🌱</div>
-      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No check-ins yet</div>
-      <div style="font-size:13px;color:var(--muted);">Tap <strong>Check In</strong> above to record how you're feeling today.</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:6px;">No check-ins yet</div>
+      <div style="font-size:16px;color:var(--muted);">Tap <strong>Check In</strong> above to record how you're feeling today.</div>
     </div>
     <ul class="list" id="checkinList"></ul>
   </div>
@@ -956,7 +974,7 @@
       <option value="⭐">⭐ Other</option>
     </select>
     <div class="sp8"></div>
-    <label style="display:flex;align-items:center;font-size:14px;cursor:pointer;padding:10px 0;">
+    <label style="display:flex;align-items:center;font-size:17px;cursor:pointer;padding:10px 0;">
       <input type="checkbox" id="remUrgent" /> 
       <span>🚨 <strong>Urgent</strong> — must dismiss full-screen alert</span>
     </label>
@@ -967,7 +985,7 @@
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div class="card-title" style="margin-bottom:0;">Saved Reminders</div>
-      <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:8px 12px;font-size:13px;">Clear All</button>
+      <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:8px 12px;font-size:16px;">Clear All</button>
     </div>
     <div class="small" style="margin-bottom:10px;" id="notifPermStatus"></div>
     <ul class="list" id="remList"></ul>
@@ -998,14 +1016,14 @@
     <div class="sp8"></div>
     <button class="btn gold" id="saveApiKeyBtn">Save Key &amp; Enable AI Chat</button>
     <div class="sp8"></div>
-    <button class="btn ghost" id="clearApiKeyBtn" style="font-size:13px;padding:9px;display:none;">🗑 Remove Saved Key</button>
+    <button class="btn ghost" id="clearApiKeyBtn" style="font-size:16px;padding:9px;display:none;">🗑 Remove Saved Key</button>
     <p class="small" id="apiKeyStatus"></p>
   </div>
 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div class="card-title" style="margin-bottom:0;">Companion Chat</div>
-      <button class="btn ghost" id="clearChatBtn" style="width:auto;padding:7px 12px;font-size:12px;">Clear</button>
+      <button class="btn ghost" id="clearChatBtn" style="width:auto;padding:7px 12px;font-size:15px;">Clear</button>
     </div>
     <p class="small" style="margin-bottom:10px;">Chat with your AI companion — warm, patient, and always here.</p>
     <div class="chat-starter-chips" id="starterChips">
@@ -1047,7 +1065,7 @@
   <div class="game-card" id="gameArea" style="display:none;">
     <div class="game-question" id="gameQuestion"></div>
     <div class="game-options" id="gameOptions"></div>
-    <div id="gameAnswer" style="display:none;margin-top:12px;padding:12px;background:rgba(46,204,138,.08);border:1px solid rgba(46,204,138,.2);border-radius:12px;font-size:14px;line-height:1.5;"></div>
+    <div id="gameAnswer" style="display:none;margin-top:12px;padding:12px;background:rgba(46,204,138,.08);border:1px solid rgba(46,204,138,.2);border-radius:12px;font-size:17px;line-height:1.5;"></div>
     <div class="sp8"></div>
     <button class="btn green" id="nextGameBtn" style="display:none;">Next →</button>
   </div>
@@ -1088,7 +1106,7 @@
     <div class="sp8"></div>
     <button class="btn ghost" id="savePhoneBtn">Save Emergency Number</button>
     <div class="sp12"></div>
-    <button class="btn red" id="callNowBtn" style="font-size:17px;padding:16px;">🆘 Call Emergency Number</button>
+    <button class="btn red" id="callNowBtn" style="font-size:19px;padding:16px;">🆘 Call Emergency Number</button>
     <p class="small" id="phoneSavedMsg" style="margin-top:8px;text-align:center;"></p>
   </div>
 </section>
@@ -1144,7 +1162,7 @@
 
     <div class="info-section">
       <div class="section-head">👨‍👩‍👧 Family</div>
-      <div class="info-val" id="diFamilyList" style="font-size:14px;line-height:1.8;"></div>
+      <div class="info-val" id="diFamilyList" style="font-size:17px;line-height:1.8;"></div>
     </div>
   </div>
 
@@ -1152,9 +1170,9 @@
   <div class="card" style="border-color:rgba(46,204,138,.2);background:rgba(46,204,138,.03);">
     <div class="card-title" style="color:var(--green);">👨‍👩‍👧 Caregiver Portal</div>
     <div class="card-sub">Share this with a family member so they can check in on you remotely. They'll need the PIN you set.</div>
-    <div style="padding:12px 14px;background:rgba(0,0,0,.2);border:1px solid var(--line2);border-radius:14px;font-size:13px;font-family:monospace;word-break:break-all;color:var(--muted);" id="caregiverPortalUrl">Add your site URL here after deploying.</div>
+    <div style="padding:12px 14px;background:rgba(0,0,0,.2);border:1px solid var(--line2);border-radius:14px;font-size:16px;font-family:monospace;word-break:break-all;color:var(--muted);" id="caregiverPortalUrl">Add your site URL here after deploying.</div>
     <div class="sp8"></div>
-    <button class="btn green" id="openCaregiverBtn" style="font-size:14px;">👁 Open Caregiver View</button>
+    <button class="btn green" id="openCaregiverBtn" style="font-size:17px;">👁 Open Caregiver View</button>
     <div class="sp8"></div>
     <p class="small" id="caregiverPinStatus"></p>
   </div>
@@ -1729,10 +1747,10 @@ function renderCheckins(){
     li.innerHTML=`
       <div style="width:42px;height:42px;border-radius:14px;background:rgba(46,204,138,.1);border:1px solid rgba(46,204,138,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${emoji}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;font-size:14px;">${esc(c.mood||'—')} <span style="color:var(--muted);font-weight:400;font-size:12px;">· Pain ${c.pain??'0'}/10</span></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(fmtDate(c.ts))}${c.notes?` · "${esc(c.notes.slice(0,40))}${c.notes.length>40?'…':''}"`:''}</div>
+        <div style="font-weight:600;font-size:17px;">${esc(c.mood||'—')} <span style="color:var(--muted);font-weight:400;font-size:15px;">· Pain ${c.pain??'0'}/10</span></div>
+        <div style="font-size:15px;color:var(--muted);margin-top:2px;">${esc(fmtDate(c.ts))}${c.notes?` · "${esc(c.notes.slice(0,40))}${c.notes.length>40?'…':''}"`:''}</div>
       </div>
-      <button class="btn ghost" style="width:auto;padding:6px 10px;font-size:12px;flex-shrink:0;" data-idx="${idx}">✕</button>
+      <button class="btn ghost" style="width:auto;padding:6px 10px;font-size:15px;flex-shrink:0;" data-idx="${idx}">✕</button>
     `;
     li.querySelector('button').addEventListener('click',()=>{
       const l=S.get('checkins_v2',[]); l.splice(idx,1); S.set('checkins_v2',l); renderCheckins(); refreshHomeStats(); refreshChart();
@@ -1900,7 +1918,7 @@ function renderReminders(){
     const li=document.createElement('li');
     const left=document.createElement('div'); left.style.cssText='display:flex;align-items:center;gap:10px;flex:1;';
     left.innerHTML=`<span class="rem-item-icon">${esc(r.cat||'⭐')}</span><div><div style="font-weight:600;">${esc(r.title)}${r.urgent?'<span class="urgent-badge">URGENT</span>':''}</div><div class="small">${r.time?fmt12(r.time):'No time set'}</div></div>`;
-    const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:12px;flex-shrink:0;'; del.textContent='✕';
+    const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:15px;flex-shrink:0;'; del.textContent='✕';
     del.addEventListener('click',()=>{ const l=S.get('reminders',[]).filter((_,i)=>i!==idx); S.set('reminders',l); renderReminders(); refreshHomeStats(); });
     li.appendChild(left); li.appendChild(del); ul.appendChild(li);
   });
@@ -2707,7 +2725,7 @@ Object.entries(QS_MAP).forEach(([qsId, key])=>{
   document.getElementById(id).addEventListener('change', syncQuickSettings);
 });
 
-document.getElementById('qsTestVoiceBtn').addEventListener('click',()=>{
+document.getElementById('qsTestVoiceBtn')?.addEventListener('click',()=>{
   document.getElementById('testVoiceBtn').click();
 });
 
@@ -2745,6 +2763,18 @@ initCaregiverPortal();
 refreshChart();
 // Request notification permission on load (gentle)
 if('Notification' in window && Notification.permission==='granted') notifGranted=true;
+/* Large-text toggle (remembered on this device) */
+(function(){
+  try{ if(localStorage.getItem('exc_text_xl')==='1') document.body.classList.add('text-xl'); }catch(e){}
+  var b=document.getElementById('bigTextBtn'); if(!b) return;
+  function label(){ b.textContent=document.body.classList.contains('text-xl')?'🔠 Back to normal text':'🔠 Make text bigger'; }
+  label();
+  b.addEventListener('click',function(){
+    var on=document.body.classList.toggle('text-xl');
+    try{ localStorage.setItem('exc_text_xl',on?'1':'0'); }catch(e){}
+    label();
+  });
+})();
 </script>
 </body>
 </html>
