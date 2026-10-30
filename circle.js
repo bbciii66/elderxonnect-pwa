@@ -81,6 +81,18 @@
     });
   }
 
+  async function invite() {
+    const email = L.cleanText($('inviteEmail').value, 200).toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showError(new Error('Enter a full email address, like name@example.com.')); return; }
+    if (email === String(me.email || '').toLowerCase()) { showError(new Error('Use a different email for the other person.')); return; }
+    try {
+      showError('');
+      const r = await client.from('caregiver_access').insert({ elder_id: me.id, caregiver_email: email, status: 'pending', role: $('inviteRole').value });
+      if (r.error) throw (r.error.code === '23505' ? new Error('That person is already in your circle. Change their role above.') : r.error);
+      $('inviteEmail').value = ''; loadRoles();
+    } catch (e) { showError(e); }
+  }
+
   async function post(body) {
     body = L.cleanText(body, 1000); if (!body) return;
     try { showError(''); const r = await client.from('circle_messages').insert({ elder_id: elderId, body }); if (r.error) throw r.error; $('text').value = ''; refresh(); } catch (e) { showError(e); }
@@ -106,6 +118,9 @@
 
   $('send').onclick = () => post($('text').value);
   $('text').addEventListener('keydown', (e) => { if (e.key === 'Enter') post($('text').value); });
+  $('inviteRole').innerHTML = L.ROLES.map((role) => `<option value="${role}">${esc(L.ROLE_LABELS[role])}</option>`).join('');
+  $('inviteRole').value = 'viewer';
+  $('sendInvite').onclick = invite;
   $('addTask').onclick = addTask;
   $('addVisit').onclick = addVisit;
   $('bigText').onclick = () => { const on = document.body.classList.toggle('text-xl'); try { localStorage.setItem('exc_text_xl', on ? '1' : '0'); } catch {} };

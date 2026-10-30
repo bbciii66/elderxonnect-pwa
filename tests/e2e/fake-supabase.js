@@ -10,6 +10,7 @@
       const rows = DB.tables[name] = DB.tables[name] || [];
       let out;
       if (st.op === 'insert') {
+        if (name === 'caregiver_access' && rows.some((r) => r.elder_id === st.payload.elder_id && r.caregiver_email === st.payload.caregiver_email)) return { data: null, error: { code: '23505', message: 'duplicate' } };
         const row = Object.assign({ id: 'id' + (++n), created_at: new Date().toISOString() }, defaults(name), st.payload);
         rows.unshift(row); out = [row];
       } else {

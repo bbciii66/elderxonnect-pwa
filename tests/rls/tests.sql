@@ -120,6 +120,11 @@ do $$ begin
   assert not testkit.blocked($q$update public.caregiver_access set role='onsite' where caregiver_id='00000000-0000-0000-0000-0000000000b1'$q$), 'elder can change roles';
   assert testkit.blocked($q$update public.caregiver_access set role='admin' where caregiver_id='00000000-0000-0000-0000-0000000000b1'$q$), 'unknown role rejected';
 end $$;
+insert into public.caregiver_access(elder_id,caregiver_email,status,role) values (:E,'new.aide@example.com','pending','onsite');
+select testkit.login(:V,'vic.viewer@example.com');
+do $$ begin
+  assert testkit.blocked($q$insert into public.caregiver_access(elder_id,caregiver_email,status,role) values ('00000000-0000-0000-0000-00000000000e','sneaky@example.com','active','family')$q$), 'a caregiver cannot invite people into the elder circle';
+end $$;
 -- the promoted caregiver can now post
 select testkit.login(:V,'vic.viewer@example.com');
 insert into public.circle_messages(elder_id,body) values (:E,'Now I can post');

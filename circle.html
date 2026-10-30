@@ -92,6 +92,14 @@
       <h2>Who can do what</h2>
       <p class="sub">Family manager and onsite caregiver can post, add tasks and log visits. View only can just read. New people start as view only.</p>
       <div id="roles"></div>
+      <div style="margin-top:14px">
+        <label for="inviteEmail" class="sub">Invite someone to this circle</label>
+        <input id="inviteEmail" type="email" autocomplete="off" placeholder="their email address" />
+        <label for="inviteRole" class="sub" style="display:block;margin-top:10px">What can they do?</label>
+        <select id="inviteRole" style="width:100%"></select>
+        <button id="sendInvite">Add to my circle</button>
+        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself.</p>
+      </div>
     </section>
     <button class="secondary" id="bigText">Make text bigger</button>
     <div class="error" id="error" role="alert"></div>
