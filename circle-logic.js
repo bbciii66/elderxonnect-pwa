@@ -5,15 +5,46 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const ROLES = ['family', 'onsite', 'viewer'];
-  const ROLE_LABELS = { family: 'Family manager', onsite: 'Onsite caregiver', viewer: 'View only' };
+  const ROLES = ['admin', 'family', 'onsite', 'viewer'];
+  const ROLE_LABELS = { admin: 'Administrator', family: 'Family', onsite: 'Onsite caregiver', viewer: 'View only' };
+  // What each person may see. 'circle' (messages, tasks, visits) is always on.
+  const SECTIONS = ['circle', 'checkins', 'reminders', 'profile', 'contacts', 'portal'];
+  const SECTION_LABELS = {
+    circle: 'Messages, tasks and visits', checkins: 'Check-ins (mood, pain, notes)', reminders: 'Reminders and medications',
+    profile: 'Profile and medical details (includes address)', contacts: 'Contacts', portal: 'Health portal button',
+  };
+  const ROLE_DEFAULT_SECTIONS = {
+    admin: SECTIONS.slice(), family: ['circle', 'checkins', 'reminders', 'contacts'], onsite: ['circle', 'reminders'], viewer: ['circle'],
+  };
   const QUICK_MESSAGES = ['I’m okay today', 'Need help', 'Running late', 'Please call me'];
   const NUDGE_HOUR = 11;
 
   function canWrite(role) { return ROLES.includes(role) && role !== 'viewer'; }
+  function sectionsForRole(role) { return (ROLE_DEFAULT_SECTIONS[role] || ROLE_DEFAULT_SECTIONS.viewer).slice(); }
+
+  // May this person see a section of this circle? Mirrors the database rule; the database is what enforces it.
+  function canSee(circle, section) {
+    if (circle.own || circle.role === 'admin') return true;
+    return Array.isArray(circle.sections) && circle.sections.includes(section);
+  }
+
+  // Own circle: 'unset' (never chosen), 'self', 'managed_pending' (admin invited, not yet accepted), 'managed'.
+  function setupState(settings, accessRows) {
+    if (!settings) return 'unset';
+    if (settings.mode !== 'managed') return 'self';
+    const active = (accessRows || []).some((r) => r.role === 'admin' && r.status === 'active');
+    return active ? 'managed' : 'managed_pending';
+  }
+
+  // Who may change who is in the circle and what they see (mirrors circle_can_manage in the database).
+  function canManage(circle, settings, accessRows) {
+    if (circle.own) return setupState(settings, accessRows) !== 'managed';
+    return circle.role === 'admin' && !!settings && settings.mode === 'managed';
+  }
 
   // Silence must never look like "all clear": no data and old data are different from "checked in today".
   function checkinStatus(lastCheckin, now) {
+    if (lastCheckin === 'not-shared') return { level: 'unknown', text: 'Check-in status is not shared with you.' };
     if (!lastCheckin || !lastCheckin.occurred_at) return { level: 'unknown', text: 'No check-in information yet. We can’t say whether all is well.' };
     const d = new Date(lastCheckin.occurred_at);
     if (Number.isNaN(d.getTime())) return { level: 'unknown', text: 'The last check-in could not be read. We can’t say whether all is well.' };
@@ -32,7 +63,7 @@
     (accessRows || []).forEach((r, i) => {
       if (!r || r.status !== 'active' || r.elder_id === meId) return;
       const name = (r.recipient_display_name || '').trim();
-      circles.push({ id: r.elder_id, label: name || 'Person I help #' + (i + 1), role: ROLES.includes(r.role) ? r.role : 'viewer', own: false });
+      circles.push({ id: r.elder_id, label: name || 'Person I help #' + (i + 1), role: ROLES.includes(r.role) ? r.role : 'viewer', sections: Array.isArray(r.sections) ? r.sections : ['circle'], own: false });
     });
     return circles;
   }
@@ -51,5 +82,5 @@
     return Number.isInteger(n) && n >= 1 && n <= 1440 ? n : NaN;
   }
 
-  return { ROLES, ROLE_LABELS, QUICK_MESSAGES, canWrite, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
+  return { ROLES, ROLE_LABELS, SECTIONS, SECTION_LABELS, ROLE_DEFAULT_SECTIONS, QUICK_MESSAGES, canWrite, sectionsForRole, canSee, setupState, canManage, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
 });

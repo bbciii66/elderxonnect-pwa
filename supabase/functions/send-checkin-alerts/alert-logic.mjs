@@ -48,5 +48,7 @@ export function safeEqual(a, b) {
 // elder's circle count (revoked and pending never do). If the admin/permission model later limits who
 // sees check-ins, change only this function; the sender calls nothing else to decide.
 export function mayReceiveAlert(link) {
-  return !!link && link.status === 'active' && ['family', 'onsite', 'viewer'].includes(link.role);
+  if (!link || link.status !== 'active') return false;
+  if (link.role === 'admin') return true;
+  return ['family', 'onsite', 'viewer'].includes(link.role) && Array.isArray(link.sections) && link.sections.includes('checkins');
 }

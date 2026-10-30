@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
   for (const [caregiverId, devices] of byCaregiver) {
     const { data: links } = await admin.from('caregiver_access')
-      .select('elder_id, recipient_display_name, role, status').eq('caregiver_id', caregiverId).eq('status', 'active');
+      .select('elder_id, recipient_display_name, role, status, sections').eq('caregiver_id', caregiverId).eq('status', 'active');
     for (const link of (links ?? []).filter(mayReceiveAlert)) {
       const { data: last } = await admin.from('checkins').select('occurred_at')
         .eq('user_id', link.elder_id).order('occurred_at', { ascending: false }).limit(1).maybeSingle();

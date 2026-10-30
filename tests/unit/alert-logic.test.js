@@ -50,8 +50,11 @@ test('message is plain text with a fallback name, and the shared secret check is
 
 test('only active circle members may be nudged', async () => {
   const { mayReceiveAlert } = await load();
-  assert.strictEqual(mayReceiveAlert({ status: 'active', role: 'family' }), true);
-  assert.strictEqual(mayReceiveAlert({ status: 'active', role: 'viewer' }), true);
-  for (const bad of [{ status: 'revoked', role: 'family' }, { status: 'pending', role: 'family' }, { status: 'active', role: 'stranger' }, null])
+  const ck = ['circle', 'checkins'];
+  assert.strictEqual(mayReceiveAlert({ status: 'active', role: 'family', sections: ck }), true);
+  assert.strictEqual(mayReceiveAlert({ status: 'active', role: 'viewer', sections: ck }), true);
+  assert.strictEqual(mayReceiveAlert({ status: 'active', role: 'admin', sections: ['circle'] }), true);
+  for (const bad of [{ status: 'revoked', role: 'family', sections: ck }, { status: 'pending', role: 'family', sections: ck }, { status: 'active', role: 'stranger', sections: ck },
+    { status: 'active', role: 'family', sections: ['circle'] }, { status: 'active', role: 'family' }, null])
     assert.strictEqual(mayReceiveAlert(bad), false);
 });
