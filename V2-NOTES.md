@@ -41,3 +41,14 @@ Made-up people only. Do not put real health information in until the privacy pha
 - Existing people keep what they could already see (one-time backfill from role defaults). New people start with messages, tasks and visits only.
 - Run `care-circle-admin-migration.sql` after `care-circle-v2-migration.sql`; safe to run twice. Check with `npm test`.
 - Still open: history of who changed sharing, "delete everything", the health portal button, the older caregiver dashboard page still shows what the database now allows (blank sections for people without access).
+
+## Push alerts: "no check-in yet today" (built, not switched on)
+- A family member who helps someone sees an **Alerts** card on the circle page. With it on, their phone gets one nudge per person per day if that person hasn't checked in by 11am (the family member's own time zone), as long as they checked in at some point in the last 7 days. People with no check-ins at all, or silent for over a week, never trigger a nudge.
+- Only **active** circle members can be nudged (revoked and pending never). `mayReceiveAlert()` in `supabase/functions/send-checkin-alerts/alert-logic.mjs` is the one place to change when the admin/permission model decides who may see check-ins.
+- Pieces: `push-alerts-migration.sql` (device list + once-a-day log, privacy locked, safe to run twice), the `send-checkin-alerts` function, `push-client.js` and the push handlers in `service-worker.js`.
+- **To switch on (Ben, from the Mac; nothing here is deployed or paid):**
+  1. Run `push-alerts-migration.sql` in the elderxonnect-v2 SQL Editor.
+  2. Make a push key pair with `npx web-push generate-vapid-keys`. Put the public key in `push-config.js`. Save the private key, the public key, a contact like `mailto:you@example.com`, and a made-up `ALERT_CRON_SECRET` as secrets on the function (never in the repo).
+  3. Deploy `send-checkin-alerts`, then have Supabase's built-in scheduler (pg_cron, free) call it every 30 minutes with the secret in the `x-cron-secret` header.
+  4. On iPhone the family member must add the app to the Home Screen first.
+- Until step 3, the function answers "not configured" and sends nothing.

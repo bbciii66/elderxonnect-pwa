@@ -127,6 +127,10 @@ create trigger circle_settings_guard before insert or update on public.circle_se
 create or replace function public.circle_last_admin_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  if old.role = 'admin' and old.status = 'active' and (tg_op = 'DELETE' or new.role <> 'admin' or new.status <> 'active') then
+    -- One change at a time per circle, so two administrators cannot remove each other simultaneously.
+    perform pg_advisory_xact_lock(hashtextextended('circle-admin:' || old.elder_id::text, 0));
+  end if;
   if old.role = 'admin' and old.status = 'active'
      and (tg_op = 'DELETE' or new.role <> 'admin' or new.status <> 'active')
      and exists (select 1 from public.circle_settings s where s.elder_id = old.elder_id and s.mode = 'managed')
@@ -140,6 +144,31 @@ end $$;
 drop trigger if exists caregiver_access_last_admin on public.caregiver_access;
 create trigger caregiver_access_last_admin before update or delete on public.caregiver_access
   for each row execute function public.circle_last_admin_guard();
+
+-- 6b. The profile snapshot kept on each access row follows the 'profile' section too.
+create or replace function public.circle_snapshot_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.role = 'admin' or 'profile' = any(new.sections) then
+    if tg_op = 'INSERT' or new.recipient_profile = '{}'::jsonb
+       or (old.role <> 'admin' and not ('profile' = any(old.sections)) and old.recipient_profile = '{}'::jsonb) then
+      -- Newly allowed: start from the elder's current profile rather than waiting for their next sync.
+      if new.recipient_profile = '{}'::jsonb then
+        select coalesce(p.profile_data, '{}'::jsonb) into new.recipient_profile from public.profiles p where p.user_id = new.elder_id;
+        new.recipient_profile := coalesce(new.recipient_profile, '{}'::jsonb);
+      end if;
+    end if;
+  else
+    new.recipient_profile := '{}'::jsonb;
+  end if;
+  return new;
+end $$;
+drop trigger if exists caregiver_access_snapshot on public.caregiver_access;
+create trigger caregiver_access_snapshot before insert or update on public.caregiver_access
+  for each row execute function public.circle_snapshot_guard();
+-- One-time cleanup of snapshots people were never allowed to see.
+update public.caregiver_access set recipient_profile = '{}'::jsonb
+ where role <> 'admin' and not ('profile' = any(sections)) and recipient_profile <> '{}'::jsonb;
 
 -- 7. Caregivers only read what their sections allow (replaces the old "any active caregiver sees everything").
 drop policy if exists "Caregivers read shared profiles" on public.profiles;

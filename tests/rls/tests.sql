@@ -266,9 +266,50 @@ update public.circle_settings set mode='self';
 select testkit.login(:E2,'eve.testerson@example.com','Eve');
 do $$ begin assert not testkit.blocked($q$update public.caregiver_access set role='viewer' where caregiver_email='olly.aide@example.com'$q$), 'self mode: elder manages again'; end $$;
 
+-- 15b. The profile snapshot on an access row follows the profile section
+select testkit.logout();
+insert into auth.users(id,email) values ('00000000-0000-0000-0000-0000000000b3','zed.viewer@example.com');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role) values (:E2,'00000000-0000-0000-0000-0000000000b3','zed.viewer@example.com','active','viewer');
+update public.caregiver_access set recipient_profile='{"name":"Eve","address":"1 Made Up Rd"}'::jsonb where caregiver_email='zed.viewer@example.com';
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='zed.viewer@example.com')='{}'::jsonb, 'snapshot is blanked for someone without the profile section';
+end $$;
+update public.caregiver_access set sections=array['circle','profile'] where caregiver_email='zed.viewer@example.com';
+update public.caregiver_access set recipient_profile='{"name":"Eve"}'::jsonb where caregiver_email='zed.viewer@example.com';
+do $$ begin
+  assert (select recipient_profile->>'name' from public.caregiver_access where caregiver_email='zed.viewer@example.com')='Eve', 'snapshot kept once profile is shared';
+end $$;
+update public.caregiver_access set sections=array['circle'] where caregiver_email='zed.viewer@example.com';
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='zed.viewer@example.com')='{}'::jsonb, 'snapshot cleared when profile is withdrawn';
+end $$;
+
 -- 15. Deleting the elder's account still cascades cleanly even with a protected administrator
 select testkit.logout();
 update public.circle_settings set mode='managed';
 delete from auth.users where id='00000000-0000-0000-0000-0000000000e2';
 do $$ begin assert (select count(*) from public.caregiver_access where elder_id='00000000-0000-0000-0000-0000000000e2')=0, 'account deletion removes the circle'; end $$;
+-- 16. Push devices: you see and manage only your own; strangers and other caregivers see nothing
+select testkit.login(:F,'fran.testerson@example.com');
+insert into public.push_subscriptions(endpoint,p256dh,auth,tz) values ('https://push.example/fran','k','a','America/Chicago');
+do $$ begin
+  assert testkit.blocked($q$insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values ('00000000-0000-0000-0000-0000000000a1','https://push.example/hijack','k','a')$q$), 'cannot register a device for someone else';
+  assert testkit.blocked($q$insert into public.push_subscriptions(endpoint,p256dh,auth) values ('http://insecure.example/x','k','a')$q$), 'endpoint must be https';
+end $$;
+select testkit.login(:F,'fran.testerson@example.com');
+insert into public.push_subscriptions(endpoint,p256dh,auth,tz) values ('https://push.example/fran','k2','a2','America/New_York') on conflict (endpoint) do update set p256dh=excluded.p256dh, tz=excluded.tz;
+do $$ begin assert (select tz from public.push_subscriptions where endpoint='https://push.example/fran')='America/New_York', 'owner can refresh their own device'; end $$;
+select testkit.login(:A,'omar.aide@example.com');
+do $$ begin
+  assert testkit.blocked($q$update public.push_subscriptions set tz='UTC'$q$), 'cannot change someone else''s device';
+  assert (select count(*) from public.push_subscriptions)=0, 'another caregiver must not see Fran''s device';
+  assert testkit.blocked($q$delete from public.push_subscriptions$q$), 'cannot delete someone else''s device';
+end $$;
+select testkit.login(:E,'edna.testerson@example.com');
+do $$ begin
+  assert (select count(*) from public.push_subscriptions)=0, 'the elder does not see caregiver devices';
+  assert testkit.blocked($q$insert into public.alert_log(elder_id,caregiver_id,day) values ('00000000-0000-0000-0000-00000000000e','00000000-0000-0000-0000-0000000000f1',current_date)$q$), 'app users cannot write the alert log';
+  assert testkit.blocked($q$select 1 from public.alert_log$q$), 'app users cannot read the alert log';
+end $$;
+select testkit.logout();
 \echo ALL DATABASE RULE CHECKS PASSED

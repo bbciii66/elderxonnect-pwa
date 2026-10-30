@@ -2,6 +2,6 @@
   "name": "elderxonnect-pwa",
   "private": true,
   "scripts": {
-    "test": "node --test tests/unit/circle-logic.test.js tests/unit/invite-logic.test.js && node tests/e2e/circle.e2e.js && tests/rls/run.sh"
+    "test": "node --test tests/unit/circle-logic.test.js tests/unit/invite-logic.test.js tests/unit/alert-logic.test.js && node tests/e2e/circle.e2e.js && tests/rls/run.sh"
   }
 }
