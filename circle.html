@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1a6b4a" />
+  <title>ElderXonnect Care Circle</title>
+  <style>
+    :root{--bg:#0e1a14;--card:#162219;--green:#2ecc8a;--gold:#e8c97e;--text:#f1f5f2;--muted:#a9c7b4;--line:rgba(255,255,255,.14);--red:#ff8a8a;--amber:#f0b429}
+    *{box-sizing:border-box}
+    body{margin:0 auto;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:19px;line-height:1.5;padding:16px 14px 40px;max-width:640px}
+    body.text-xl{font-size:23px}
+    h1{font-size:28px;margin:0 0 4px}h2{font-size:22px;margin:0 0 12px}
+    .sub{color:var(--muted);margin:0 0 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+    button,input{font:inherit}
+    button{width:100%;min-height:60px;border:0;border-radius:14px;padding:12px;font-weight:700;background:var(--green);color:#071209;margin-top:10px}
+    button.secondary{background:#2a3d32;color:var(--text)}
+    input{width:100%;min-height:60px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:#0b1510;color:var(--text)}
+    :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+    .hidden{display:none!important}
+    .status{border-radius:16px;padding:14px 16px;font-weight:700;margin-bottom:14px}
+    .status.ok{background:rgba(46,204,138,.18);border:2px solid var(--green)}
+    .status.warn{background:rgba(240,180,41,.18);border:2px solid var(--amber)}
+    .status.unknown{background:rgba(255,255,255,.08);border:2px solid var(--line)}
+    .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick button{margin:0;background:#26372d;color:var(--text)}
+    .msg{padding:12px 0;border-bottom:1px solid var(--line)}.msg:last-child{border:0}
+    .who{color:var(--muted);font-size:16px}.mine .body{color:var(--gold)}
+    .body{white-space:pre-wrap;overflow-wrap:anywhere}
+    .task{display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+    .task button{width:auto;min-width:96px;margin:0}
+    .task.done .t{text-decoration:line-through;color:var(--muted)}
+    .row2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row2 button{width:auto;margin:0;min-width:96px}
+    select{font:inherit;min-height:56px;border-radius:12px;padding:8px 12px;background:#0b1510;color:var(--text);border:2px solid var(--line)}
+    option{background:#162219;color:var(--text)}
+    .rolerow{padding:12px 0;border-bottom:1px solid var(--line)}.rolerow:last-child{border:0}
+    .error{color:var(--red);margin-top:8px}
+    a.back{color:var(--green);font-weight:700;display:inline-block;padding:14px 0;min-height:56px}
+    @media(max-width:480px){.quick{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← Back to ElderXonnect</a>
+  <h1>Care Circle</h1>
+  <p class="sub">Messages and tasks shared by the family and caregivers.</p>
+
+  <section class="card" id="signin">
+    <p><strong>You need to sign in with your cloud account first.</strong></p>
+    <p>The name, username and PIN you set up on this device are not enough here. On the <a style="color:var(--green)" href="/">main page</a>, tap <strong>Me (⚙️)</strong>, scroll to <strong>☁️ Cloud Sync</strong>, and sign in or create an account with an email and password. Then come back to this page.</p>
+    <p>Family and caregivers: use the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> instead.</p>
+  </section>
+
+  <main id="app" class="hidden">
+    <label for="who" id="whoLabel" class="sub hidden">Whose circle?</label>
+    <select id="who" class="hidden" style="width:100%;min-height:60px;font-size:19px;border-radius:14px;margin-bottom:14px"></select>
+    <div class="status unknown" id="status">Checking…</div>
+
+    <section class="card">
+      <h2>Quick message</h2>
+      <div class="quick" id="quick"></div>
+    </section>
+
+    <section class="card">
+      <h2>Messages</h2>
+      <div id="messages"></div>
+      <div class="row2" style="margin-top:12px" id="composeRow">
+        <input id="text" type="text" maxlength="1000" placeholder="Write a message" aria-label="Write a message" />
+        <button id="send">Send</button>
+      </div>
+      <div class="status unknown hidden" id="viewerNote" style="margin-top:12px">You have view-only access, so you can read but not post.</div>
+    </section>
+
+    <section class="card">
+      <h2>Tasks and visits</h2>
+      <div id="tasks"></div>
+      <div class="row2" style="margin-top:12px" id="taskRow">
+        <input id="taskText" type="text" maxlength="200" placeholder="Add a task (e.g. refill pills)" aria-label="Add a task" />
+        <button id="addTask">Add</button>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Visit log</h2>
+      <div id="visits"></div>
+      <div id="visitForm" style="margin-top:12px">
+        <label for="visitNotes" class="sub">What happened on this visit?</label>
+        <input id="visitNotes" type="text" maxlength="2000" placeholder="e.g. Brought groceries, took a walk" />
+        <label for="visitMinutes" class="sub" style="display:block;margin-top:10px">How many minutes? (optional)</label>
+        <input id="visitMinutes" type="number" inputmode="numeric" min="1" max="1440" />
+        <button id="addVisit">Log this visit</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="rolesCard">
+      <h2>Who can do what</h2>
+      <p class="sub">Family manager and onsite caregiver can post, add tasks and log visits. View only can just read. New people start as view only.</p>
+      <div id="roles"></div>
+      <div style="margin-top:14px">
+        <label for="inviteEmail" class="sub">Invite someone to this circle</label>
+        <input id="inviteEmail" type="email" autocomplete="off" placeholder="their email address" />
+        <label for="inviteRole" class="sub" style="display:block;margin-top:10px">What can they do?</label>
+        <select id="inviteRole" style="width:100%"></select>
+        <button id="sendInvite">Add to my circle</button>
+        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself.</p>
+      </div>
+    </section>
+    <button class="secondary" id="bigText">Make text bigger</button>
+    <div class="error" id="error" role="alert"></div>
+  </main>
+
+  <script src="/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/circle-logic.js"></script>
+  <script src="/circle.js"></script>
+</body>
+</html>
