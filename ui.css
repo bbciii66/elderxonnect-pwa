@@ -2,7 +2,8 @@
    Colors come from theme tokens (index.html :root and theme.css). */
 
 html, body { overflow-x: hidden; }
-body.text-xl #mainApp, body.text-xl #mainNav, body.text-xl #settingsDrawer { zoom: 1.15; }
+/* Bigger text reaches everything on the page, including pop-ups like the profile editor. */
+body.text-xl > :not(script):not(style) { zoom: 1.15; }
 
 /* Header: name and greeting left, two round buttons right. Nothing may push past the edge. */
 header { flex-wrap: nowrap; min-width: 0; }

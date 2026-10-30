@@ -159,6 +159,11 @@ let port;
     await p.click('#bigTextBtn');
     check(await p.evaluate(() => document.body.classList.contains('text-xl')), 'text size can be raised from Me');
     check(await noSideScroll(p), 'bigger text still fits the screen');
+    await p.click('#editMeBtn');
+    await p.waitForTimeout(200);
+    check(await p.evaluate(() => { const m = document.getElementById('meModal'); return !!m && getComputedStyle(m).zoom !== '1' && getComputedStyle(m).zoom !== 'normal'; }), 'bigger text also enlarges the profile editor');
+    await p.keyboard.press('Escape');
+    await p.evaluate(() => document.getElementById('meModal')?.classList.add('hidden'));
     await p.click('#bigTextBtn');
     await ctx.close();
   }
