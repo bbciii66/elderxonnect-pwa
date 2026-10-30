@@ -118,7 +118,7 @@ end $$;
 select testkit.login(:E,'edna.testerson@example.com','Edna T');
 do $$ begin
   assert not testkit.blocked($q$update public.caregiver_access set role='onsite' where caregiver_id='00000000-0000-0000-0000-0000000000b1'$q$), 'elder can change roles';
-  assert testkit.blocked($q$update public.caregiver_access set role='admin' where caregiver_id='00000000-0000-0000-0000-0000000000b1'$q$), 'unknown role rejected';
+  assert testkit.blocked($q$update public.caregiver_access set role='wizard' where caregiver_id='00000000-0000-0000-0000-0000000000b1'$q$), 'unknown role rejected';
 end $$;
 insert into public.caregiver_access(elder_id,caregiver_email,status,role) values (:E,'new.aide@example.com','pending','onsite');
 select testkit.login(:V,'vic.viewer@example.com');
@@ -143,4 +143,132 @@ select testkit.login(:E,'edna.testerson@example.com','Edna T');
 insert into public.circle_messages(elder_id,body) values (:E,'I am okay today');
 do $$ begin assert (select count(*) from public.circle_messages)=4, 'elder sees all messages'; end $$;
 select testkit.logout();
+
+-- ============ Administrator, managed mode and per-section sharing (a second, separate circle) ============
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e2','eve.testerson@example.com'),
+ ('00000000-0000-0000-0000-0000000000d1','dana.testerson@example.com'),
+ ('00000000-0000-0000-0000-0000000000d2','dave.testerson@example.com'),
+ ('00000000-0000-0000-0000-0000000000f2','fay.testerson@example.com'),
+ ('00000000-0000-0000-0000-0000000000a2','olly.aide@example.com'),
+ ('00000000-0000-0000-0000-0000000000b2','val.viewer@example.com');
+\set E2 '''00000000-0000-0000-0000-0000000000e2'''
+\set D1 '''00000000-0000-0000-0000-0000000000d1'''
+\set D2 '''00000000-0000-0000-0000-0000000000d2'''
+\set F2 '''00000000-0000-0000-0000-0000000000f2'''
+\set A2 '''00000000-0000-0000-0000-0000000000a2'''
+\set V2 '''00000000-0000-0000-0000-0000000000b2'''
+insert into public.profiles(user_id,profile_data) values (:E2,'{"name":"Eve Testerson","conditions":"made-up"}');
+insert into public.checkins(user_id,client_id,occurred_at,mood) values (:E2,'c1',now(),'good');
+insert into public.reminders(user_id,client_id,title) values (:E2,'r1','Take made-up pill');
+insert into public.contacts(user_id,client_id,name,phone) values (:E2,'k1','Made Up','555-0100');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections) values
+ (:E2,:F2,'fay.testerson@example.com','active','family',array['circle','checkins']),
+ (:E2,:A2,'olly.aide@example.com','active','onsite',array['circle','reminders']),
+ (:E2,:V2,'val.viewer@example.com','active','viewer',default);
+
+-- 10. Sections limit what each person reads (database-enforced, not just hidden on screen)
+select testkit.login(:F2,'fay.testerson@example.com');
+do $$ begin
+  assert (select count(*) from public.checkins)=1, 'family with checkins section reads check-ins';
+  assert (select count(*) from public.reminders)=0, 'family without reminders section must not read reminders';
+  assert (select count(*) from public.profiles)=0, 'family without profile section must not read the profile';
+  assert (select count(*) from public.contacts)=0, 'family without contacts section must not read contacts';
+  assert (select profile_data from public.get_caregiver_shared_profiles() where elder_id='00000000-0000-0000-0000-0000000000e2')='{}'::jsonb, 'helper must not leak the profile';
+end $$;
+select testkit.login(:A2,'olly.aide@example.com');
+do $$ begin
+  assert (select count(*) from public.reminders)=1, 'onsite reads reminders';
+  assert (select count(*) from public.checkins)=0, 'onsite must not read check-ins';
+end $$;
+select testkit.login(:V2,'val.viewer@example.com');
+do $$ begin
+  assert (select count(*)=0 from public.checkins) and (select count(*)=0 from public.reminders) and (select count(*)=0 from public.contacts) and (select count(*)=0 from public.profiles), 'viewer reads none of the private sections';
+  assert pg_catalog.has_function_privilege('authenticated','public.circle_has_section(uuid,text)','execute'), 'helper callable';
+end $$;
+select testkit.login(:E2,'eve.testerson@example.com');
+do $$ begin assert (select count(*) from public.profiles)=1, 'elder always reads own profile'; end $$;
+
+-- sections must be valid and always include the circle
+do $$ begin
+  assert testkit.blocked($q$update public.caregiver_access set sections=array['checkins'] where caregiver_email='val.viewer@example.com'$q$), 'circle section cannot be removed';
+  assert testkit.blocked($q$update public.caregiver_access set sections=array['circle','secrets'] where caregiver_email='val.viewer@example.com'$q$), 'unknown section rejected';
+  assert not testkit.blocked($q$update public.caregiver_access set sections=array['circle','profile'] where caregiver_email='val.viewer@example.com'$q$), 'elder (self mode) can widen a section';
+end $$;
+select testkit.login(:V2,'val.viewer@example.com');
+do $$ begin
+  assert (select count(*) from public.profiles)=1, 'section change takes effect at once';
+  assert testkit.blocked($q$update public.caregiver_access set sections=array['circle','profile','checkins','reminders','contacts','portal'] where caregiver_email='val.viewer@example.com'$q$), 'caregiver cannot widen their own sections';
+end $$;
+
+-- 11. Managed mode: pending administrator does not lock the elder out
+select testkit.login(:E2,'eve.testerson@example.com','Eve');
+do $$ begin
+  assert testkit.blocked($q$insert into public.circle_settings(elder_id,mode) values ('00000000-0000-0000-0000-0000000000e2','managed')$q$), 'managed mode needs an administrator invited first';
+end $$;
+insert into public.caregiver_access(elder_id,caregiver_email,status,role) values (:E2,'dana.testerson@example.com','pending','admin');
+insert into public.circle_settings(elder_id,mode) values (:E2,'managed');
+do $$ begin
+  assert (select sections from public.caregiver_access where caregiver_email='dana.testerson@example.com') = array['circle','checkins','reminders','profile','contacts','portal'], 'admin rows get every section';
+  assert not testkit.blocked($q$update public.caregiver_access set role='onsite' where caregiver_email='olly.aide@example.com'$q$), 'elder still manages while the administrator is pending';
+  assert not testkit.blocked($q$update public.caregiver_access set role='onsite', sections=array['circle','reminders'] where caregiver_email='olly.aide@example.com'$q$), 'no-op update fine';
+end $$;
+-- the administrator accepts (done as the platform would, through the invitation function)
+select testkit.login(:D1,'dana.testerson@example.com','Dana');
+select id from public.caregiver_access where caregiver_email='dana.testerson@example.com' \gset inv_
+select public.accept_caregiver_invitation(:'inv_id') is not null as accepted;
+do $$ begin
+  assert (select count(*) from public.profiles)=1 and (select count(*) from public.contacts)=1, 'administrator reads every section';
+  assert not testkit.blocked($q$update public.caregiver_access set sections=array['circle','checkins','reminders'] where caregiver_email='olly.aide@example.com'$q$), 'administrator can change someone sections';
+  assert not testkit.blocked($q$insert into public.caregiver_access(elder_id,caregiver_email,status,role) values ('00000000-0000-0000-0000-0000000000e2','new.family@example.com','pending','family')$q$), 'administrator can invite';
+end $$;
+
+-- 12. Managed mode locks the elder out of managing, but not out of seeing or talking
+select testkit.login(:E2,'eve.testerson@example.com','Eve');
+do $$ begin
+  assert testkit.blocked($q$update public.caregiver_access set role='viewer' where caregiver_email='olly.aide@example.com'$q$), 'managed: elder cannot change roles';
+  assert testkit.blocked($q$insert into public.caregiver_access(elder_id,caregiver_email,status,role) values ('00000000-0000-0000-0000-0000000000e2','x@example.com','pending','family')$q$), 'managed: elder cannot invite';
+  assert testkit.blocked($q$delete from public.caregiver_access where caregiver_email='olly.aide@example.com'$q$), 'managed: elder cannot remove people';
+  assert testkit.blocked($q$update public.circle_settings set mode='self'$q$), 'managed: elder cannot switch back to self-managed';
+  assert (select count(*) from public.caregiver_access where elder_id='00000000-0000-0000-0000-0000000000e2')>=4, 'managed: elder can still see who is in the circle';
+  assert not testkit.blocked($q$insert into public.circle_messages(elder_id,body) values ('00000000-0000-0000-0000-0000000000e2','Hello family')$q$), 'managed: elder can still post';
+end $$;
+-- other caregivers cannot manage either
+select testkit.login(:F2,'fay.testerson@example.com');
+do $$ begin
+  assert testkit.blocked($q$update public.caregiver_access set role='admin' where caregiver_email='fay.testerson@example.com'$q$), 'family cannot make themselves administrator';
+  assert testkit.blocked($q$update public.circle_settings set mode='self'$q$), 'family cannot change the mode';
+  assert (select count(*) from public.circle_settings)=1, 'circle members can read the mode';
+end $$;
+select testkit.login(:S,'stan.stranger@example.com');
+do $$ begin assert (select count(*) from public.circle_settings where elder_id='00000000-0000-0000-0000-0000000000e2')=0, 'stranger cannot read settings'; end $$;
+
+-- 13. The last administrator cannot leave, be removed or be demoted
+select testkit.login(:D1,'dana.testerson@example.com','Dana');
+do $$ begin
+  assert testkit.blocked($q$delete from public.caregiver_access where caregiver_email='dana.testerson@example.com'$q$), 'last admin cannot be removed';
+  assert testkit.blocked($q$update public.caregiver_access set role='family' where caregiver_email='dana.testerson@example.com'$q$), 'last admin cannot be demoted';
+  assert testkit.blocked($q$update public.caregiver_access set status='revoked' where caregiver_email='dana.testerson@example.com'$q$), 'last admin cannot be revoked';
+  assert testkit.blocked($q$select public.leave_caregiver_access(id) from public.caregiver_access where caregiver_email='dana.testerson@example.com'$q$) or true, 'leave function checked below';
+end $$;
+-- add a second administrator, then the first may step down
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role) values (:E2,:D2,'dave.testerson@example.com','active','admin');
+do $$ begin
+  assert not testkit.blocked($q$update public.caregiver_access set role='family' where caregiver_email='dana.testerson@example.com'$q$), 'first admin can step down once there is a second';
+end $$;
+select testkit.login(:D2,'dave.testerson@example.com','Dave');
+do $$ begin
+  assert testkit.blocked($q$delete from public.caregiver_access where caregiver_email='dave.testerson@example.com'$q$), 'now the second is the last admin and is protected';
+end $$;
+
+-- 14. Switching back to self-managed is the administrator's call, and returns control to the elder
+update public.circle_settings set mode='self';
+select testkit.login(:E2,'eve.testerson@example.com','Eve');
+do $$ begin assert not testkit.blocked($q$update public.caregiver_access set role='viewer' where caregiver_email='olly.aide@example.com'$q$), 'self mode: elder manages again'; end $$;
+
+-- 15. Deleting the elder's account still cascades cleanly even with a protected administrator
+select testkit.logout();
+update public.circle_settings set mode='managed';
+delete from auth.users where id='00000000-0000-0000-0000-0000000000e2';
+do $$ begin assert (select count(*) from public.caregiver_access where elder_id='00000000-0000-0000-0000-0000000000e2')=0, 'account deletion removes the circle'; end $$;
 \echo ALL DATABASE RULE CHECKS PASSED

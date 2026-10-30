@@ -8,7 +8,7 @@ test('viewer cannot write; unknown roles cannot write', () => {
   assert.equal(L.canWrite('family'), true);
   assert.equal(L.canWrite('onsite'), true);
   assert.equal(L.canWrite('viewer'), false);
-  assert.equal(L.canWrite('admin'), false);
+  assert.equal(L.canWrite('wizard'), false);
   assert.equal(L.canWrite(undefined), false);
 });
 
@@ -48,4 +48,47 @@ test('visit minutes and text are validated', () => {
   assert.equal(L.cleanText('  hi  ', 10), 'hi');
   assert.equal(L.cleanText('abcdef', 3), 'abc');
   assert.equal(L.cleanText(null, 3), '');
+});
+
+test('roles include administrator; defaults match the design', () => {
+  assert.deepEqual(L.sectionsForRole('viewer'), ['circle']);
+  assert.deepEqual(L.sectionsForRole('onsite'), ['circle', 'reminders']);
+  assert.ok(L.sectionsForRole('family').includes('checkins') && !L.sectionsForRole('family').includes('profile'));
+  assert.deepEqual(L.sectionsForRole('admin'), L.SECTIONS);
+  assert.deepEqual(L.sectionsForRole('nonsense'), ['circle']);
+  assert.equal(L.canWrite('admin'), true);
+});
+
+test('what a person can see follows their sections; admins and owners see everything', () => {
+  assert.equal(L.canSee({ own: true }, 'profile'), true);
+  assert.equal(L.canSee({ role: 'admin', sections: ['circle'] }, 'portal'), true);
+  assert.equal(L.canSee({ role: 'family', sections: ['circle', 'checkins'] }, 'checkins'), true);
+  assert.equal(L.canSee({ role: 'family', sections: ['circle', 'checkins'] }, 'profile'), false);
+  assert.equal(L.canSee({ role: 'viewer' }, 'checkins'), false);
+});
+
+test('check-in status says "not shared" instead of looking like silence', () => {
+  const s = L.checkinStatus('not-shared', at('2026-10-30T15:00:00'));
+  assert.equal(s.level, 'unknown');
+  assert.match(s.text, /not shared/);
+});
+
+test('setup state: unset, self, pending administrator, managed', () => {
+  const admin = (status) => [{ role: 'admin', status }];
+  assert.equal(L.setupState(null, []), 'unset');
+  assert.equal(L.setupState({ mode: 'self' }, admin('active')), 'self');
+  assert.equal(L.setupState({ mode: 'managed' }, admin('pending')), 'managed_pending');
+  assert.equal(L.setupState({ mode: 'managed' }, []), 'managed_pending');
+  assert.equal(L.setupState({ mode: 'managed' }, admin('active')), 'managed');
+});
+
+test('who may manage: elder until an administrator accepts; then only administrators', () => {
+  const own = { own: true };
+  const act = [{ role: 'admin', status: 'active' }], pend = [{ role: 'admin', status: 'pending' }];
+  assert.equal(L.canManage(own, null, []), true);
+  assert.equal(L.canManage(own, { mode: 'managed' }, pend), true);
+  assert.equal(L.canManage(own, { mode: 'managed' }, act), false);
+  assert.equal(L.canManage({ role: 'admin' }, { mode: 'managed' }, act), true);
+  assert.equal(L.canManage({ role: 'admin' }, { mode: 'self' }, act), false);
+  assert.equal(L.canManage({ role: 'family' }, { mode: 'managed' }, act), false);
 });

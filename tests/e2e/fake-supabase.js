@@ -5,12 +5,13 @@
   const save = () => sessionStorage.setItem('fakedb', JSON.stringify(DB));
   let n = 1000;
   function table(name) {
-    const st = { name, filters: [], order: null, limit: null, op: 'select', payload: null };
+    const st = { name, filters: [], order: null, limit: null, op: 'select', payload: null, maybe: false };
     const run = () => {
       if ((DB.failTables || []).includes(name)) return { data: null, error: { message: 'relation "' + name + '" does not exist' } };
       const rows = DB.tables[name] = DB.tables[name] || [];
       let out;
       if (st.op === 'insert') {
+        if (name === 'circle_settings' && rows.some((r) => r.elder_id === st.payload.elder_id)) return { data: null, error: { code: '23505', message: 'duplicate' } };
         if (name === 'caregiver_access' && rows.some((r) => r.elder_id === st.payload.elder_id && r.caregiver_email === st.payload.caregiver_email)) return { data: null, error: { code: '23505', message: 'duplicate' } };
         const row = Object.assign({ id: 'id' + (++n), created_at: new Date().toISOString() }, defaults(name), st.payload);
         rows.unshift(row); out = [row];
@@ -22,7 +23,8 @@
         if (st.limit) out = out.slice(0, st.limit);
       }
       save();
-      return { data: JSON.parse(JSON.stringify(out)), error: null };
+      const data = JSON.parse(JSON.stringify(out));
+      return { data: st.maybe ? (data[0] || null) : data, error: null };
     };
     const defaults = (t) => ({
       circle_messages: { sender_id: DB.me.id, sender_name: DB.me.name },
@@ -32,7 +34,7 @@
     const q = {
       select() { return q; }, insert(p) { st.op = 'insert'; st.payload = p; return q; }, update(p) { st.op = 'update'; st.payload = p; return q; },
       eq(c, v) { st.filters.push((r) => r[c] === v); return q; }, in(c, vs) { st.filters.push((r) => vs.includes(r[c])); return q; },
-      order(col, o) { st.order = { col, asc: !(o && o.ascending === false) }; return q; }, limit(k) { st.limit = k; return q; },
+      order(col, o) { st.order = { col, asc: !(o && o.ascending === false) }; return q; }, limit(k) { st.limit = k; return q; }, maybeSingle() { st.maybe = true; return q; },
       then(res, rej) { return Promise.resolve().then(run).then(res, rej); },
     };
     return q;

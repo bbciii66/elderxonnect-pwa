@@ -32,6 +32,8 @@
     .row2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row2 button{width:auto;margin:0;min-width:96px}
     select{font:inherit;min-height:56px;border-radius:12px;padding:8px 12px;background:#0b1510;color:var(--text);border:2px solid var(--line)}
     option{background:#162219;color:var(--text)}
+    details{margin-top:8px}summary{min-height:44px;padding:10px 0;cursor:pointer;color:var(--green);font-weight:700}
+    .sec{display:flex;gap:12px;align-items:center;min-height:48px}.sec input{width:28px;min-height:28px;height:28px;flex:none}
     .rolerow{padding:12px 0;border-bottom:1px solid var(--line)}.rolerow:last-child{border:0}
     .error{color:var(--red);margin-top:8px}
     a.back{color:var(--green);font-weight:700;display:inline-block;padding:14px 0;min-height:56px}
@@ -52,6 +54,19 @@
   <main id="app" class="hidden">
     <label for="who" id="whoLabel" class="sub hidden">Whose circle?</label>
     <select id="who" class="hidden" style="width:100%;min-height:60px;font-size:19px;border-radius:14px;margin-bottom:14px"></select>
+    <section class="card hidden" id="setupCard">
+      <h2 id="setupTitle">Who manages this account?</h2>
+      <p class="sub" id="setupText"></p>
+      <button id="setupSelf">I manage it myself</button>
+      <button id="setupManaged" class="secondary">A family member manages it for me</button>
+      <div id="setupForm" class="hidden" style="margin-top:12px">
+        <label for="setupEmail" class="sub">Their email address</label>
+        <input id="setupEmail" type="email" autocomplete="off" placeholder="family member's email" />
+        <button id="setupInvite">Invite them as administrator</button>
+        <p class="sub" style="margin-top:8px">Until they sign in on the caregiver page and accept, you stay in control. After that, only they can change who is in your circle and what each person sees. You can still read and post.</p>
+      </div>
+      <button id="setupBack" class="secondary hidden"></button>
+    </section>
     <div class="status unknown" id="status">Checking…</div>
 
     <section class="card">
@@ -91,15 +106,15 @@
 
     <section class="card hidden" id="rolesCard">
       <h2>Who can do what</h2>
-      <p class="sub">Family manager and onsite caregiver can post, add tasks and log visits. View only can just read. New people start as view only.</p>
+      <p class="sub" id="rolesIntro"></p>
       <div id="roles"></div>
-      <div style="margin-top:14px">
+      <div style="margin-top:14px" id="inviteBox">
         <label for="inviteEmail" class="sub">Invite someone to this circle</label>
         <input id="inviteEmail" type="email" autocomplete="off" placeholder="their email address" />
         <label for="inviteRole" class="sub" style="display:block;margin-top:10px">What can they do?</label>
         <select id="inviteRole" style="width:100%"></select>
-        <button id="sendInvite">Add to my circle</button>
-        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself.</p>
+        <button id="sendInvite">Add to the circle</button>
+        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself. Everyone starts with messages, tasks and visits only; you choose what else they see.</p>
       </div>
     </section>
     <button class="secondary" id="bigText">Make text bigger</button>

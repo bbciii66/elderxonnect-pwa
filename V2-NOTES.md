@@ -32,3 +32,12 @@ Made-up people only. Do not put real health information in until the privacy pha
 
 ## AI companion
 - The elder-pasted API key is gone (see above). Bringing a real AI back needs a server-side key in the Cloudflare relay plus a decision about sending any health details. Left for Ben.
+
+## Administrator and per-section sharing (care-circle-admin-migration.sql)
+- **Who manages the account** is chosen on the Care Circle page: "I manage it myself" or "A family member manages it for me". In managed mode the family member is the **administrator**. Managed mode only takes effect once the administrator has accepted, so a pending invite never locks the elder out.
+- In managed mode the elder can still read and post, but cannot invite, remove, change roles, change what is shared, or switch back. Only administrators can; an administrator can hand control back.
+- A managed circle always keeps at least one administrator (the last one cannot leave, be removed or be demoted).
+- **Per-section sharing**: each person has switches for check-ins, reminders and medications, profile and medical details (includes the address), contacts and the health portal button. Messages, tasks and visits are always on. Roles only set the starting switches. This is enforced in the database for check-ins, reminders, profile and contacts (and the older shared-profile helper), not just hidden on screen. The portal switch is stored but has no button yet.
+- Existing people keep what they could already see (one-time backfill from role defaults). New people start with messages, tasks and visits only.
+- Run `care-circle-admin-migration.sql` after `care-circle-v2-migration.sql`; safe to run twice. Check with `npm test`.
+- Still open: history of who changed sharing, "delete everything", the health portal button, the older caregiver dashboard page still shows what the database now allows (blank sections for people without access).
