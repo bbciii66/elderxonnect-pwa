@@ -95,8 +95,16 @@ let port;
     await ctx.setOffline(false);
     await p.reload(); await p.waitForTimeout(700);
 
-    // Change place, then search a town.
-    await p.click('#weatherChange'); await p.waitForTimeout(150);
+    // A slow Refresh must not come back and undo Change place.
+    await p.unroute('**/api.open-meteo.com/**');
+    await p.route('**/api.open-meteo.com/**', async (r) => { await new Promise((ok) => setTimeout(ok, 600)); r.fulfill({ contentType: 'application/json', body: JSON.stringify(forecast) }).catch(() => {}); });
+    await p.click('#weatherRefresh'); await p.waitForTimeout(100);
+    await p.click('#weatherChange'); await p.waitForTimeout(900);
+    check(await visible(p, '#weatherSetup') && !(await visible(p, '#weatherView')), 'weather: a late reply does not undo Change place');
+    await p.unroute('**/api.open-meteo.com/**');
+    await p.route('**/api.open-meteo.com/**', (r) => { calls.push(r.request().url()); r.fulfill({ contentType: 'application/json', body: JSON.stringify(forecast) }); });
+
+    // Change place (done just above), then search a town.
     check(await visible(p, '#weatherSetup'), 'weather: Change place goes back to setup');
     await p.evaluate(() => { document.getElementById('weatherCityBox').open = true; });
     await p.fill('#weatherCity', 'Metairie'); await p.press('#weatherCity', 'Enter'); await p.waitForTimeout(300);

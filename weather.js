@@ -7,6 +7,7 @@
   if (!W || !$('weatherCard')) return;
 
   var PLACE_KEY = 'exc_weather_place', CACHE_KEY = 'exc_weather_cache', FRESH_MS = 30 * 60 * 1000;
+  var latest = 0; // only the newest request may change the card
   var fahrenheit = W.usesFahrenheit(navigator.language);
   var unit = fahrenheit ? 'F' : 'C';
 
@@ -40,10 +41,12 @@
       if (Date.now() - cache.at >= FRESH_MS) note('Showing the last weather we had. Check your internet connection.');
       return;
     }
+    var mine = ++latest;
     fetch(W.forecastUrl(place.lat, place.lon, fahrenheit))
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function (data) { write(CACHE_KEY, { key: key, at: Date.now(), data: data }); note(''); render(data, place); })
+      .then(function (data) { if (mine !== latest) return; write(CACHE_KEY, { key: key, at: Date.now(), data: data }); note(''); render(data, place); })
       .catch(function () {
+        if (mine !== latest) return;
         if (cache && cache.key === key) note('Showing the last weather we had. Check your internet connection.');
         else { note('Could not get the weather. Check your internet connection and try again.'); show('weatherSetup'); }
       });
@@ -93,7 +96,7 @@
     $('weatherUseLocation').addEventListener('click', useLocation);
     $('weatherCityBtn').addEventListener('click', searchCity);
     $('weatherCity').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); searchCity(); } });
-    $('weatherChange').addEventListener('click', function () { write(PLACE_KEY, null); write(CACHE_KEY, null); note(''); show('weatherSetup'); });
+    $('weatherChange').addEventListener('click', function () { latest++; write(PLACE_KEY, null); write(CACHE_KEY, null); note(''); show('weatherSetup'); });
     $('weatherRefresh').addEventListener('click', function () { load(read(PLACE_KEY), true); });
     load(read(PLACE_KEY), false);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) load(read(PLACE_KEY), false); });
