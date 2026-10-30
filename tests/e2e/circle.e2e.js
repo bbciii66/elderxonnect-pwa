@@ -3,7 +3,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '../..');
 const fake = fs.readFileSync(path.join(__dirname, 'fake-supabase.js'), 'utf8');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.css': 'text/css' };
 const server = http.createServer((q, r) => {
   const f = path.join(root, q.url.split('?')[0] === '/' ? 'index.html' : q.url.split('?')[0]);
   if (!f.startsWith(root) || !fs.existsSync(f)) { r.writeHead(404); return r.end(); }
@@ -180,6 +180,29 @@ let port;
   check(hits.length === 0, 'chat makes no call to any AI service ' + hits.join(','));
   check(errs.length === 0, 'main page has no script errors ' + errs.join(' | '));
   await ctx3.close();
+
+  // Appearance: light theme is readable, not stark white, and the choice sticks
+  {
+    const lum = (rgb) => { const [r, g, b] = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const { p: tp, ctx: tctx } = await open(browser, EDNA);
+    await tp.emulateMedia({ colorScheme: 'light' }); await tp.waitForTimeout(400);
+    check((await tp.getAttribute('html', 'data-theme')) === 'light', 'Auto follows a light phone setting');
+    const pairs = await tp.evaluate(() => {
+      const cs = (sel) => { const e = document.querySelector(sel); const c = getComputedStyle(e); return [c.color, c.backgroundColor]; };
+      return { body: cs('body'), sub: [getComputedStyle(document.querySelector('.sub')).color, getComputedStyle(document.body).backgroundColor], send: cs('#send'), sec: cs('#bigText'), input: cs('#text'), pick: cs('[data-theme-choice="auto"]') };
+    });
+    const bg = pairs.body[1];
+    check(lum(bg) < 0.9 && lum(bg) > 0.6, 'light background is soft, not stark white (' + bg + ')');
+    for (const k of Object.keys(pairs)) check(ratio(pairs[k][0], pairs[k][1]) >= 4.5, 'light theme text is readable: ' + k + ' ' + ratio(pairs[k][0], pairs[k][1]).toFixed(1));
+    if (process.env.SHOTS) await tp.screenshot({ path: process.env.SHOTS + '/circle-light.png', fullPage: true });
+    await tp.click('[data-theme-choice="dark"]');
+    check((await tp.getAttribute('html', 'data-theme')) === 'dark', 'Dark button switches to dark even on a light phone');
+    await tp.reload(); await tp.waitForTimeout(300);
+    check((await tp.getAttribute('html', 'data-theme')) === 'dark', 'the choice is remembered');
+    if (process.env.SHOTS) await tp.screenshot({ path: process.env.SHOTS + '/circle-dark.png', fullPage: true });
+    await tctx.close();
+  }
 
   await browser.close(); server.close();
   console.log(failures ? failures + ' CHECK(S) FAILED' : 'ALL SCREEN CHECKS PASSED');

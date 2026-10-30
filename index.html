@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="description" content="ElderXonnect — daily companion, reminders, and support for seniors." />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="/theme.js"></script>
   <style>
     :root {
       --bg: #0e1a14;
@@ -732,6 +733,7 @@
     body.text-xl button, body.text-xl input, body.text-xl select, body.text-xl textarea { font-size: 22px; min-height: 64px; }
     @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   </style>
+  <link rel="stylesheet" href="/theme.css" />
 </head>
 <body>
 
@@ -1093,6 +1095,8 @@
 
 <!-- ══════════════ ME PAGE ══════════════ -->
 <section class="grid hidden" id="view-me">
+
+  <div class="card"><div class="card-title">Appearance</div><div data-theme-control></div></div>
 
   <!-- Hero -->
   <div class="me-hero">

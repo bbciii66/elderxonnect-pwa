@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v32";
+const CACHE_NAME = "elderxonnect-v33";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/push-config.js",
@@ -26,6 +26,8 @@ const STATIC_ASSETS = [
   "/caregiver.html",
   "/circle.html",
   "/circle.js",
+  "/theme.js",
+  "/theme.css",
   "/circle-logic.js"
 ];
 
