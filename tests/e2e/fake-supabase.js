@@ -7,6 +7,7 @@
   function table(name) {
     const st = { name, filters: [], order: null, limit: null, op: 'select', payload: null };
     const run = () => {
+      if ((DB.failTables || []).includes(name)) return { data: null, error: { message: 'relation "' + name + '" does not exist' } };
       const rows = DB.tables[name] = DB.tables[name] || [];
       let out;
       if (st.op === 'insert') {

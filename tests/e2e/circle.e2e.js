@@ -32,11 +32,11 @@ const seed = (me) => ({
 let failures = 0;
 const check = (ok, what) => { console.log((ok ? 'PASS ' : 'FAIL ') + what); if (!ok) failures++; };
 
-async function open(browser, me, page = '/circle.html', checkins) {
+async function open(browser, me, page = '/circle.html', checkins, failTables) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
   const errors = []; p.on('pageerror', (e) => errors.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  const s = seed(me); if (checkins) s.tables.checkins = checkins;
+  const s = seed(me); if (checkins) s.tables.checkins = checkins; if (failTables) s.failTables = failTables;
   await p.route('**/cdn.jsdelivr.net/**', (r) => r.fulfill({ contentType: 'text/javascript', body: `window.__SEED__=${JSON.stringify(s)};\n` + fake }));
   await p.route('**/supabase-config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `localStorage.setItem('elderxonnect_supabase_config', JSON.stringify({url:'https://x.test',key:'k'}));` }));
   await p.goto('http://127.0.0.1:' + port + page);
@@ -105,6 +105,12 @@ let port;
   // No data and missed check-in
   ({ p, ctx } = await open(browser, VIC, '/circle.html', [])); await p.waitForSelector('#messages .msg');
   check((await p.getAttribute('#status', 'class')).includes('unknown'), 'no check-in data shows unknown, not all-clear'); await ctx.close();
+
+  // Visit log table missing (migration not applied): everything else still works
+  ({ p, ctx } = await open(browser, EDNA, '/circle.html', undefined, ['circle_visits'])); await p.waitForSelector('#messages .msg');
+  check((await p.textContent('#visits')).includes('not available yet'), 'missing visit log is explained');
+  check((await p.locator('#messages .msg').count()) >= 1, 'messages still load without the visit log');
+  check((await p.locator('#roles select').count()) === 3, 'roles still load without the visit log'); await ctx.close();
 
   // Signed-out visitor
   const ctx2 = await browser.newContext(); const q = await ctx2.newPage();

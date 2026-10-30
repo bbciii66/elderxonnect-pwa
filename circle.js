@@ -67,11 +67,12 @@
         client.from('circle_visits').select('*').eq('elder_id', elderId).order('visited_at', { ascending: false }).limit(30),
         client.from('checkins').select('occurred_at,mood').eq('user_id', elderId).order('occurred_at', { ascending: false }).limit(1),
       ]);
-      if (m.error) throw m.error; if (t.error) throw t.error; if (v.error) throw v.error;
+      if (m.error) throw m.error; if (t.error) throw t.error;
       $('messages').innerHTML = (m.data || []).map((x) => `<div class="msg ${x.sender_id === me.id ? 'mine' : ''}"><div class="who">${esc(x.sender_name || 'Someone')} · ${esc(when(x.created_at))}</div><div class="body">${esc(x.body)}</div></div>`).join('') || '<p class="sub">No messages yet.</p>';
       $('tasks').innerHTML = (t.data || []).map((x) => `<div class="task ${x.done ? 'done' : ''}"><span class="t" style="flex:1">${esc(x.title)}${x.done ? `<div class="who">Done by ${esc(x.done_by_name || 'someone')}</div>` : ''}</span>${canWrite && !x.done ? `<button data-t="${esc(x.id)}">Done</button>` : ''}</div>`).join('') || '<p class="sub">No tasks yet.</p>';
       document.querySelectorAll('[data-t]').forEach((b) => { b.onclick = () => finish(b.dataset.t); });
-      $('visits').innerHTML = (v.data || []).map((x) => `<div class="msg"><div class="who">${esc(x.visitor_name || 'Someone')} · ${esc(when(x.visited_at))}${x.minutes ? ' · ' + esc(x.minutes) + ' min' : ''}</div><div class="body">${esc(x.notes || '(no notes)')}</div></div>`).join('') || '<p class="sub">No visits logged yet.</p>';
+      // The visit log is newer than the rest; if it is unavailable, keep every other panel working.
+      $('visits').innerHTML = v.error ? '<p class="sub">The visit log is not available yet.</p>' : (v.data || []).map((x) => `<div class="msg"><div class="who">${esc(x.visitor_name || 'Someone')} · ${esc(when(x.visited_at))}${x.minutes ? ' · ' + esc(x.minutes) + ' min' : ''}</div><div class="body">${esc(x.notes || '(no notes)')}</div></div>`).join('') || '<p class="sub">No visits logged yet.</p>';
       const s = L.checkinStatus(k.error ? null : (k.data || [])[0], new Date());
       $('status').className = 'status ' + s.level; $('status').textContent = s.text;
       if (circle.own) loadRoles();
