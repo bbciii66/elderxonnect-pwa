@@ -995,29 +995,9 @@
 
 <!-- ══════════════ CHAT ══════════════ -->
 <section class="grid hidden" id="view-chat">
-  <div class="card api-key-card" id="apiKeyCard">
-    <div class="card-title" style="color:var(--gold);">🔑 AI Chat Setup</div>
-    <div class="card-sub">Enter your API key. Stored only on this device.</div>
-
-    <!-- AI Provider Toggle -->
-    <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button class="ai-provider-btn active" id="providerClaude" data-provider="claude">
-        🟣 Claude
-      </button>
-      <button class="ai-provider-btn" id="providerDeepSeek" data-provider="deepseek">
-        🔵 DeepSeek
-      </button>
-    </div>
-    <div class="label" id="apiKeyLabel">Anthropic API Key</div>
-    <div class="api-key-input-wrap">
-      <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" />
-      <button class="toggle-key-btn" id="toggleKeyBtn">👁</button>
-    </div>
-    <div class="sp8"></div>
-    <button class="btn gold" id="saveApiKeyBtn">Save Key &amp; Enable AI Chat</button>
-    <div class="sp8"></div>
-    <button class="btn ghost" id="clearApiKeyBtn" style="font-size:16px;padding:9px;display:none;">🗑 Remove Saved Key</button>
-    <p class="small" id="apiKeyStatus"></p>
+  <div class="card" id="companionNote">
+    <div class="card-title" style="color:var(--gold);">Companion mode</div>
+    <div class="card-sub">The companion gives simple, friendly replies on this device. Nothing you type here leaves your phone, and you never need a key or password.</div>
   </div>
 
   <div class="card">
@@ -2055,74 +2035,8 @@ document.getElementById('callNowBtn').addEventListener('click',()=>{
 //  CHAT — REAL AI
 // ════════════════════════════════════
 let chatHistory=[];
-document.getElementById('toggleKeyBtn').addEventListener('click',()=>{ const i=document.getElementById('apiKeyInput'); i.type=i.type==='password'?'text':'password'; });
-
-// ── AI PROVIDER TOGGLE ──
-let currentProvider = S.get('ai_provider', 'claude');
-
-function setProvider(p){
-  currentProvider = p;
-  S.set('ai_provider', p);
-  document.querySelectorAll('.ai-provider-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.provider === p);
-  });
-  const label = document.getElementById('apiKeyLabel');
-  if(label) label.textContent = p === 'deepseek' ? 'DeepSeek API Key' : 'Anthropic API Key';
-  const keyField = document.getElementById('apiKeyInput');
-  const saved = S.get(p === 'deepseek' ? 'deepseek_key' : 'anthropic_key', '');
-  if(keyField) keyField.value = saved;
-  const status = document.getElementById('apiKeyStatus');
-  if(status) status.textContent = saved ? '✅ Key saved. Start chatting!' : '';
-  const clearBtn = document.getElementById('clearApiKeyBtn');
-  if(clearBtn) clearBtn.style.display = saved ? 'block' : 'none';
-}
-
-document.querySelectorAll('.ai-provider-btn').forEach(b=>{
-  b.addEventListener('click', ()=> setProvider(b.dataset.provider));
-});
-
-document.getElementById('saveApiKeyBtn').addEventListener('click',()=>{
-  const k = document.getElementById('apiKeyInput').value.trim();
-  if(!k){ toast('⚠️ Please paste your API key first'); return; }
-  const storageKey = currentProvider === 'deepseek' ? 'deepseek_key' : 'anthropic_key';
-  S.set(storageKey, k);
-  document.getElementById('apiKeyStatus').textContent='✅ Key saved. Start chatting!';
-  document.getElementById('clearApiKeyBtn').style.display='block';
-  toast(`✅ ${currentProvider === 'deepseek' ? 'DeepSeek' : 'Claude'} enabled!`);
-});
-
-document.getElementById('clearApiKeyBtn').addEventListener('click',()=>{
-  const storageKey = currentProvider === 'deepseek' ? 'deepseek_key' : 'anthropic_key';
-  S.set(storageKey, '');
-  document.getElementById('apiKeyInput').value='';
-  document.getElementById('apiKeyStatus').textContent='Key removed. Paste a new one above.';
-  document.getElementById('clearApiKeyBtn').style.display='none';
-  toast('🗑 API key removed');
-});
-
-// Init provider state on load
-setProvider(currentProvider);
-
-function buildSystemPrompt(){
-  const checkins=S.get('checkins_v2',[]),reminders=S.get('reminders',[]),p=S.get('me_profile',{});
-  const last3=checkins.slice(0,3).map(c=>`${fmtDate(c.ts)}: mood=${c.mood}, pain=${c.pain}/10${c.notes?', notes: '+c.notes:''}`).join('\n');
-  return `You are ElderXonnect Companion, a warm, patient, caring AI assistant for elderly users. Provide emotional support, companionship, gentle cognitive engagement, and health reminders.
-
-Guidelines:
-- Speak warmly, clearly, and simply. Avoid jargon.
-- Be patient, empathetic, and encouraging.
-- Keep responses concise — 2-4 sentences, unless asked for more.
-- If someone mentions severe pain or emergency symptoms, urge them to call emergency services.
-- Occasionally ask a gentle follow-up question.
-
-User profile: ${p.name?'Name: '+p.name:'Unknown'}${p.dob?', DOB: '+p.dob:''}${p.conditions?', Conditions: '+p.conditions:''}${p.allergies?', Allergies: '+p.allergies:''}
-
-Recent check-ins:
-${last3||'No recent check-ins.'}
-
-Reminders: ${reminders.length?reminders.map(r=>r.title+(r.time?' at '+fmt12(r.time):'')).join(', '):'None'}
-Today: ${new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}`;
-}
+// Retire keys that older versions asked the elder to paste into the app.
+['anthropic_key','deepseek_key','ai_provider'].forEach(k=>{ try{ S.set(k,''); }catch(e){} });
 
 document.querySelectorAll('.chip').forEach(c=>{ c.addEventListener('click',()=>{ document.getElementById('chatInput').value=c.dataset.msg; sendChat(); }); });
 
@@ -2138,32 +2052,12 @@ function localReply(t){
 
 async function sendChat(){
   const input=document.getElementById('chatInput'),msg=input.value.trim(); if(!msg)return;
-  input.value=''; addBubble(msg,'me'); document.getElementById('starterChips').style.display='none';
+  input.value=''; addBubble(msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),'me'); document.getElementById('starterChips').style.display='none';
   const tid='t'+Date.now(); addBubble('<div class="typing-dots"><span></span><span></span><span></span></div>','ai typing',tid);
   chatHistory.push({role:'user',content:msg});
 
-  const provider = S.get('ai_provider', 'claude');
-  const key = provider === 'deepseek' ? S.get('deepseek_key','') : S.get('anthropic_key','');
-
-  if(!key){
-    await new Promise(r=>setTimeout(r,600)); removeEl(tid);
-    const r=localReply(msg); addBubble(r,'ai'); chatHistory.push({role:'assistant',content:r}); return;
-  }
-  try{
-    const resp=await fetch('https://elderxonnect-proxy.bbciii.workers.dev/',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': key,
-        'x-ai-provider': provider,
-      },
-      body:JSON.stringify({model: provider==='deepseek'?'deepseek-v4-flash':'claude-haiku-4-5-20251001', max_tokens:1000, system:buildSystemPrompt(), messages:chatHistory.slice(-20)})
-    });
-    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+resp.status);}
-    const data=await resp.json();
-    const reply=data.content?.map(b=>b.type==='text'?b.text:'').join('').trim()||'I had trouble responding. Please try again.';
-    removeEl(tid); addBubble(reply,'ai'); chatHistory.push({role:'assistant',content:reply});
-  }catch(e){ removeEl(tid); addBubble('Sorry, I couldn\'t connect. ('+e.message+')','ai'); }
+  await new Promise(r=>setTimeout(r,600)); removeEl(tid);
+  const r=localReply(msg); addBubble(r,'ai'); chatHistory.push({role:'assistant',content:r});
 }
 
 function addBubble(html,cls,id){

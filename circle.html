@@ -30,6 +30,9 @@
     .task button{width:auto;min-width:96px;margin:0}
     .task.done .t{text-decoration:line-through;color:var(--muted)}
     .row2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row2 button{width:auto;margin:0;min-width:96px}
+    select{font:inherit;min-height:56px;border-radius:12px;padding:8px 12px;background:#0b1510;color:var(--text);border:2px solid var(--line)}
+    option{background:#162219;color:var(--text)}
+    .rolerow{padding:12px 0;border-bottom:1px solid var(--line)}.rolerow:last-child{border:0}
     .error{color:var(--red);margin-top:8px}
     a.back{color:var(--green);font-weight:700;display:inline-block;padding:14px 0;min-height:56px}
     @media(max-width:480px){.quick{grid-template-columns:1fr}}
@@ -41,7 +44,9 @@
   <p class="sub">Messages and tasks shared by the family and caregivers.</p>
 
   <section class="card" id="signin">
-    <p>Please sign in first on the main ElderXonnect page (elder) or the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a>, then come back here.</p>
+    <p><strong>You need to sign in with your cloud account first.</strong></p>
+    <p>The name, username and PIN you set up on this device are not enough here. On the <a style="color:var(--green)" href="/">main page</a>, tap <strong>Me (⚙️)</strong>, scroll to <strong>☁️ Cloud Sync</strong>, and sign in or create an account with an email and password. Then come back to this page.</p>
+    <p>Family and caregivers: use the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> instead.</p>
   </section>
 
   <main id="app" class="hidden">
@@ -72,71 +77,38 @@
         <button id="addTask">Add</button>
       </div>
     </section>
+    <section class="card">
+      <h2>Visit log</h2>
+      <div id="visits"></div>
+      <div id="visitForm" style="margin-top:12px">
+        <label for="visitNotes" class="sub">What happened on this visit?</label>
+        <input id="visitNotes" type="text" maxlength="2000" placeholder="e.g. Brought groceries, took a walk" />
+        <label for="visitMinutes" class="sub" style="display:block;margin-top:10px">How many minutes? (optional)</label>
+        <input id="visitMinutes" type="number" inputmode="numeric" min="1" max="1440" />
+        <button id="addVisit">Log this visit</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="rolesCard">
+      <h2>Who can do what</h2>
+      <p class="sub">Family manager and onsite caregiver can post, add tasks and log visits. View only can just read. New people start as view only.</p>
+      <div id="roles"></div>
+      <div style="margin-top:14px">
+        <label for="inviteEmail" class="sub">Invite someone to this circle</label>
+        <input id="inviteEmail" type="email" autocomplete="off" placeholder="their email address" />
+        <label for="inviteRole" class="sub" style="display:block;margin-top:10px">What can they do?</label>
+        <select id="inviteRole" style="width:100%"></select>
+        <button id="sendInvite">Add to my circle</button>
+        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself.</p>
+      </div>
+    </section>
     <button class="secondary" id="bigText">Make text bigger</button>
     <div class="error" id="error" role="alert"></div>
   </main>
 
   <script src="/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const $=id=>document.getElementById(id);
-    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const QUICK=['I’m okay today','Need help','Running late','Please call me'];
-    let client,me,myName,elderId,canWrite=true,timer;
-    const cfg=()=>{try{return JSON.parse(localStorage.getItem('elderxonnect_supabase_config')||'{}')}catch{return {}}};
-    const err=e=>{$('error').textContent=e?(e.message||String(e)):''};
-    const when=d=>new Date(d).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'});
-
-    async function init(){
-      const c=cfg(); if(!c.url||!c.key) return;
-      client=supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true}});
-      const {data}=await client.auth.getSession(); if(!data.session) return;
-      me=data.session.user;
-      myName=me.user_metadata?.full_name||(me.email||'Someone').split('@')[0];
-      try{ if(localStorage.getItem('exc_text_xl')==='1') document.body.classList.add('text-xl'); }catch{}
-      $('signin').classList.add('hidden'); $('app').classList.remove('hidden');
-      $('quick').innerHTML=QUICK.map(q=>`<button data-q="${esc(q)}">${esc(q)}</button>`).join('');
-      document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>post(b.dataset.q));
-      // circles: my own (as elder) plus any I'm an active caregiver for
-      const r=await client.from('caregiver_access').select('elder_id,role,status').eq('caregiver_id',me.id).eq('status','active');
-      const circles=[{id:me.id,label:'My own circle',role:'family'}];
-      (r.data||[]).forEach((x,i)=>circles.push({id:x.elder_id,label:'Person I help #'+(i+1),role:x.role||'family'}));
-      if(circles.length>1){ $('who').innerHTML=circles.map(c=>`<option value="${esc(c.id)}">${esc(c.label)}</option>`).join(''); $('who').classList.remove('hidden'); $('whoLabel').classList.remove('hidden'); $('who').onchange=()=>choose(circles.find(c=>c.id===$('who').value)); }
-      // default to the first person I help if I'm not an elder with data; else own
-      choose(circles.length>1?circles[1]:circles[0]);
-      timer=setInterval(refresh,20000);
-    }
-    function choose(c){ elderId=c.id; canWrite=c.role!=='viewer';
-      ['composeRow','taskRow'].forEach(i=>$(i).classList.toggle('hidden',!canWrite));
-      $('viewerNote').classList.toggle('hidden',canWrite); $('quick').parentElement.classList.toggle('hidden',!canWrite);
-      refresh(); }
-    async function refresh(){ try{ err('');
-      const [m,t,k]=await Promise.all([
-        client.from('circle_messages').select('*').eq('elder_id',elderId).order('created_at',{ascending:false}).limit(50),
-        client.from('circle_tasks').select('*').eq('elder_id',elderId).order('created_at',{ascending:false}).limit(50),
-        client.from('checkins').select('occurred_at,mood').eq('user_id',elderId).order('occurred_at',{ascending:false}).limit(1)]);
-      if(m.error) throw m.error; if(t.error) throw t.error;
-      $('messages').innerHTML=(m.data||[]).map(x=>`<div class="msg ${x.sender_id===me.id?'mine':''}"><div class="who">${esc(x.sender_name||'Someone')} · ${esc(when(x.created_at))}</div><div class="body">${esc(x.body)}</div></div>`).join('')||'<p class="sub">No messages yet.</p>';
-      $('tasks').innerHTML=(t.data||[]).map(x=>`<div class="task ${x.done?'done':''}"><span class="t" style="flex:1">${esc(x.title)}${x.done?`<div class="who">Done by ${esc(x.done_by_name||'someone')}</div>`:''}</span>${canWrite&&!x.done?`<button data-t="${esc(x.id)}">Done</button>`:''}</div>`).join('')||'<p class="sub">No tasks yet.</p>';
-      document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>finish(b.dataset.t));
-      status(k.error?null:(k.data||[])[0]);
-    }catch(e){err(e)} }
-    function status(c){ const s=$('status');
-      if(!c){ s.className='status unknown'; s.textContent='No check-in information yet. We can’t say whether all is well.'; return; }
-      const d=new Date(c.occurred_at), now=new Date(), same=d.toDateString()===now.toDateString();
-      if(same){ s.className='status ok'; s.textContent='Checked in today at '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' ('+c.mood+')'; }
-      else if(now.getHours()>=11){ s.className='status warn'; s.textContent='No check-in yet today. Last check-in: '+when(c.occurred_at)+'. Consider a call.'; }
-      else { s.className='status unknown'; s.textContent='No check-in yet today (before 11am). Last: '+when(c.occurred_at); }
-    }
-    async function post(body){ body=(body||'').trim(); if(!body) return; try{ err('');
-      const r=await client.from('circle_messages').insert({elder_id:elderId,sender_name:myName,body}); if(r.error) throw r.error;
-      $('text').value=''; refresh(); }catch(e){err(e)} }
-    async function finish(id){ try{ const r=await client.from('circle_tasks').update({done:true,done_by_name:myName,done_at:new Date().toISOString()}).eq('id',id); if(r.error) throw r.error; refresh(); }catch(e){err(e)} }
-    $('send').onclick=()=>post($('text').value);
-    $('text').addEventListener('keydown',e=>{if(e.key==='Enter')post($('text').value)});
-    $('addTask').onclick=async()=>{ const title=$('taskText').value.trim(); if(!title) return; try{ const r=await client.from('circle_tasks').insert({elder_id:elderId,title,created_by_name:myName}); if(r.error) throw r.error; $('taskText').value=''; refresh(); }catch(e){err(e)} };
-    $('bigText').onclick=()=>{ const on=document.body.classList.toggle('text-xl'); try{localStorage.setItem('exc_text_xl',on?'1':'0')}catch{} };
-    init().catch(err);
-  </script>
+  <script src="/circle-logic.js"></script>
+  <script src="/circle.js"></script>
 </body>
 </html>

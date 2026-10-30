@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v30";
+const CACHE_NAME = "elderxonnect-v31";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/fixes.js",
@@ -21,7 +21,10 @@ const STATIC_ASSETS = [
   "/caregiver-access-manager.js",
   "/caregiver-care-list.js",
   "/caregiver-profile-snapshot.js",
-  "/caregiver.html"
+  "/caregiver.html",
+  "/circle.html",
+  "/circle.js",
+  "/circle-logic.js"
 ];
 
 self.addEventListener("install", (event) => {
