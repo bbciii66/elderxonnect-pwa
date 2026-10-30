@@ -57,3 +57,10 @@ html[data-theme="light"] .me-name{color:#5b4410}
 html[data-theme="light"] .me-edit-btn{background:#dce7f5;border:1px solid rgba(47,90,168,.35);color:#1c2f57;box-shadow:none}
 html[data-theme="light"] button,html[data-theme="light"] .btn,html[data-theme="light"] .caregiver-btn{box-shadow:none;text-shadow:none}
 html[data-theme="light"] .card,html[data-theme="light"] .grid > div{box-shadow:none}
+html[data-theme="light"] .call-big{background:#c9e8d8;color:#12452d;border-color:#2e7d57}
+html[data-theme="light"] details.add-fold > summary{color:#2f5aa8}
+html[data-theme="light"] details.fold > summary{color:var(--text)}
+html[data-theme="light"] details.add-fold > summary{color:#2f5aa8}
+html[data-theme="light"] .tabbtn{background:transparent;border:1px solid transparent;color:var(--muted)}
+html[data-theme="light"] .tabbtn.active{background:#cfdff5;border-color:rgba(47,90,168,.35);color:#1c2f57}
+html[data-theme="light"] .caregiver-btn{background:#c9e8d8;color:#12452d;border-color:#2e7d57}

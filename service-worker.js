@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v33";
+const CACHE_NAME = "elderxonnect-v34";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/push-config.js",
@@ -28,6 +28,8 @@ const STATIC_ASSETS = [
   "/circle.js",
   "/theme.js",
   "/theme.css",
+  "/ui.css",
+  "/ui-polish.js",
   "/circle-logic.js"
 ];
 
@@ -84,7 +86,8 @@ function enhanceResponse(response, pathname) {
     "/caregiver-access.js",
     "/reminder-schedule.js",
     "/reminder-schedule-cloud.js",
-    "/role-router.js"
+    "/role-router.js",
+    "/ui-polish.js"
   ]);
 }
 

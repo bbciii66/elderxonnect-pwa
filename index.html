@@ -729,11 +729,10 @@
     .tabbtn { min-height: 64px; font-size: 14px; }
     .tabbtn .icon { font-size: 26px; }
     :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-    body.text-xl { font-size: 22px; }
-    body.text-xl button, body.text-xl input, body.text-xl select, body.text-xl textarea { font-size: 22px; min-height: 64px; }
     @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   </style>
   <link rel="stylesheet" href="/theme.css" />
+  <link rel="stylesheet" href="/ui.css" />
 </head>
 <body>
 
@@ -829,8 +828,8 @@
     <h1>ElderXonnect</h1>
     <p>Your daily companion &amp; support</p>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <div class="status-dot">
+  <div class="head-actions">
+    <div class="status-dot" aria-live="polite">
       <span class="dot" id="dotEl"></span>
       <span id="statusText">Online</span>
     </div>
@@ -841,18 +840,15 @@
 
 <!-- ══════════════ HOME ══════════════ -->
 <section class="grid" id="view-home">
-  <div class="card" id="circleCard">
-    <div class="card-title">👨‍👩‍👧 Family Circle</div>
-    <div class="card-sub">Send a quick message to your family or see shared tasks.</div>
-    <a class="btn green" href="/circle.html" style="display:block;text-align:center;text-decoration:none;line-height:56px;">Open Family Circle</a>
-    <div class="sp8"></div>
-    <button class="btn" id="bigTextBtn">🔠 Make text bigger</button>
+  <div class="hello" id="helloCard">
+    <div class="hello-day" id="todayDateEl"></div>
+    <h2 class="hello-title" id="helloTitle">Hello</h2>
   </div>
-  <div class="card" id="checkinHeroCard">
+
+  <div class="card hero-card" id="checkinHeroCard">
     <div class="checkin-hero">
       <div class="checkin-hero-left">
-        <div class="day" id="todayDateEl"></div>
-        <div class="prompt">How are you feeling today?</div>
+        <div class="prompt" id="checkinPrompt">How are you feeling today?</div>
         <div class="last" id="lastCheckinLabel">Last check-in: none yet</div>
       </div>
       <button class="btn green" id="checkinHeroBtn">Check In</button>
@@ -890,36 +886,39 @@
     <button class="btn ghost" id="cancelCheckinBtn">Cancel</button>
   </div>
 
-  <div class="stat-grid">
-    <div class="stat-box"><div class="stat-num" id="statCheckins">0</div><div class="stat-label">Check-ins</div></div>
-    <div class="stat-box"><div class="stat-num" id="statReminders">0</div><div class="stat-label">Reminders</div></div>
+
+  <button class="call-big" id="homeCallBtn" type="button" hidden><span class="call-icon" aria-hidden="true">📞</span><span class="call-name">Call my caregiver</span></button>
+
+  <div class="card" id="todayCard">
+    <div class="card-title">🗓️ Today</div>
+    <ul class="today-list" id="todayList"></ul>
+    <p class="today-empty" id="todayEmpty">Nothing scheduled for today.</p>
+    <button class="btn ghost" type="button" data-go="reminders">See all reminders</button>
+  </div>
+
+  <div class="card" id="circleCard">
+    <div class="card-title">👨‍👩‍👧 Family Circle</div>
+    <div class="card-sub">Messages, tasks and visits shared with your family.</div>
+    <a class="btn green" href="/circle.html" style="display:block;text-align:center;text-decoration:none;">Open Family Circle</a>
   </div>
 
   <!-- Daily Tip Card -->
-  <div class="card" id="dailyTipCard" style="background:linear-gradient(135deg,rgba(46,204,138,.08),rgba(26,107,74,.12));border-color:rgba(46,204,138,.2);">
+  <div class="card tip-card" id="dailyTipCard">
     <div style="display:flex;align-items:flex-start;gap:12px;">
       <div style="font-size:28px;flex-shrink:0;" id="tipEmoji">💡</div>
       <div>
-        <div style="font-size:15px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:4px;">DAILY TIP</div>
-        <div style="font-size:17px;line-height:1.5;font-family:'Lora',serif;" id="tipText">Loading your tip for today…</div>
+        <div class="tip-label">Daily tip</div>
+        <div class="tip-text" id="tipText">Loading your tip for today…</div>
       </div>
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-    <button class="quick-action-btn" onclick="showTab('chat')">
-      <span style="font-size:24px;">💬</span>
-      <span class="qa-label">Chat with AI</span>
-    </button>
-    <button class="quick-action-btn" onclick="showTab('reminders')">
-      <span style="font-size:24px;">🔔</span>
-      <span class="qa-label">Reminders</span>
-    </button>
-  </div>
 
+  <details class="card fold" id="historyCard">
+    <summary>📋 My check-in history</summary>
+    <div class="fold-body">
   <!-- Trends Chart — only shown when data exists -->
-  <div class="card" id="trendsCard" style="display:none;">
+  <div id="trendsCard" style="display:none;">
     <div class="card-title">Wellness Trends</div>
     <div class="card-sub" style="margin-bottom:10px;">Your mood &amp; pain over the past 14 days.</div>
     <div class="chart-tabs">
@@ -937,25 +936,43 @@
     </div>
   </div>
 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:0;">📋 Recent Check-Ins</div>
-      <button class="btn ghost" id="clearCheckinsBtn" style="width:auto;padding:6px 10px;font-size:14px;">Clear All</button>
-    </div>
+
     <div id="checkinEmpty" style="text-align:center;padding:24px 0;">
       <div style="font-size:40px;margin-bottom:10px;">🌱</div>
       <div style="font-size:18px;font-weight:600;margin-bottom:6px;">No check-ins yet</div>
       <div style="font-size:16px;color:var(--muted);">Tap <strong>Check In</strong> above to record how you're feeling today.</div>
     </div>
     <ul class="list" id="checkinList"></ul>
+      <div class="sp12"></div>
+      <button class="btn ghost" id="clearCheckinsBtn">Clear all check-ins</button>
+    </div>
+  </details>
+
+  <div hidden>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-num" id="statCheckins">0</div><div class="stat-label">Check-ins</div></div>
+    <div class="stat-box"><div class="stat-num" id="statReminders">0</div><div class="stat-label">Reminders</div></div>
+  </div>
+
   </div>
 </section>
 
 <!-- ══════════════ REMINDERS ══════════════ -->
 <section class="grid hidden" id="view-reminders">
   <div class="card">
-    <div class="card-title">Add Reminder</div>
-    <div class="card-sub">Medications, hydration, appointments — anything you need to remember.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:0;">🔔 My reminders</div>
+      <button class="btn ghost small-btn" id="clearRemindersBtn">Clear all</button>
+    </div>
+    <div class="small" style="margin-bottom:10px;" id="notifPermStatus"></div>
+    <ul class="list" id="remList"></ul>
+    <p class="small" id="remEmpty">No reminders yet.</p>
+  </div>
+
+  <details class="card fold add-fold" id="addReminderCard">
+    <summary>＋ Add a reminder</summary>
+    <div class="fold-body">
+    <div class="card-sub">Medications, water, appointments: anything you want to remember.</div>
     <div class="label">Reminder title</div>
     <div class="input-mic-wrap">
       <input id="remTitle" placeholder="Type or tap 🎙️ to speak…" />
@@ -983,39 +1000,26 @@
     <div class="sp4"></div>
     <button class="btn green" id="addReminderBtn">Add Reminder</button>
   </div>
-
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:0;">Saved Reminders</div>
-      <button class="btn ghost" id="clearRemindersBtn" style="width:auto;padding:8px 12px;font-size:16px;">Clear All</button>
-    </div>
-    <div class="small" style="margin-bottom:10px;" id="notifPermStatus"></div>
-    <ul class="list" id="remList"></ul>
-    <p class="small" id="remEmpty">No reminders yet.</p>
-  </div>
+  </details>
 </section>
 
 <!-- ══════════════ CHAT ══════════════ -->
 <section class="grid hidden" id="view-chat">
   <div class="card" id="aiLinksCard">
-    <div class="card-title">Chat with a real AI</div>
-    <div class="card-sub" style="margin-bottom:10px;">Ask about the weather, a movie, or anything else. These open the free version of each service in a new tab. You sign in there, not here. Do not share medical details or passwords.</div>
+    <div class="card-title">💬 Talk with an AI helper</div>
+    <div class="card-sub" style="margin-bottom:10px;">Ask about the weather, a recipe, a movie, anything. Each button opens a free AI in a new window; close it to come back here. Please don't share medical details or passwords.</div>
     <a class="btn ghost" href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">Open Claude</a>
     <a class="btn ghost" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">Open ChatGPT</a>
     <a class="btn ghost" href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;">Open Gemini</a>
   </div>
 
-  <div class="card" id="companionNote">
-    <div class="card-title" style="color:var(--gold);">Companion mode</div>
-    <div class="card-sub">The built-in companion gives simple, friendly replies on this device. Nothing you type in it leaves your phone. For real conversation, use the free AI links above.</div>
-  </div>
 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div class="card-title" style="margin-bottom:0;">Companion Chat</div>
       <button class="btn ghost" id="clearChatBtn" style="width:auto;padding:7px 12px;font-size:15px;">Clear</button>
     </div>
-    <p class="small" style="margin-bottom:10px;">Chat with your AI companion — warm, patient, and always here.</p>
+    <p class="small" style="margin-bottom:10px;">A simple helper that stays on this phone. Nothing you type here leaves it.</p>
     <div class="chat-starter-chips" id="starterChips">
       <div class="chip" data-msg="How are you today?">👋 Say hello</div>
       <div class="chip" data-msg="I'm feeling lonely today.">💙 Feeling lonely</div>
@@ -1064,8 +1068,13 @@
 <!-- ══════════════ CONTACTS ══════════════ -->
 <section class="grid hidden" id="view-contacts">
   <div class="card">
-    <div class="card-title">Add Contact</div>
-    <div class="card-sub">Save family, friends, or caregivers for quick calling.</div>
+    <div class="card-title">👥 My people</div>
+    <div id="contactList"><p class="small" id="contactEmpty">No contacts yet.</p></div>
+  </div>
+  <details class="card fold add-fold" id="addContactCard">
+    <summary>＋ Add a person</summary>
+    <div class="fold-body">
+    <div class="card-sub">Family, friends or helpers you want to call with one tap.</div>
     <div class="label">Name</div>
     <input id="cName" placeholder="e.g., Mary (daughter)" />
     <div class="sp8"></div>
@@ -1084,13 +1093,11 @@
     <div class="sp12"></div>
     <button class="btn green" id="addContactBtn">Add Contact</button>
   </div>
-  <div class="card">
-    <div class="card-title">My Contacts</div>
-    <div id="contactList"><p class="small" id="contactEmpty">No contacts yet.</p></div>
-  </div>
-  <div class="card" style="border-color:rgba(224,82,82,.2);background:rgba(224,82,82,.04);">
-    <div class="card-title" style="color:var(--red);">🆘 Emergency SOS</div>
-    <div class="card-sub">Set a primary emergency number. This button will immediately dial it.</div>
+  </details>
+
+  <div class="card sos-card">
+    <div class="card-title sos-title">🆘 Emergency</div>
+    <div class="card-sub">Save one number to call in an emergency. The red button dials it right away.</div>
     <div class="label">Primary emergency number</div>
     <input id="emPhone" placeholder="e.g., 911 or a family number" inputmode="tel" />
     <div class="sp8"></div>
@@ -1104,10 +1111,9 @@
 <!-- ══════════════ ME PAGE ══════════════ -->
 <section class="grid hidden" id="view-me">
 
-  <div class="card"><div class="card-title">Appearance</div><div data-theme-control></div></div>
 
   <!-- Hero -->
-  <div class="me-hero">
+  <div class="me-hero" id="meHero">
     <button class="me-edit-btn" id="editMeBtn">✏️ Edit</button>
     <div class="me-avatar" id="meAvatar">
       <span id="meAvatarEmoji">👤</span>
@@ -1124,8 +1130,17 @@
     </button>
   </div>
 
+  <div class="card" id="appearanceCard">
+    <div class="card-title">Look and feel</div>
+    <div class="label">Colors</div>
+    <div data-theme-control></div>
+    <div class="sp12"></div>
+    <div class="label">Text size</div>
+    <button class="btn ghost" id="bigTextBtn" type="button">🔠 Make text bigger</button>
+  </div>
+
   <!-- Personal Info -->
-  <div class="card">
+  <div class="card" id="meInfoCard">
     <div class="info-section">
       <div class="section-head">👤 Personal</div>
       <div class="info-row"><span class="info-icon">🎂</span><div class="info-body"><div class="info-label">Date of Birth</div><div class="info-val" id="diDob">—</div></div></div>
@@ -1158,6 +1173,12 @@
     </div>
   </div>
 
+  <div id="caregivingSlot"></div>
+
+  <details class="card fold" id="helperSettings">
+    <summary>⚙️ Settings for family helpers</summary>
+    <div class="fold-body" id="helperSlot">
+      <p class="card-sub">Set up once by a family member. Nothing here is needed day to day.</p>
   <!-- Caregiver Portal Link -->
   <div class="card" style="border-color:rgba(46,204,138,.2);background:rgba(46,204,138,.03);">
     <div class="card-title" style="color:var(--green);">👨‍👩‍👧 Caregiver Portal</div>
@@ -1188,7 +1209,7 @@
     <div class="voice-toggle-row">
       <div class="voice-toggle-info">
         <div class="voice-toggle-label">🔊 Read Responses Aloud</div>
-        <div class="voice-toggle-sub">Claude's replies are spoken out loud</div>
+        <div class="voice-toggle-sub">The companion's replies are read out loud</div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" id="voiceOutputToggle" />
@@ -1239,24 +1260,29 @@
     <div class="sp8"></div>
     <p class="small" id="voiceSupportMsg" style="text-align:center;"></p>
   </div>
-
+    </div>
+  </details>
 </section>
 
 <!-- ══════════════ TAB BAR ══════════════ -->
 <nav class="tabs hidden" id="mainNav" role="navigation" aria-label="ElderXonnect Tabs">
-  <div class="tabbtn active" data-tab="home"><span class="icon">🏠</span>Home</div>
-  <div class="tabbtn" data-tab="reminders"><span class="icon">🔔</span>Remind</div>
-  <div class="tabbtn" data-tab="chat"><span class="icon">💬</span>Chat</div>
-  <div class="tabbtn" data-tab="games"><span class="icon">🧠</span>Games</div>
-  <div class="tabbtn" data-tab="contacts"><span class="icon">👥</span>People</div>
+  <button type="button" class="tabbtn active" data-tab="home"><span class="icon">🏠</span>Home</button>
+  <button type="button" class="tabbtn" data-tab="reminders"><span class="icon">🔔</span>Remind</button>
+  <button type="button" class="tabbtn" data-tab="chat"><span class="icon">💬</span>Chat</button>
+  <button type="button" class="tabbtn" data-tab="games"><span class="icon">🧠</span>Games</button>
+  <button type="button" class="tabbtn" data-tab="contacts"><span class="icon">👥</span>People</button>
 </nav>
 
 <!-- ══════════════ SETTINGS DRAWER ══════════════ -->
 <div class="settings-drawer-backdrop hidden" id="settingsDrawer">
   <div class="settings-drawer">
     <div class="drawer-handle"></div>
-    <div class="drawer-title">⚙️ Voice Settings</div>
-    <p class="drawer-sub">Customize how voice works throughout the app.</p>
+    <div class="drawer-title">⚙️ Settings</div>
+    <div class="drawer-section">Colors</div>
+    <div data-theme-control></div>
+    <div class="drawer-section">Text size</div>
+    <button class="btn ghost" id="bigTextBtnDrawer" type="button">🔠 Make text bigger</button>
+    <div class="drawer-section">Voice</div>
 
     <div class="drawer-row">
       <div class="drawer-row-left">
@@ -1277,7 +1303,7 @@
         <span class="drawer-row-icon">🔊</span>
         <div>
           <div class="drawer-row-label">Read Responses Aloud</div>
-          <div class="drawer-row-sub">Claude speaks its replies out loud</div>
+          <div class="drawer-row-sub">The companion reads its replies out loud</div>
         </div>
       </div>
       <label class="toggle-switch">
@@ -2672,16 +2698,31 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
 /* Large-text toggle (remembered on this device) */
 (function(){
   try{ if(localStorage.getItem('exc_text_xl')==='1') document.body.classList.add('text-xl'); }catch(e){}
-  var b=document.getElementById('bigTextBtn'); if(!b) return;
-  function label(){ b.textContent=document.body.classList.contains('text-xl')?'🔠 Back to normal text':'🔠 Make text bigger'; }
+  var btns=['bigTextBtn','bigTextBtnDrawer'].map(function(id){return document.getElementById(id);}).filter(Boolean);
+  function label(){ var on=document.body.classList.contains('text-xl'); btns.forEach(function(b){ b.textContent=on?'🔠 Back to normal text':'🔠 Make text bigger'; b.setAttribute('aria-pressed',String(on)); }); }
   label();
-  b.addEventListener('click',function(){
+  btns.forEach(function(b){ b.addEventListener('click',function(){
     var on=document.body.classList.toggle('text-xl');
     try{ localStorage.setItem('exc_text_xl',on?'1':'0'); }catch(e){}
     label();
-  });
+  }); });
 })();
 </script>
+<!-- Add-on scripts, loaded here so the page works the same with or without the offline cache. -->
+<script src="/fixes.js" defer></script>
+<script src="/supabase-config.js" defer></script>
+<script src="/safe-cloud-reconcile.js" defer></script>
+<script src="/supabase-sync.js" defer></script>
+<script src="/recipient-account-restore.js" defer></script>
+<script src="/profile-name-backfill.js" defer></script>
+<script src="/profile-display-refresh.js" defer></script>
+<script src="/care-recipient-display-name-sync.js" defer></script>
+<script src="/care-recipient-profile-snapshot-sync.js" defer></script>
+<script src="/caregiver-access.js" defer></script>
+<script src="/reminder-schedule.js" defer></script>
+<script src="/reminder-schedule-cloud.js" defer></script>
+<script src="/role-router.js" defer></script>
+<script src="/ui-polish.js" defer></script>
 </body>
 </html>
 
