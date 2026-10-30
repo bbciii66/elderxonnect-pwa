@@ -40,6 +40,6 @@
     return q;
   }
   window.supabase = { createClient() {
-    return { from: table, auth: { getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
+    return { from: table, auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
   } };
 })();

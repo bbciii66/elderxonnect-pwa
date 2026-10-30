@@ -1,0 +1,100 @@
+/* ElderXonnect layout polish: calm single column, big tap targets, same in light and dark.
+   Colors come from theme tokens (index.html :root and theme.css). */
+
+html, body { overflow-x: hidden; }
+/* Bigger text reaches everything on the page, including pop-ups like the profile editor. */
+body.text-xl > :not(script):not(style) { zoom: 1.15; }
+
+/* Header: name and greeting left, two round buttons right. Nothing may push past the edge. */
+header { flex-wrap: nowrap; min-width: 0; }
+header .brand { min-width: 0; }
+header .brand h1 { font-size: 24px; line-height: 1.15; }
+header .brand p { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.head-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.me-fab-inline, .settings-btn { width: 52px; height: 52px; min-height: 52px; font-size: 15px; }
+.settings-btn { font-size: 22px; }
+/* Only say something about the connection when it is down. */
+.status-dot { display: none; }
+.status-dot:has(.dot.offline) { display: flex; }
+
+/* Home */
+.hello { padding: 4px 4px 0; }
+.hello-day { font-size: 17px; color: var(--muted); }
+.hello-title { font-family: 'Lora', serif; font-size: 30px; line-height: 1.2; font-weight: 700; margin-top: 2px; }
+.hero-card .prompt { font-size: 22px !important; }
+.hero-card .last { font-size: 16px !important; }
+#checkinHeroBtn { max-width: none; width: auto; min-width: 128px; min-height: 60px; font-size: 19px; padding: 12px 18px; flex: none; }
+.hero-card.done { border-color: var(--green); }
+.hero-card.done .prompt { color: var(--green); }
+
+.call-big {
+  width: 100%; min-height: 76px; border-radius: 20px; border: 2px solid var(--green);
+  background: var(--green2); color: #fff; font: 700 21px 'DM Sans', system-ui, sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.call-big[hidden] { display: none; }
+.call-big .call-icon { font-size: 28px; }
+
+.today-list { list-style: none; margin: 8px 0 12px; padding: 0; }
+.today-list li { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px;
+  min-height: 56px; padding: 8px 0; border-bottom: 1px solid var(--line2); font-size: 18px; }
+.today-list li:last-child { border-bottom: 0; }
+.today-list .ti { font-size: 24px; text-align: center; }
+.today-list .tt { font-weight: 600; overflow-wrap: anywhere; }
+.today-list .tm { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.today-list li.past .tt, .today-list li.past .tm { color: var(--muted); font-weight: 500; }
+.today-empty { color: var(--muted); font-size: 17px; margin: 6px 0 12px; }
+.today-empty[hidden] { display: none; }
+
+.tip-card { border-color: var(--line); }
+.tip-label { font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+.tip-text { font-size: 18px; line-height: 1.5; font-family: 'Lora', serif; }
+
+/* Folding sections (history, add forms, helper settings) */
+details.fold { padding: 0; overflow: hidden; }
+details.fold > summary {
+  list-style: none; cursor: pointer; min-height: 64px; padding: 18px var(--pad);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: 'Lora', serif; font-size: 20px; font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: '›'; font-size: 30px; line-height: 1; color: var(--muted); transition: transform .2s; }
+details.fold[open] > summary::after { transform: rotate(90deg); }
+details.fold > .fold-body { padding: 0 var(--pad) var(--pad); }
+details.add-fold > summary { font-family: 'DM Sans', system-ui, sans-serif; font-size: 19px; font-weight: 700; color: var(--green); justify-content: center; }
+details.add-fold > summary::after { display: none; }
+details.add-fold[open] > summary { color: var(--muted); }
+details.sub-details { margin: 4px 0 12px; }
+details.sub-details > summary { cursor: pointer; min-height: 48px; padding: 10px 0; color: var(--muted); font-weight: 600; }
+
+/* Lists: bigger rows and delete buttons that are easy to hit */
+.list li, #contactList > * { min-height: 64px; }
+#remList button, #contactList button { min-width: 52px; min-height: 52px; font-size: 18px !important; }
+.small-btn { width: auto !important; min-height: 44px; padding: 8px 14px !important; font-size: 15px !important; }
+
+/* Buttons: one comfortable size everywhere */
+.btn { min-height: 56px; font-size: 18px; }
+.btn.red { font-weight: 700; }
+
+/* Emergency card */
+.sos-card { border-color: rgba(224, 82, 82, .35); }
+.sos-title { color: var(--red); }
+
+/* Me: caregiving switch */
+#caregivingSlot:empty { display: none; }
+#elderxonnectCaregivingSwitch { width: 100%; }
+
+/* Settings drawer */
+.drawer-section { font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+
+/* Bottom tabs: real buttons, clear current tab */
+.tabbtn { min-height: 60px; font-size: 15px; }
+.tabbtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* The home screen greets by name, so the header line would only repeat it. */
+header .brand p { display: none; }
+.rem-note { margin-top: 12px; font-size: 15px; color: var(--muted); }
+
+/* Calling family is not an emergency: calm green here, red is kept for the Emergency button. */
+.caregiver-btn { background: var(--green2); border: 2px solid var(--green); box-shadow: none; animation: none; font-family: 'DM Sans', system-ui, sans-serif; min-height: 76px; }

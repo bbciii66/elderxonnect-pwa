@@ -1,0 +1,67 @@
+/* Appearance controls (both themes) */
+.theme-picker{display:flex;gap:8px}
+.theme-picker button{flex:1;min-height:52px;margin:0;border-radius:14px;font:inherit;font-weight:700;cursor:pointer;border:2px solid var(--line);background:transparent;color:var(--text)}
+.theme-picker button[aria-pressed="true"]{border-color:var(--green);background:rgba(127,127,127,.18)}
+
+/* Light theme: soft blue-gray surfaces, dark navy type, pastel buttons. Not stark white. */
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#e3e7ee; --bg2:#dbe1ea; --card:#eeece6; --card2:#e6e5df;
+  --green:#2f5aa8; --green2:#cfdff5; --green3:#dbe7f7;
+  --gold:#7a5a12; --gold-dark:#7a5a12;
+  --red:#b3392f; --red2:#a02f26;
+  --text:#1c2533; --muted:#4a5a73;
+  --line:rgba(47,90,168,.22); --line2:rgba(28,37,51,.16);
+  --shadow:0 6px 20px rgba(28,37,51,.12);
+  --surface-2:#e6e5df; --surface-3:#dce4ee; --surface-btn:#e3e9f3; --accent-soft:#cfdff5;
+}
+html[data-theme="light"],html[data-theme="light"] body{background:var(--bg);color:var(--text);background-image:none}
+html[data-theme="light"] body{min-height:100vh;min-height:100dvh}
+html[data-theme="light"] input,html[data-theme="light"] textarea,html[data-theme="light"] select{background:#dce7f5;color:var(--text);border-color:rgba(47,90,168,.4)}
+html[data-theme="light"] option{background:#dce7f5;color:var(--text)}
+html[data-theme="light"] input::placeholder,html[data-theme="light"] textarea::placeholder{color:#55657f}
+html[data-theme="light"] :focus-visible{outline-color:#2f5aa8}
+/* pastel buttons */
+html[data-theme="light"] button,html[data-theme="light"] .btn{background:#cfdff5;color:#1c2f57;border:1px solid rgba(47,90,168,.3)}
+html[data-theme="light"] button.secondary,html[data-theme="light"] .btn.ghost{background:#e3e9f3;color:#1c2533;border:1px solid rgba(28,37,51,.2)}
+html[data-theme="light"] .btn.green{background:#c9e8d8;color:#12452d;border:1px solid rgba(18,69,45,.3)}
+html[data-theme="light"] .btn.red{background:#f6d3cf;color:#6e1a13;border:1px solid rgba(110,26,19,.3)}
+html[data-theme="light"] .btn.gold{background:#f5e6bd;color:#4d3908;border:1px solid rgba(77,57,8,.3)}
+html[data-theme="light"] .theme-picker button{background:#e3e9f3;color:#1c2533}
+html[data-theme="light"] .theme-picker button[aria-pressed="true"]{background:#cfdff5;border-color:#2f5aa8}
+html[data-theme="light"] .quick button{background:#dde7f6;color:#1c2533}
+html[data-theme="light"] .status.ok{background:#d6ecdf;border-color:#2e7d57}
+html[data-theme="light"] .status.warn{background:#f7e8c4;border-color:#b07d12}
+html[data-theme="light"] .status.unknown{background:#e3e9f3;border-color:rgba(28,37,51,.25)}
+html[data-theme="light"] .mine .body{color:#7a5a12}
+html[data-theme="light"] .error{color:#b3392f}
+html[data-theme="light"] a.back,html[data-theme="light"] summary{color:#2f5aa8}
+html[data-theme="light"] .card a,html[data-theme="light"] .sub a{color:#2f5aa8!important}
+/* main page: translucent-white surfaces become soft tints, dark bars become light bars */
+html[data-theme="light"] .bottom-nav,html[data-theme="light"] nav{background:rgba(227,231,238,.97);border-top-color:rgba(47,90,168,.25);box-shadow:0 -4px 18px rgba(28,37,51,.12)}
+html[data-theme="light"] .modal-overlay,html[data-theme="light"] .overlay{background:rgba(28,37,51,.45)}
+html[data-theme="light"] .modal,html[data-theme="light"] .sheet{background:var(--card);color:var(--text)}
+html[data-theme="light"] .chip,html[data-theme="light"] .mood-btn,html[data-theme="light"] .modal-close,html[data-theme="light"] .notif-banner-close{background:#e3e9f3;color:var(--text)}
+html[data-theme="light"] .bubble{background:#e3e9f3;color:var(--text)}
+html[data-theme="light"] .bubble.me{background:#cfdff5;color:#1c2f57}
+html[data-theme="light"] .badge.good{background:#d6ecdf;color:#1d5c3c;border-color:#7fb99a}
+html[data-theme="light"] .badge.ok{background:#f7e8c4;color:#6b4d08;border-color:#d4b565}
+html[data-theme="light"] .badge.bad{background:#f6d3cf;color:#8a2a22;border-color:#d99a94}
+html[data-theme="dark"]{background:#0e1a14;color-scheme:dark}
+
+/* Light theme: remove glows and faded gradients that looked washed out or spilled past their edges */
+html[data-theme="light"] .brand h1{background:linear-gradient(135deg,#1c2f57 0%,#2f5aa8 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] .me-hero{background:#e6e8ec;border-color:rgba(47,90,168,.25)}
+html[data-theme="light"] .me-hero::before{display:none}
+html[data-theme="light"] .me-avatar{background:#dce7f5;border-color:#7a5a12;color:#1c2533}
+html[data-theme="light"] .me-name{color:#5b4410}
+html[data-theme="light"] .me-edit-btn{background:#dce7f5;border:1px solid rgba(47,90,168,.35);color:#1c2f57;box-shadow:none}
+html[data-theme="light"] button,html[data-theme="light"] .btn,html[data-theme="light"] .caregiver-btn{box-shadow:none;text-shadow:none}
+html[data-theme="light"] .card,html[data-theme="light"] .grid > div{box-shadow:none}
+html[data-theme="light"] .call-big{background:#c9e8d8;color:#12452d;border-color:#2e7d57}
+html[data-theme="light"] details.add-fold > summary{color:#2f5aa8}
+html[data-theme="light"] details.fold > summary{color:var(--text)}
+html[data-theme="light"] details.add-fold > summary{color:#2f5aa8}
+html[data-theme="light"] .tabbtn{background:transparent;border:1px solid transparent;color:var(--muted)}
+html[data-theme="light"] .tabbtn.active{background:#cfdff5;border-color:rgba(47,90,168,.35);color:#1c2f57}
+html[data-theme="light"] .caregiver-btn{background:#c9e8d8;color:#12452d;border-color:#2e7d57}
