@@ -56,6 +56,8 @@ let port;
   check((await p.locator('#roles select').count()) === 3, 'roles card lists all three invited people');
   await p.selectOption('[data-role="a2"]', 'onsite');
   check(await p.evaluate(() => window.__FAKE_DB__.tables.caregiver_access.find((r) => r.id === 'a2').role) === 'onsite', 'elder can change a role');
+  check(await p.$$eval('select', (ss) => ss.filter((s) => s.offsetParent).every((s) => { const c = getComputedStyle(s); return c.color !== c.backgroundColor; })), 'dropdown text is readable against its background');
+  check(await p.$eval('#inviteRole', (s) => [...s.options].map((o) => o.text).join('|')) === 'Family manager|Onsite caregiver|View only', 'invite dropdown lists the three roles');
   await p.fill('#inviteEmail', 'nope'); await p.click('#sendInvite');
   check((await p.textContent('#error')).includes('full email'), 'bad invite email gets a plain message');
   await p.fill('#inviteEmail', 'Omar.Aide@Example.com'); await p.selectOption('#inviteRole', 'onsite'); await p.click('#sendInvite');
