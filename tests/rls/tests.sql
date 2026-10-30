@@ -150,8 +150,12 @@ do $$ begin
   assert testkit.blocked($q$insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values ('00000000-0000-0000-0000-0000000000a1','https://push.example/hijack','k','a')$q$), 'cannot register a device for someone else';
   assert testkit.blocked($q$insert into public.push_subscriptions(endpoint,p256dh,auth) values ('http://insecure.example/x','k','a')$q$), 'endpoint must be https';
 end $$;
+select testkit.login(:F,'fran.testerson@example.com');
+insert into public.push_subscriptions(endpoint,p256dh,auth,tz) values ('https://push.example/fran','k2','a2','America/New_York') on conflict (endpoint) do update set p256dh=excluded.p256dh, tz=excluded.tz;
+do $$ begin assert (select tz from public.push_subscriptions where endpoint='https://push.example/fran')='America/New_York', 'owner can refresh their own device'; end $$;
 select testkit.login(:A,'omar.aide@example.com');
 do $$ begin
+  assert testkit.blocked($q$update public.push_subscriptions set tz='UTC'$q$), 'cannot change someone else''s device';
   assert (select count(*) from public.push_subscriptions)=0, 'another caregiver must not see Fran''s device';
   assert testkit.blocked($q$delete from public.push_subscriptions$q$), 'cannot delete someone else''s device';
 end $$;

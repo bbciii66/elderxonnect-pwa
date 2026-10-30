@@ -18,9 +18,12 @@ drop policy if exists "Own devices read" on public.push_subscriptions;
 create policy "Own devices read" on public.push_subscriptions for select to authenticated using (user_id = (select auth.uid()));
 drop policy if exists "Own devices add" on public.push_subscriptions;
 create policy "Own devices add" on public.push_subscriptions for insert to authenticated with check (user_id = (select auth.uid()));
+drop policy if exists "Own devices update" on public.push_subscriptions;
+create policy "Own devices update" on public.push_subscriptions for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 drop policy if exists "Own devices remove" on public.push_subscriptions;
 create policy "Own devices remove" on public.push_subscriptions for delete to authenticated using (user_id = (select auth.uid()));
-grant select, insert, delete on public.push_subscriptions to authenticated;
+grant select, insert, update, delete on public.push_subscriptions to authenticated;
 
 -- One nudge per person per day. No one can read or write it from the app; only the sender (service role).
 create table if not exists public.alert_log (

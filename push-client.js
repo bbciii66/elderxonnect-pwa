@@ -11,22 +11,42 @@
   }
   const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
+  // Caregiver and circle pages are often opened without the main page, so make sure the worker exists first.
+  async function registration() {
+    await navigator.serviceWorker.register('/service-worker.js');
+    return navigator.serviceWorker.ready;
+  }
+
   async function currentSub() {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await registration();
     return reg.pushManager.getSubscription();
+  }
+
+  // A browser subscription proves nothing about who it belongs to: someone else may have enabled it on this
+  // device. Only a saved row for the signed-in user counts.
+  async function isEnrolled(client, userId) {
+    const sub = await currentSub();
+    if (!sub || Notification.permission !== 'granted') return false;
+    const { data } = await client.from('push_subscriptions').select('id').eq('user_id', userId).eq('endpoint', sub.endpoint).maybeSingle();
+    return !!data;
   }
 
   function setText(msg, kind) { const el = $('alertsStatus'); el.textContent = msg; el.className = 'status ' + (kind || 'unknown'); }
 
-  async function turnOn(client) {
+  async function turnOn(client, userId) {
     const key = window.EXC_PUSH_PUBLIC_KEY;
     if (!key) return setText('Alerts are not switched on yet. Ask Ben to finish setup.');
     if (Notification.permission === 'denied') return setText('Notifications are blocked for this site in your phone settings.', 'warn');
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') return setText('Alerts stay off because notifications were not allowed.', 'warn');
-    const reg = await navigator.serviceWorker.ready;
-    const sub = (await reg.pushManager.getSubscription()) ||
-      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(key) }));
+    const reg = await registration();
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      // Left over from a different account on this device? Drop it and make a fresh one for this person.
+      const { data } = await client.from('push_subscriptions').select('id').eq('user_id', userId).eq('endpoint', sub.endpoint).maybeSingle();
+      if (!data) { await sub.unsubscribe(); sub = null; }
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(key) });
     const j = sub.toJSON();
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const { error } = await client.from('push_subscriptions').upsert(
@@ -41,17 +61,17 @@
     setText('Alerts are off for this device.'); $('alertsBtn').textContent = 'Turn on alerts';
   }
 
-  window.initPushCard = async function (client) {
+  window.initPushCard = async function (client, userId) {
     const card = $('alertsCard'); if (!card) return;
     if (!supported()) { card.classList.remove('hidden'); setText('This browser can’t show alerts. On iPhone, add the app to the Home Screen first.'); $('alertsBtn').classList.add('hidden'); return; }
     card.classList.remove('hidden');
     if (!window.EXC_PUSH_PUBLIC_KEY) { setText('Alerts are not switched on yet.'); $('alertsBtn').classList.add('hidden'); return; }
-    const on = !!(await currentSub()) && Notification.permission === 'granted';
+    const on = await isEnrolled(client, userId);
     setText(on ? 'Alerts are on for this device.' : 'Get a nudge if someone hasn’t checked in by 11am.', on ? 'ok' : 'unknown');
     $('alertsBtn').textContent = on ? 'Turn alerts off' : 'Turn on alerts';
     $('alertsBtn').onclick = async () => {
       $('alertsBtn').disabled = true;
-      try { (await currentSub()) && Notification.permission === 'granted' ? await turnOff(client) : await turnOn(client); }
+      try { (await isEnrolled(client, userId)) ? await turnOff(client) : await turnOn(client, userId); }
       catch (e) { setText('Something went wrong: ' + (e.message || e), 'warn'); }
       $('alertsBtn').disabled = false;
     };

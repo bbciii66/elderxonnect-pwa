@@ -47,7 +47,7 @@
     if (circles.length > 1) $('who').value = first.id;
     choose(first);
     // Only people who help someone else get the alert switch.
-    if (circles.length > 1 && window.initPushCard) window.initPushCard(client);
+    if (circles.length > 1 && window.initPushCard) window.initPushCard(client, me.id);
     timer = setInterval(refresh, 20000);
   }
 

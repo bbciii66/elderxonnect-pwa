@@ -48,16 +48,19 @@ Deno.serve(async (req) => {
         .insert({ elder_id: link.elder_id, caregiver_id: caregiverId, day: decision.day });
       if (dupe) { skipped++; continue; }
       const message = JSON.stringify(alertMessage(link.recipient_display_name));
+      let accepted = 0;
       for (const d of devices) {
         try {
           await webpush.sendNotification({ endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth } }, message);
-          sent++;
+          sent++; accepted++;
         } catch (e) {
           const code = (e as { statusCode?: number }).statusCode;
           if (code === 404 || code === 410) { await admin.from('push_subscriptions').delete().eq('id', d.id); removed++; }
           else console.error('push failed', code);
         }
       }
+      // Nothing got through (push service down, devices gone): give the claim back so the next run tries again.
+      if (accepted === 0) await admin.from('alert_log').delete().eq('elder_id', link.elder_id).eq('caregiver_id', caregiverId).eq('day', decision.day);
     }
   }
   return json({ sent, skipped, removed });
