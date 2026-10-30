@@ -84,7 +84,8 @@ let port;
   check(btnH.every((h) => h >= 44), 'every visible button is at least 44px tall');
   await p.click('#bigText');
   check(await p.evaluate(() => document.body.classList.contains('text-xl')), 'bigger text toggles');
-  check(errors.length === 0, 'no script errors (elder) ' + errors.join(' | ')); await ctx.close();
+  check(errors.length === 0, 'no script errors (elder) ' + errors.join(' | ')); check(!(await p.isVisible('#alertsCard')), 'an elder with no one to watch over has no alerts card');
+  await ctx.close();
 
   // Family caregiver opens the elder's circle by saved name and can write
   ({ p, errors, ctx } = await open(browser, FRAN));
@@ -92,6 +93,7 @@ let port;
   check((await p.textContent('#who')).includes('Edna Testerson'), 'caregiver sees the person by name, not a code');
   check(!(await p.isVisible('#rolesCard')), 'caregiver does not see the roles card');
   check(await p.isVisible('#composeRow') && await p.isVisible('#visitForm'), 'family role can post and log visits');
+  check((await p.isVisible('#alertsCard')) && (await p.textContent('#alertsStatus')).includes('not switched on'), 'people who help others see the alerts card, explaining it is not switched on yet');
   await ctx.close();
 
   // View-only caregiver

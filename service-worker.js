@@ -1,6 +1,8 @@
-const CACHE_NAME = "elderxonnect-v31";
+const CACHE_NAME = "elderxonnect-v32";
 const STATIC_ASSETS = [
   "/manifest.json",
+  "/push-config.js",
+  "/push-client.js",
   "/fixes.js",
   "/supabase-config.js",
   "/safe-cloud-reconcile.js",
@@ -119,4 +121,25 @@ self.addEventListener("fetch", (event) => {
       return cached || networkPromise;
     })());
   }
+});
+
+// Push alerts: show the nudge the sender made, and open the circle page when it is tapped.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) { data = {}; }
+  const title = String(data.title || "ElderXonnect").slice(0, 80);
+  event.waitUntil(self.registration.showNotification(title, {
+    body: String(data.body || "").slice(0, 200),
+    icon: "/icons/icon-192.png",
+    data: { url: typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/circle.html" }
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/circle.html";
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) { if (c.url.includes(url) && "focus" in c) return c.focus(); }
+    return clients.openWindow(url);
+  }));
 });

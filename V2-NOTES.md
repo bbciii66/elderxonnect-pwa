@@ -32,3 +32,14 @@ Made-up people only. Do not put real health information in until the privacy pha
 
 ## AI companion
 - The elder-pasted API key is gone (see above). Bringing a real AI back needs a server-side key in the Cloudflare relay plus a decision about sending any health details. Left for Ben.
+
+## Push alerts: "no check-in yet today" (built, not switched on)
+- A family member who helps someone sees an **Alerts** card on the circle page. With it on, their phone gets one nudge per person per day if that person hasn't checked in by 11am (the family member's own time zone), as long as they checked in at some point in the last 7 days. People with no check-ins at all, or silent for over a week, never trigger a nudge.
+- Only **active** circle members can be nudged (revoked and pending never). `mayReceiveAlert()` in `supabase/functions/send-checkin-alerts/alert-logic.mjs` is the one place to change when the admin/permission model decides who may see check-ins.
+- Pieces: `push-alerts-migration.sql` (device list + once-a-day log, privacy locked, safe to run twice), the `send-checkin-alerts` function, `push-client.js` and the push handlers in `service-worker.js`.
+- **To switch on (Ben, from the Mac; nothing here is deployed or paid):**
+  1. Run `push-alerts-migration.sql` in the elderxonnect-v2 SQL Editor.
+  2. Make a push key pair with `npx web-push generate-vapid-keys`. Put the public key in `push-config.js`. Save the private key, the public key, a contact like `mailto:you@example.com`, and a made-up `ALERT_CRON_SECRET` as secrets on the function (never in the repo).
+  3. Deploy `send-checkin-alerts`, then have Supabase's built-in scheduler (pg_cron, free) call it every 30 minutes with the secret in the `x-cron-secret` header.
+  4. On iPhone the family member must add the app to the Home Screen first.
+- Until step 3, the function answers "not configured" and sends nothing.

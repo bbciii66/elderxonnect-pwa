@@ -102,6 +102,11 @@
         <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself.</p>
       </div>
     </section>
+    <section class="card hidden" id="alertsCard">
+      <h2>Alerts</h2>
+      <div class="status unknown" id="alertsStatus">Checking…</div>
+      <button id="alertsBtn" class="secondary">Turn on alerts</button>
+    </section>
     <button class="secondary" id="bigText">Make text bigger</button>
     <div class="error" id="error" role="alert"></div>
   </main>
@@ -109,6 +114,8 @@
   <script src="/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/circle-logic.js"></script>
+  <script src="/push-config.js"></script>
+  <script src="/push-client.js"></script>
   <script src="/circle.js"></script>
 </body>
 </html>

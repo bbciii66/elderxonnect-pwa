@@ -143,4 +143,27 @@ select testkit.login(:E,'edna.testerson@example.com','Edna T');
 insert into public.circle_messages(elder_id,body) values (:E,'I am okay today');
 do $$ begin assert (select count(*) from public.circle_messages)=4, 'elder sees all messages'; end $$;
 select testkit.logout();
+-- 10. Push devices: you see and manage only your own; strangers and other caregivers see nothing
+select testkit.login(:F,'fran.testerson@example.com');
+insert into public.push_subscriptions(endpoint,p256dh,auth,tz) values ('https://push.example/fran','k','a','America/Chicago');
+do $$ begin
+  assert testkit.blocked($q$insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values ('00000000-0000-0000-0000-0000000000a1','https://push.example/hijack','k','a')$q$), 'cannot register a device for someone else';
+  assert testkit.blocked($q$insert into public.push_subscriptions(endpoint,p256dh,auth) values ('http://insecure.example/x','k','a')$q$), 'endpoint must be https';
+end $$;
+select testkit.login(:F,'fran.testerson@example.com');
+insert into public.push_subscriptions(endpoint,p256dh,auth,tz) values ('https://push.example/fran','k2','a2','America/New_York') on conflict (endpoint) do update set p256dh=excluded.p256dh, tz=excluded.tz;
+do $$ begin assert (select tz from public.push_subscriptions where endpoint='https://push.example/fran')='America/New_York', 'owner can refresh their own device'; end $$;
+select testkit.login(:A,'omar.aide@example.com');
+do $$ begin
+  assert testkit.blocked($q$update public.push_subscriptions set tz='UTC'$q$), 'cannot change someone else''s device';
+  assert (select count(*) from public.push_subscriptions)=0, 'another caregiver must not see Fran''s device';
+  assert testkit.blocked($q$delete from public.push_subscriptions$q$), 'cannot delete someone else''s device';
+end $$;
+select testkit.login(:E,'edna.testerson@example.com');
+do $$ begin
+  assert (select count(*) from public.push_subscriptions)=0, 'the elder does not see caregiver devices';
+  assert testkit.blocked($q$insert into public.alert_log(elder_id,caregiver_id,day) values ('00000000-0000-0000-0000-00000000000e','00000000-0000-0000-0000-0000000000f1',current_date)$q$), 'app users cannot write the alert log';
+  assert testkit.blocked($q$select 1 from public.alert_log$q$), 'app users cannot read the alert log';
+end $$;
+select testkit.logout();
 \echo ALL DATABASE RULE CHECKS PASSED
