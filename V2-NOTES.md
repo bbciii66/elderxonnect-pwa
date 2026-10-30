@@ -5,7 +5,7 @@ Made-up people only. Do not put real health information in until the privacy pha
 ## What this branch changes (on top of the Family Circle PR)
 - **Visit log** in the Care Circle: who visited, when, how long, what happened. Family and onsite roles can add entries; view-only can read.
 - **Three roles that mean something**: Family manager, Onsite caregiver, View only. The elder sees a "Who can do what" card on their own circle and picks each person's role. New invitations now start as **view only** (least privilege).
-- **Names can't be faked**: the database stamps the sender/visitor/"done by" name from the signed-in account. The browser no longer sends names.
+- **Names can't be faked**: the database stamps the sender/visitor/"done by" name from the verified account email (not the editable profile name). The browser no longer sends names.
 - **Tasks can only be ticked**: title, owner and circle can't be rewritten after creation.
 - **No more API key for the elder**: the key box is gone and any key saved on a device by older versions is cleared. The companion now answers locally and sends nothing off the phone (this also stops the elder's medical profile from being sent to an AI service). Bringing the AI back needs a server-side key in the Cloudflare relay (not in this repo) and a privacy decision.
 - Circle screen split into `circle.html` (page), `circle.js` (screen), `circle-logic.js` (rules that can be tested alone).

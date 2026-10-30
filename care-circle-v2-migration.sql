@@ -24,13 +24,12 @@ create policy "Circle writes visits" on public.circle_visits for insert to authe
 with check (public.circle_can_write(elder_id) and visitor_id = (select auth.uid()));
 grant select, insert on public.circle_visits to authenticated;
 
--- 2. Names come from the signed-in account, never from the browser, so nobody can post as someone else.
+-- 2. Names are stamped by the database from the verified account email, never taken from the browser.
+-- Names come from the verified email on the account. user_metadata (full_name) is editable by the
+-- user themselves, so it must never be used to say who wrote something.
 create or replace function public.circle_trusted_name()
 returns text language sql stable as $$
-  select coalesce(
-    nullif(trim(auth.jwt()->'user_metadata'->>'full_name'), ''),
-    nullif(split_part(coalesce(auth.jwt()->>'email', ''), '@', 1), ''),
-    'Someone');
+  select coalesce(nullif(split_part(coalesce(auth.jwt()->>'email', ''), '@', 1), ''), 'Someone');
 $$;
 create or replace function public.circle_stamp_sender()
 returns trigger language plpgsql as $$

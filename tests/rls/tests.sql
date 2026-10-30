@@ -46,7 +46,7 @@ insert into public.circle_messages(elder_id,body) values (:E,'Lunch done');
 select testkit.logout();
 do $$ begin
   assert (select count(*) from public.circle_messages)=2, 'two messages expected';
-  assert (select sender_name from public.circle_messages where body like 'Hi Edna%')='Fran T', 'sender name must come from the account';
+  assert (select sender_name from public.circle_messages where body like 'Hi Edna%')='fran.testerson', 'sender name must come from the verified email, not editable profile text';
   assert (select sender_name from public.circle_messages where body='Lunch done')='omar.aide', 'falls back to email name';
 end $$;
 
@@ -85,8 +85,8 @@ insert into public.circle_visits(elder_id,minutes,notes) values (:E,30,'Helped w
 select testkit.logout();
 do $$ begin
   assert (select count(*) from public.circle_visits)=2, 'two visits expected';
-  assert (select visitor_name from public.circle_visits where notes='Brought groceries')='Fran T', 'visitor name stamped from account, not the forged one';
-  assert (select visitor_name from public.circle_visits where notes='Helped with bath')='Omar', 'visitor name from full_name';
+  assert (select visitor_name from public.circle_visits where notes='Brought groceries')='fran.testerson', 'visitor name stamped from the verified email, not the forged one';
+  assert (select visitor_name from public.circle_visits where notes='Helped with bath')='omar.aide', 'a self-chosen full_name must not be used as the visitor name';
 end $$;
 -- the visit log respects its limits
 select testkit.login(:F,'fran.testerson@example.com','Fran T');
@@ -102,7 +102,7 @@ do $$ declare t uuid; begin
   assert testkit.blocked(format($q$update public.circle_tasks set title='Something else' where id=%L$q$,t)), 'title cannot change';
   assert testkit.blocked(format($q$update public.circle_tasks set elder_id=%L where id=%L$q$,'00000000-0000-0000-0000-0000000000c1',t)), 'task cannot move circles';
   assert not testkit.blocked(format($q$update public.circle_tasks set done=true, done_by_name='Edna (forged)' where id=%L$q$,t)), 'tick should work';
-  assert (select done_by_name from public.circle_tasks where id=t)='Fran T', 'done-by stamped from account';
+  assert (select done_by_name from public.circle_tasks where id=t)='fran.testerson', 'done-by stamped from the verified email';
 end $$;
 select testkit.login(:V,'vic.viewer@example.com');
 do $$ begin
