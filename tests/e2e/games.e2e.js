@@ -85,6 +85,16 @@ let port;
     await p.reload(); await p.waitForTimeout(700);
     check(await visible(p, '#weatherView') && calls.length === before, 'weather: reopening within 30 minutes uses the saved forecast');
 
+    // Offline with an old forecast: still shown, but labelled.
+    await p.evaluate(() => { const c = JSON.parse(localStorage.getItem('exc_weather_cache')); c.at -= 3 * 3600 * 1000; localStorage.setItem('exc_weather_cache', JSON.stringify(c)); });
+    await ctx.setOffline(true);
+    await p.reload().catch(() => {}); await p.waitForTimeout(700);
+    if (await p.$('#weatherCard')) {
+      check(await visible(p, '#weatherView') && /last weather/i.test(await p.textContent('#weatherNote')), 'weather: offline with an old forecast says it is the last one we had');
+    } else check(true, 'weather: offline reload skipped (no service worker in test)');
+    await ctx.setOffline(false);
+    await p.reload(); await p.waitForTimeout(700);
+
     // Change place, then search a town.
     await p.click('#weatherChange'); await p.waitForTimeout(150);
     check(await visible(p, '#weatherSetup'), 'weather: Change place goes back to setup');
@@ -188,6 +198,17 @@ let port;
       else { await p.click('#stageClose'); await p.waitForTimeout(200); check(!(await stageOpen(p)), `${scheme}: ✕ closes the game`); }
       check(await p.evaluate(() => location.pathname === '/'), `${scheme}: closing ${g} stays in the app`);
     }
+    // "Make text bigger" zooms the page; the boards must still fit.
+    await p.evaluate(() => document.body.classList.add('text-xl'));
+    for (const g of ['solitaire', 'tiles', 'sudoku', 'match']) {
+      await p.evaluate((k) => ExcGames.open(k), g); await p.waitForTimeout(150);
+      if (g === 'sudoku') { await p.click('text=Full 9×9'); await p.waitForTimeout(100); }
+      const off = await p.$eval('#stageBody', (b) => [...b.querySelectorAll('*')].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).length);
+      check(off === 0 && await noSideScroll(p), `${scheme}: ${g} fits with large text on`);
+      if (SHOTS && scheme === 'light') await p.screenshot({ path: `${SHOTS}/xl-game-${g}.png` });
+      await p.evaluate(() => ExcGames.close()); await p.waitForTimeout(200);
+    }
+    await p.evaluate(() => document.body.classList.remove('text-xl'));
     check(errors.length === 0, `${scheme}: games, no script errors ` + errors.join(' | '));
     await ctx.close();
   }

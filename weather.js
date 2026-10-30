@@ -36,7 +36,10 @@
       render(cache.data, place);
       if (!force && Date.now() - cache.at < FRESH_MS) return;
     } else show('weatherLoading');
-    if (!navigator.onLine && cache && cache.key === key) return;
+    if (!navigator.onLine && cache && cache.key === key) {
+      if (Date.now() - cache.at >= FRESH_MS) note('Showing the last weather we had. Check your internet connection.');
+      return;
+    }
     fetch(W.forecastUrl(place.lat, place.lon, fahrenheit))
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) { write(CACHE_KEY, { key: key, at: Date.now(), data: data }); note(''); render(data, place); })

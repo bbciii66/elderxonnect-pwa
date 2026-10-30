@@ -137,7 +137,7 @@ html.stage-open, html.stage-open body { overflow: hidden; }
 .stage-head h2 { font-family: 'Lora', serif; font-size: 26px; margin: 0; }
 .stage-close { width: 64px !important; height: 64px; min-height: 64px; border-radius: 50%; border: 2px solid var(--line) !important; background: var(--card) !important; color: var(--text) !important;
   font-size: 30px; font-weight: 800; line-height: 1; cursor: pointer; flex: none; padding: 0; }
-.stage-body { max-width: 560px; width: 100%; margin: 0 auto; }
+.stage-body { max-width: 560px; width: 100%; margin: 0 auto; container-type: inline-size; }
 .stage-status { font-size: 18px; color: var(--muted); margin: 0 0 12px; min-height: 2.6em; }
 .stage-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .stage-tools .btn { flex: 1 1 140px; width: auto; }
@@ -182,6 +182,8 @@ html.stage-open, html.stage-open body { overflow: hidden; }
 
 /* Tile Match */
 .tm-board { position: relative; width: 100%; --tw: calc((min(100vw, 560px) - 24px - 12px) / 6); height: calc(var(--tw) * 1.25 * 4 + 16px); }
+/* Size from the board's own width (cqw) so large text (zoom) never pushes pieces off screen. */
+@supports (width: 1cqw) { .sol-table { --cw: calc((100cqw - 6 * 4px) / 7); } .tm-board { --tw: calc((100cqw - 12px) / 6); } }
 .tm-tile { position: absolute; width: var(--tw); height: calc(var(--tw) * 1.25); min-height: 0; padding: 0;
   left: calc(var(--x) * var(--tw) - var(--z) * 5px); top: calc(var(--y) * var(--tw) * 1.25 - var(--z) * 5px + 12px);
   border-radius: 10px; border: 1px solid #9aa3b2 !important; background: #e8e3d6 !important; color: #111 !important;
