@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { buildInviteEmail, buildInviteLink, parseAllowedOrigins } from './invite-logic.mjs';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,8 +42,7 @@ Deno.serve(async (req) => {
     const { invitationId, caregiverEmail, portalUrl } = await req.json();
     const email = String(caregiverEmail || '').trim().toLowerCase();
     const invitation = String(invitationId || '').trim();
-    const portal = String(portalUrl || '').trim();
-    if (!invitation || !email || !email.includes('@') || !portal.startsWith('https://')) {
+    if (!invitation || !email || !email.includes('@')) {
       return json({ error: 'Invalid invitation request' }, 400);
     }
 
@@ -59,19 +59,10 @@ Deno.serve(async (req) => {
       return json({ error: 'Invitation not found or no longer pending' }, 404);
     }
 
-    const link = `${portal}?email=${encodeURIComponent(email)}`;
+    const link = buildInviteLink(portalUrl, email, parseAllowedOrigins(Deno.env.get('INVITE_ALLOWED_ORIGINS')));
+    if (!link) return json({ error: 'Invalid invitation link' }, 400);
     const elderName = String(userData.user.user_metadata?.full_name || userData.user.email || 'Someone you know');
-    const subject = `${elderName} invited you to ElderXonnect`;
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#173126">
-        <h1 style="color:#1a6b4a">ElderXonnect</h1>
-        <p><strong>${elderName.replace(/[<>&"']/g, '')}</strong> invited you to securely view their shared care information.</p>
-        <p>Your access is read-only and uses your own caregiver account.</p>
-        <p style="margin:28px 0"><a href="${link}" style="background:#2ecc8a;color:#071209;text-decoration:none;padding:13px 20px;border-radius:10px;font-weight:bold">Open Caregiver Invitation</a></p>
-        <p style="font-size:13px;color:#61756a">Create an account with this same email address, confirm it, then accept the invitation.</p>
-        <p style="font-size:12px;color:#87968e;word-break:break-all">${link}</p>
-      </div>`;
-
+    const { subject, html } = buildInviteEmail({ elderName, link });
     const mailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
