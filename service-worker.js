@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v34";
+const CACHE_NAME = "elderxonnect-v35";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/push-config.js",
@@ -30,6 +30,10 @@ const STATIC_ASSETS = [
   "/theme.css",
   "/ui.css",
   "/ui-polish.js",
+  "/games-logic.js",
+  "/games.js",
+  "/weather-logic.js",
+  "/weather.js",
   "/circle-logic.js"
 ];
 
@@ -62,6 +66,7 @@ async function injectScripts(response, scripts) {
 }
 
 function enhanceResponse(response, pathname) {
+  if (pathname !== "/index.html" && pathname !== "/caregiver.html") return response;
   if (pathname === "/caregiver.html") {
     return injectScripts(response, [
       "/caregiver-reminder-schedule.js",
@@ -87,7 +92,11 @@ function enhanceResponse(response, pathname) {
     "/reminder-schedule.js",
     "/reminder-schedule-cloud.js",
     "/role-router.js",
-    "/ui-polish.js"
+    "/ui-polish.js",
+    "/games-logic.js",
+    "/games.js",
+    "/weather-logic.js",
+    "/weather.js"
   ]);
 }
 
@@ -96,17 +105,19 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (request.mode === "navigate") {
+    // Each page is cached under its own address, so the Care Circle page never replaces the home page offline.
+    const path = url.pathname === "/" ? "/index.html" : url.pathname;
     event.respondWith((async () => {
       try {
         const networkResponse = await fetch(request, { cache: "no-store" });
-        const cache = await caches.open(CACHE_NAME);
-        const path = url.pathname === "/caregiver.html" ? "/caregiver.html" : "/index.html";
-        cache.put(path, networkResponse.clone());
-        return enhanceResponse(networkResponse, url.pathname);
+        if (networkResponse.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(path, networkResponse.clone());
+        }
+        return enhanceResponse(networkResponse, path);
       } catch (error) {
-        const path = url.pathname === "/caregiver.html" ? "/caregiver.html" : "/index.html";
-        const cached = await caches.match(path) || await caches.match("/");
-        if (cached) return enhanceResponse(cached, url.pathname);
+        const cached = await caches.match(path) || await caches.match("/index.html");
+        if (cached) return enhanceResponse(cached, path);
         throw error;
       }
     })());

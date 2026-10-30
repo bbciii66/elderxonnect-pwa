@@ -98,3 +98,94 @@ header .brand p { display: none; }
 
 /* Calling family is not an emergency: calm green here, red is kept for the Emergency button. */
 .caregiver-btn { background: var(--green2); border: 2px solid var(--green); box-shadow: none; animation: none; font-family: 'DM Sans', system-ui, sans-serif; min-height: 76px; }
+
+/* AI helper links: name plus a plain note about sign-up */
+.ai-link { display: flex !important; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; margin-bottom: 8px; line-height: 1.25; padding: 10px 14px; }
+.ai-note { font-size: 15px; font-weight: 500; opacity: .85; }
+
+/* ── Weather card ── */
+.weather-card .row-input { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.weather-card .row-input .btn { width: auto; min-width: 88px; }
+.wx-choice { margin-top: 8px; text-align: left; }
+.wx-main { display: flex; align-items: center; gap: 14px; }
+.wx-icon { font-size: 52px; line-height: 1; }
+.wx-temp { font-family: 'Lora', serif; font-size: 52px; font-weight: 700; line-height: 1; }
+.wx-words { font-size: 21px; font-weight: 700; }
+.wx-hilo { font-size: 17px; color: var(--muted); margin-top: 2px; }
+.wx-advice { font-size: 19px; font-weight: 600; margin: 12px 0 0; }
+.wx-feels { font-size: 17px; color: var(--muted); margin: 6px 0 0; }
+.wx-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-top: 12px; font-size: 16px; color: var(--muted); }
+.wx-place { font-weight: 600; }
+.link-btn { background: none !important; border: 0 !important; padding: 8px 2px; min-height: 44px; color: var(--green) !important; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; width: auto; }
+.wx-note { margin-top: 10px; }
+.wx-credit { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.wx-credit a { color: inherit; }
+
+/* ── Games tab ── */
+.game-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.game-tile { min-height: 116px; border-radius: 18px; border: 2px solid var(--line); background: var(--card2, var(--card)); color: var(--text);
+  font: 700 19px 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.game-tile .gt-icon { font-size: 40px; line-height: 1; }
+.chess-link { display: flex !important; flex-direction: column; align-items: center; text-decoration: none; line-height: 1.3; }
+
+/* ── Full-screen game stage with a big ✕ ── */
+html.stage-open, html.stage-open body { overflow: hidden; }
+.game-stage { position: fixed; inset: 0; z-index: 400; background: var(--bg); color: var(--text); display: flex; flex-direction: column;
+  padding: max(env(safe-area-inset-top), 10px) 12px max(env(safe-area-inset-bottom), 12px); overflow-y: auto; }
+.game-stage.hidden { display: none; }
+.stage-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; background: var(--bg); padding: 6px 0 10px; z-index: 2; }
+.stage-head h2 { font-family: 'Lora', serif; font-size: 26px; margin: 0; }
+.stage-close { width: 64px !important; height: 64px; min-height: 64px; border-radius: 50%; border: 2px solid var(--line) !important; background: var(--card) !important; color: var(--text) !important;
+  font-size: 30px; font-weight: 800; line-height: 1; cursor: pointer; flex: none; padding: 0; }
+.stage-body { max-width: 560px; width: 100%; margin: 0 auto; }
+.stage-status { font-size: 18px; color: var(--muted); margin: 0 0 12px; min-height: 2.6em; }
+.stage-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.stage-tools .btn { flex: 1 1 140px; width: auto; }
+.stage-win { border: 2px solid var(--green); border-radius: 18px; padding: 14px; margin-bottom: 12px; text-align: center; background: var(--card); }
+.stage-win-title { font-family: 'Lora', serif; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+
+/* Memory Match */
+.mm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mm-grid.mm-8 { grid-template-columns: repeat(4, 1fr); }
+.mm-card { aspect-ratio: 1; min-height: 72px; border-radius: 16px; border: 2px solid var(--line) !important; background: var(--green2) !important; font-size: 40px; cursor: pointer; padding: 0; }
+.mm-card.up { background: var(--card) !important; }
+.mm-card.done { opacity: .55; border-color: var(--green) !important; }
+
+/* Sudoku */
+.sd-board { display: grid; gap: 0; border: 3px solid var(--text); border-radius: 8px; overflow: hidden; width: 100%; aspect-ratio: 1; }
+.sd-4 { grid-template-columns: repeat(4, 1fr); } .sd-6 { grid-template-columns: repeat(6, 1fr); } .sd-9 { grid-template-columns: repeat(9, 1fr); }
+.sd-cell { min-height: 0; border-radius: 0 !important; border: 1px solid var(--line2) !important; background: var(--card) !important; color: var(--green) !important;
+  font: 700 26px 'DM Sans', system-ui, sans-serif; padding: 0; cursor: pointer; }
+.sd-4 .sd-cell { font-size: 34px; } .sd-9 .sd-cell { font-size: 21px; }
+.sd-cell.given { color: var(--text) !important; background: var(--bg2, var(--bg)) !important; }
+.sd-cell.sel { outline: 4px solid var(--gold); outline-offset: -4px; }
+.sd-cell.clash { color: var(--red) !important; text-decoration: underline wavy; }
+.sd-cell.edge-r { border-right: 3px solid var(--text) !important; }
+.sd-cell.edge-b { border-bottom: 3px solid var(--text) !important; }
+.sd-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+.sd-pad-4 { grid-template-columns: repeat(5, 1fr); }
+.sd-pad .btn { font-size: 22px; min-height: 60px; padding: 6px; }
+
+/* Solitaire */
+.sol-table { --cw: calc((min(100vw, 560px) - 24px - 6 * 4px) / 7); }
+.sol-top, .sol-piles { display: grid; grid-template-columns: repeat(7, var(--cw)); gap: 4px; }
+.sol-piles { margin-top: 12px; align-items: start; }
+.sol-pile { position: relative; min-height: 72px; }
+.sol-card, .sol-slot { width: var(--cw); height: calc(var(--cw) * 1.4); min-height: 0; border-radius: 8px; padding: 2px 0 0; font: 800 clamp(13px, 4.2vw, 19px) 'DM Sans', system-ui, sans-serif;
+  display: flex; align-items: flex-start; justify-content: center; cursor: pointer; }
+.sol-pile .sol-card { position: absolute; left: 0; }
+.sol-card.red, .sol-card.black { background: #fbfaf6 !important; border: 1px solid #9aa3b2 !important; }
+.sol-card.red { color: #b3261e !important; } .sol-card.black { color: #111827 !important; }
+.sol-card.back { background: repeating-linear-gradient(45deg, #2f5aa8 0 6px, #3d6bc0 6px 12px) !important; border: 1px solid #1c2f57 !important; }
+.sol-slot { border: 2px dashed var(--line) !important; color: var(--muted); background: transparent !important; align-items: center; }
+.sol-recycle { font-size: 26px; }
+
+/* Tile Match */
+.tm-board { position: relative; width: 100%; --tw: calc((min(100vw, 560px) - 24px - 12px) / 6); height: calc(var(--tw) * 1.25 * 4 + 16px); }
+.tm-tile { position: absolute; width: var(--tw); height: calc(var(--tw) * 1.25); min-height: 0; padding: 0;
+  left: calc(var(--x) * var(--tw) - var(--z) * 5px); top: calc(var(--y) * var(--tw) * 1.25 - var(--z) * 5px + 12px);
+  border-radius: 10px; border: 1px solid #9aa3b2 !important; background: #e8e3d6 !important; color: #111 !important;
+  font-size: calc(var(--tw) * .55); box-shadow: 3px 3px 0 #8d8676; opacity: .55; filter: saturate(.5); cursor: pointer; }
+.tm-tile.free { opacity: 1; filter: none; background: #fbfaf3 !important; }
+.tm-tile.sel { background: #fde68a !important; outline: 4px solid #b45309; }
+.tm-tile.hint { outline: 4px solid #16a34a; }

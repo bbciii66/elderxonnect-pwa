@@ -18,8 +18,8 @@ Made-up people only. Do not put real health information in until the privacy pha
 
 ## Checks (`npm test`)
 - `tests/rls/`: 30+ rule checks run against the real SQL on a throwaway Postgres (stranger sees nothing, viewer can't write, nobody can post as someone else, only the elder can change roles, revoked access stops at once, migration is re-runnable).
-- `tests/e2e/`: click-through robot (Chromium, fake Supabase) for elder, family, view-only and signed-out visitors, plus the main page.
-- `tests/unit/`: the check-in status and role rules. No data or old data is "unknown"/"warning", never "all clear".
+- `tests/e2e/`: click-through robot (Chromium, fake Supabase) for elder, family, view-only and signed-out visitors, plus the main page, the weather card and every game.
+- `tests/unit/`: the check-in status and role rules, game rules and weather wording. No data or old data is "unknown"/"warning", never "all clear".
 
 ## Still open
 - **Patch pile**: ~20 small scripts (`caregiver-*.js`, `profile-*.js`, `reminder-*.js`, ...) are still layered on `index.html`. They are all loaded by the service worker and untangling them needs a logged-in click-through on a real v2 project, so it is deferred rather than risked blind.
@@ -30,8 +30,14 @@ Made-up people only. Do not put real health information in until the privacy pha
 - To turn it on for v2 (Ben, from the Mac): deploy the function to elderxonnect-v2, and set two secrets in Supabase: `RESEND_API_KEY` and (once a sending domain is verified) `CAREGIVER_INVITE_FROM`. Until a key is set the function answers "Email delivery is not configured" and sends nothing, and the app falls back to the copy-link button.
 - Resend's free test sender only delivers to the account owner's own address. A verified domain is needed to email family.
 
-## AI companion
-- The elder-pasted API key is gone (see above). Bringing a real AI back needs a server-side key in the Cloudflare relay plus a decision about sending any health details. Left for Ben.
+## AI chat (links, no API)
+- The Chat tab has buttons that open a free AI in a new window: Duck.ai (free, no account), ChatGPT (works without signing in), Claude and Gemini (need a free account). Nothing is sent from our app and there is no key to manage. Close the window to come back.
+
+## Games and weather (no logins, no ads)
+- Built into the app, work offline, big tap targets, a big ✕ Close (the phone's Back button and Escape also close): Memory Match (6 or 8 pairs), Sudoku (4×4, 6×6, 9×9), Solitaire (Klondike, tap to move, Undo), Tile Match (mahjong-style; every deal can be finished; Hint and Shuffle).
+- Chess links to Lichess (free, open source, no ads, no sign-up needed).
+- Rules are in `games-logic.js` and `weather-logic.js`, tested in `tests/unit/`; screens in `games.js` and `weather.js`, clicked through by `tests/e2e/games.e2e.js`.
+- Weather uses Open-Meteo (free, no key, credit shown on the card). Nothing is fetched until the person taps "Use my location" or types a town. Location is rounded to about 1 km and kept on the phone only. The forecast is saved for 30 minutes and shown offline.
 
 ## Administrator and per-section sharing (care-circle-admin-migration.sql)
 - **Who manages the account** is chosen on the Care Circle page: "I manage it myself" or "A family member manages it for me". In managed mode the family member is the **administrator**. Managed mode only takes effect once the administrator has accepted, so a pending invite never locks the elder out.

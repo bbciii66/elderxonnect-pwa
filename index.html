@@ -845,6 +845,41 @@
     <h2 class="hello-title" id="helloTitle">Hello</h2>
   </div>
 
+  <div class="card weather-card" id="weatherCard">
+    <div id="weatherSetup">
+      <div class="card-title">🌤️ Weather</div>
+      <p class="card-sub">See today's weather where you live.</p>
+      <button class="btn green" id="weatherUseLocation" type="button">📍 Use my location</button>
+      <details class="sub-details" id="weatherCityBox">
+        <summary>Or type your town</summary>
+        <div class="row-input">
+          <input id="weatherCity" type="text" autocomplete="address-level2" placeholder="e.g., New Orleans" aria-label="Your town" />
+          <button class="btn ghost" id="weatherCityBtn" type="button">Find</button>
+        </div>
+        <div id="weatherCityResults"></div>
+      </details>
+    </div>
+    <div id="weatherLoading" hidden><p class="card-sub">Getting the weather…</p></div>
+    <div id="weatherView" hidden>
+      <div class="wx-main">
+        <span class="wx-icon" id="wxIcon" aria-hidden="true"></span>
+        <span class="wx-temp" id="wxTemp"></span>
+        <div class="wx-text">
+          <div class="wx-words" id="wxWords"></div>
+          <div class="wx-hilo" id="wxHiLo"></div>
+        </div>
+      </div>
+      <p class="wx-advice" id="wxAdvice" hidden></p>
+      <p class="wx-feels" id="wxFeels" hidden></p>
+      <div class="wx-foot">
+        <span class="wx-place" id="wxPlace"></span>
+        <span class="wx-actions"><button class="link-btn" id="weatherRefresh" type="button">Refresh</button> · <button class="link-btn" id="weatherChange" type="button">Change place</button></span>
+      </div>
+    </div>
+    <p class="small wx-note" id="weatherNote" hidden></p>
+    <p class="wx-credit">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+  </div>
+
   <div class="card hero-card" id="checkinHeroCard">
     <div class="checkin-hero">
       <div class="checkin-hero-left">
@@ -1008,9 +1043,10 @@
   <div class="card" id="aiLinksCard">
     <div class="card-title">💬 Talk with an AI helper</div>
     <div class="card-sub" style="margin-bottom:10px;">Ask about the weather, a recipe, a movie, anything. Each button opens a free AI in a new window; close it to come back here. Please don't share medical details or passwords.</div>
-    <a class="btn ghost" href="https://claude.ai" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">Open Claude</a>
-    <a class="btn ghost" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">Open ChatGPT</a>
-    <a class="btn ghost" href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;">Open Gemini</a>
+    <a class="btn green ai-link" href="https://duck.ai" target="_blank" rel="noopener noreferrer">🦆 Duck.ai <span class="ai-note">free, no sign-up</span></a>
+    <a class="btn ghost ai-link" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer">ChatGPT <span class="ai-note">free, no sign-up needed</span></a>
+    <a class="btn ghost ai-link" href="https://claude.ai" target="_blank" rel="noopener noreferrer">Claude <span class="ai-note">needs a free account</span></a>
+    <a class="btn ghost ai-link" href="https://gemini.google.com" target="_blank" rel="noopener noreferrer">Gemini <span class="ai-note">needs a Google account</span></a>
   </div>
 
 
@@ -1048,8 +1084,20 @@
     <div style="text-align:right;"><div class="small">Streak</div><div class="score-num" id="streakNum">🔥 0</div></div>
   </div>
   <div class="card">
-    <div class="card-title">Brain Games</div>
-    <div class="card-sub">Keep your mind sharp with trivia, memory prompts, and word games.</div>
+    <div class="card-title">🎲 Games</div>
+    <div class="card-sub">No ads, no sign-up. Tap a game to start; the big ✕ takes you back.</div>
+    <div class="game-tiles">
+      <button type="button" class="game-tile" data-game="match"><span class="gt-icon">🧩</span>Memory Match</button>
+      <button type="button" class="game-tile" data-game="sudoku"><span class="gt-icon">🔢</span>Sudoku</button>
+      <button type="button" class="game-tile" data-game="solitaire"><span class="gt-icon">🃏</span>Solitaire</button>
+      <button type="button" class="game-tile" data-game="tiles"><span class="gt-icon">🀄</span>Tile Match</button>
+    </div>
+    <a class="btn ghost chess-link" href="https://lichess.org/#ai" target="_blank" rel="noopener noreferrer">♟️ Chess on Lichess <span class="ai-note">free, no ads, no sign-up. Tap “Play against computer”.</span></a>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🧠 Quick quizzes</div>
+    <div class="card-sub">Trivia, memory questions and word games.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn green" id="triviaBtn" style="flex:1;min-width:110px;">🧠 Trivia</button>
       <button class="btn ghost" id="memoryBtn" style="flex:1;min-width:110px;">💭 Memory</button>
@@ -2708,6 +2756,14 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
   }); });
 })();
 </script>
+<div class="game-stage hidden" id="gameStage" role="dialog" aria-modal="true" aria-labelledby="stageTitle">
+  <div class="stage-head">
+    <h2 id="stageTitle"></h2>
+    <button type="button" class="stage-close" id="stageClose" aria-label="Close game">✕</button>
+  </div>
+  <div class="stage-body" id="stageBody"></div>
+</div>
+
 <!-- Add-on scripts, loaded here so the page works the same with or without the offline cache. -->
 <script src="/fixes.js" defer></script>
 <script src="/supabase-config.js" defer></script>
@@ -2723,6 +2779,10 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
 <script src="/reminder-schedule-cloud.js" defer></script>
 <script src="/role-router.js" defer></script>
 <script src="/ui-polish.js" defer></script>
+<script src="/games-logic.js" defer></script>
+<script src="/games.js" defer></script>
+<script src="/weather-logic.js" defer></script>
+<script src="/weather.js" defer></script>
 </body>
 </html>
 
