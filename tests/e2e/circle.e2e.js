@@ -19,11 +19,12 @@ const seed = (me) => ({
   tables: {
     caregiver_access: [
       { id: 'a1', elder_id: 'elder-1', caregiver_id: 'fam-1', caregiver_email: 'fran@example.com', role: 'family', status: 'active', recipient_display_name: 'Edna Testerson', invited_at: hoursAgo(50) },
-      { id: 'a2', elder_id: 'elder-1', caregiver_id: 'view-1', caregiver_email: 'vic@example.com', role: 'viewer', status: 'active', recipient_display_name: 'Edna Testerson', invited_at: hoursAgo(40) },
+      { id: 'a2', elder_id: 'elder-1', caregiver_id: 'view-1', caregiver_email: 'vic@example.com', role: 'viewer', status: 'active', invited_at: hoursAgo(40) },
       { id: 'a3', elder_id: 'elder-1', caregiver_id: null, caregiver_email: 'new@example.com', role: 'viewer', status: 'pending', invited_at: hoursAgo(1) },
     ],
     circle_messages: [{ id: 'm0', elder_id: 'elder-1', sender_id: 'elder-1', sender_name: 'Edna Testerson', body: '<img src=x onerror="window.__xss=1">', created_at: hoursAgo(3) }],
     circle_tasks: [], circle_visits: [],
+    profiles: [{ user_id: 'elder-1', profile_data: { name: 'Edna Testerson' } }],
     checkins: [{ user_id: 'elder-1', occurred_at: hoursAgo(1), mood: 'good' }],
   },
 });
@@ -96,6 +97,7 @@ let port;
   // View-only caregiver
   ({ p, errors, ctx } = await open(browser, VIC));
   await p.waitForSelector('#messages .msg');
+  check((await p.textContent('#who')).includes('Edna Testerson'), 'name falls back to the shared profile when the invitation has none');
   check(!(await p.isVisible('#composeRow')) && !(await p.isVisible('#taskRow')) && !(await p.isVisible('#visitForm')), 'viewer cannot see any write controls');
   check(await p.isVisible('#viewerNote'), 'viewer is told why');
   check(errors.length === 0, 'no script errors (viewer) ' + errors.join(' | ')); await ctx.close();

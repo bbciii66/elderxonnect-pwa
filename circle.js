@@ -27,7 +27,17 @@
 
     const r = await client.from('caregiver_access')
       .select('elder_id,role,status,recipient_display_name').eq('caregiver_id', me.id).eq('status', 'active');
-    const circles = L.buildCircles(me.id, r.data || []);
+    const rows = r.data || [];
+    // Older invitations may not carry the person's name; read it from their shared profile instead.
+    const unnamed = rows.filter((x) => !(x.recipient_display_name || '').trim()).map((x) => x.elder_id);
+    if (unnamed.length) {
+      const p = await client.from('profiles').select('user_id,profile_data').in('user_id', unnamed);
+      (p.data || []).forEach((pr) => {
+        const nm = pr.profile_data && typeof pr.profile_data.name === 'string' ? pr.profile_data.name.trim() : '';
+        if (nm) rows.filter((x) => x.elder_id === pr.user_id).forEach((x) => { x.recipient_display_name = nm; });
+      });
+    }
+    const circles = L.buildCircles(me.id, rows);
     if (circles.length > 1) {
       $('who').innerHTML = circles.map((x) => `<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('');
       $('who').classList.remove('hidden'); $('whoLabel').classList.remove('hidden');
