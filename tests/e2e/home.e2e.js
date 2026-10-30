@@ -175,6 +175,27 @@ let port;
     await ctx.close();
   }
 
+  // Caregiver pages: no dark-only backgrounds left behind in light mode
+  {
+    const darkOnly = /background:\s*#(0b1510|101b14|0e1a14|162219|26372d)/i;
+    const files = ['caregiver.html', ...fs.readdirSync(root).filter((f) => /^caregiver-.*\.js$/.test(f))];
+    const offenders = files.filter((f) => darkOnly.test(fs.readFileSync(path.join(root, f), 'utf8').replace(/var\([^)]*\)/g, '')));
+    check(offenders.length === 0, 'caregiver screens use theme colors, not fixed dark backgrounds: ' + offenders.join(', '));
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'light' });
+    const p = await ctx.newPage();
+    await p.route('**/cdn.jsdelivr.net/**', (r) => r.fulfill({ contentType: 'text/javascript', body: 'window.__SEED__={me:null,tables:{}};\n' + fake }));
+    await p.goto('http://127.0.0.1:' + port + '/caregiver.html'); await p.waitForTimeout(300);
+    const lum = await p.evaluate(() => {
+      const box = document.createElement('div'); box.className = 'stat'; box.innerHTML = '<strong>3</strong>'; document.body.appendChild(box);
+      const rgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+      const L = (c) => { const [r, g, b] = rgb(c); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const a = L(getComputedStyle(box).backgroundColor), b = L(getComputedStyle(box.firstChild).color);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    check(lum >= 4.5, 'caregiver summary tiles are readable in light mode (' + lum.toFixed(1) + ')');
+    await ctx.close();
+  }
+
   await browser.close(); server.close();
   console.log(failures ? failures + ' CHECK(S) FAILED' : 'ALL HOME CHECKS PASSED');
   process.exit(failures ? 1 : 0);

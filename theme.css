@@ -13,6 +13,7 @@ html[data-theme="light"]{
   --text:#1c2533; --muted:#4a5a73;
   --line:rgba(47,90,168,.22); --line2:rgba(28,37,51,.16);
   --shadow:0 6px 20px rgba(28,37,51,.12);
+  --surface-2:#e6e5df; --surface-3:#dce4ee; --surface-btn:#e3e9f3; --accent-soft:#cfdff5;
 }
 html[data-theme="light"],html[data-theme="light"] body{background:var(--bg);color:var(--text);background-image:none}
 html[data-theme="light"] body{min-height:100vh;min-height:100dvh}

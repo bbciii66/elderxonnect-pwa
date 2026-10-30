@@ -102,17 +102,17 @@
       : 'No check-ins recorded';
 
     return `
-      <article class="careRecipientCard" data-access-id="${escapeHtml(access.id)}" style="border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:15px;margin:11px 0;background:#101b14">
+      <article class="careRecipientCard" data-access-id="${escapeHtml(access.id)}" style="border:1px solid var(--line);border-radius:16px;padding:15px;margin:11px 0;background:var(--surface-2,#101b14)">
         <div style="display:flex;align-items:center;gap:12px">
-          <div aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(46,204,138,.14);color:#2ecc8a;font-size:20px;font-weight:800">${escapeHtml(initial)}</div>
+          <div aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft,rgba(46,204,138,.14));color:var(--green);font-size:20px;font-weight:800">${escapeHtml(initial)}</div>
           <div style="min-width:0;flex:1">
             <strong style="display:block;font-size:18px;overflow-wrap:anywhere">${escapeHtml(name)}</strong>
-            <div class="key">Care recipient · Read only</div>
+            <div class="key">Care recipient</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px">
-          <div style="background:#0b1510;border-radius:12px;padding:10px;text-align:center"><strong style="font-size:20px">${summary.reminderCount}</strong><div class="key">Reminders</div></div>
-          <div style="background:#0b1510;border-radius:12px;padding:10px;text-align:center"><strong style="font-size:14px">${urgentText}</strong><div class="key">Priority</div></div>
+          <div style="background:var(--surface-3,#0b1510);border-radius:12px;padding:10px;text-align:center"><strong style="font-size:20px">${summary.reminderCount}</strong><div class="key">Reminders</div></div>
+          <div style="background:var(--surface-3,#0b1510);border-radius:12px;padding:10px;text-align:center"><strong style="font-size:14px">${urgentText}</strong><div class="key">Priority</div></div>
         </div>
         <div class="key" style="margin-top:10px">${escapeHtml(lastCheckin)}</div>
         <button class="openCareRecipient" data-elder-id="${escapeHtml(access.elder_id)}">Open Care Dashboard</button>
