@@ -751,10 +751,12 @@
         <div class="auth-card-title">Welcome back 👋</div>
         <div id="authReturnName" style="color:var(--green);font-size:20px;font-weight:700;margin:8px 0 16px;"></div>
         <button class="biometric-btn" id="biometricLoginBtn" style="display:none;">
-          <span class="biometric-icon">👆</span>
-          <span class="biometric-label">Touch ID / Face ID</span>
-          <span class="biometric-sub">Tap to sign in instantly</span>
+          <span class="biometric-icon">🙂</span>
+          <span class="biometric-label">Open with Face ID or fingerprint</span>
+          <span class="biometric-sub">Tap here</span>
         </button>
+        <button class="auth-link use-pin-btn" id="usePinBtn" type="button" style="display:none;">Use my PIN instead</button>
+        <div id="pinArea">
         <div class="auth-divider" id="authDivider" style="display:none;"><span>or enter your PIN</span></div>
         <div class="pin-display">
           <div class="pin-dot" id="ld0"></div>
@@ -775,6 +777,7 @@
           <button class="pin-key pin-key-empty"></button>
           <button class="pin-key" data-val="0">0</button>
           <button class="pin-key pin-key-del" id="loginDelBtn">⌫</button>
+        </div>
         </div>
         <div class="auth-error" id="loginError"></div>
         <button class="auth-link" id="showNewUserBtn">New user? Create account</button>
@@ -1187,6 +1190,17 @@
     <button class="btn ghost" id="bigTextBtn" type="button">🔠 Make text bigger</button>
   </div>
 
+  <div class="card" id="unlockCard">
+    <div class="card-title">Opening the app</div>
+    <div class="card-sub">Choose how ElderXonnect opens on this phone.</div>
+    <div class="unlock-choices" role="group" aria-label="Opening the app">
+      <button type="button" class="unlock-choice" data-unlock="bio" hidden><span class="uc-icon">🙂</span><span><b>Face ID or fingerprint</b><small>One look or touch. Your PIN still works as a backup.</small></span></button>
+      <button type="button" class="unlock-choice" data-unlock="pin"><span class="uc-icon">🔢</span><span><b>4-digit PIN</b><small>Asks after 12 hours of not using the app.</small></span></button>
+      <button type="button" class="unlock-choice" data-unlock="none"><span class="uc-icon">🚪</span><span><b>Just open it</b><small>No PIN. Best when the phone itself is locked with a code or Face ID.</small></span></button>
+    </div>
+    <p class="small unlock-note" id="unlockNote" hidden></p>
+  </div>
+
   <!-- Personal Info -->
   <div class="card" id="meInfoCard">
     <div class="info-section">
@@ -1497,12 +1511,18 @@ const Auth = {
   saveUsers(u){ localStorage.setItem('auth_users', JSON.stringify(u)); },
   getSession(){ try{ return JSON.parse(localStorage.getItem('auth_session')); }catch(e){ return null; } },
   setSession(u){ localStorage.setItem('auth_session', JSON.stringify({...u, ts:Date.now()})); },
+  // How the app opens on this phone: 'none' (just opens), 'pin', or 'bio' (Face ID / fingerprint, PIN as backup).
+  getUnlock(){ try{ return localStorage.getItem('exc_unlock') || 'pin'; }catch(e){ return 'pin'; } },
+  setUnlock(m){ try{ localStorage.setItem('exc_unlock', m); }catch(e){} },
+  // Locks again only after 12 hours of not using the app (not 12 hours after unlocking).
   isSessionValid(){
     try{
       const s = this.getSession();
-      return s && (Date.now() - s.ts) < 12*60*60*1000;
+      if(s && this.getUnlock()==='none' && this.getUsers().length) return true;
+      return !!s && (Date.now() - s.ts) < 12*60*60*1000;
     }catch(e){ return false; }
   },
+  touch(){ try{ const s=this.getSession(); if(s && this.isSessionValid() && Date.now()-s.ts > 60000){ s.ts=Date.now(); localStorage.setItem('auth_session', JSON.stringify(s)); } }catch(e){} },
   hashPin(pin){
     let h=0;
     for(let i=0;i<pin.length;i++){ h=((h<<5)-h)+pin.charCodeAt(i); h|=0; }
@@ -1540,13 +1560,21 @@ function showReturning(){
   document.getElementById('authNewUser').style.display = 'none';
   if(user){
     document.getElementById('authReturnName').textContent = user.name;
-    const hasBio = user.credentialId && window.PublicKeyCredential;
+    const hasBio = !!(user.credentialId && window.PublicKeyCredential);
     document.getElementById('biometricLoginBtn').style.display = hasBio ? 'flex' : 'none';
-    document.getElementById('authDivider').style.display = hasBio ? 'flex' : 'none';
+    document.getElementById('authDivider').style.display = 'none';
+    // With Face ID set up, the PIN pad stays tucked away behind "Use my PIN instead".
+    document.getElementById('pinArea').style.display = hasBio ? 'none' : 'block';
+    document.getElementById('usePinBtn').style.display = hasBio ? 'block' : 'none';
+    if(hasBio && !showReturning.tried){ showReturning.tried = true; bioLogin(true); }
   }
   loginPin='';
   setPinDots(loginPin,'ld');
 }
+document.getElementById('usePinBtn').addEventListener('click', function(){
+  document.getElementById('pinArea').style.display = 'block';
+  this.style.display = 'none';
+});
 
 function showNewUser(){
   document.getElementById('authReturning').style.display = 'none';
@@ -1590,20 +1618,22 @@ function checkPin(){
 }
 
 // ── BIOMETRIC LOGIN ──
-document.getElementById('biometricLoginBtn').addEventListener('click', async function(){
+// quiet: the automatic try when the screen opens; if the phone needs a tap first, just wait for it.
+async function bioLogin(quiet){
   const users = Auth.getUsers();
   const user = users[0];
-  if(!user || !user.credentialId){ showErr('loginError','No biometric registered.'); return; }
+  if(!user || !user.credentialId){ if(!quiet) showErr('loginError','Face ID is not set up. Use your PIN.'); return; }
   try {
     const credId = Uint8Array.from(atob(user.credentialId), c=>c.charCodeAt(0));
     const challenge = new Uint8Array(32);
     window.crypto.getRandomValues(challenge);
     const result = await navigator.credentials.get({
-      publicKey:{ challenge, allowCredentials:[{type:'public-key',id:credId}], userVerification:'preferred', timeout:60000 }
+      publicKey:{ challenge, allowCredentials:[{type:'public-key',id:credId}], userVerification:'required', timeout:60000 }
     });
-    if(result){ Auth.setSession(user); enterApp(user); }
-  } catch(e){ showErr('loginError','Biometric failed. Use your PIN.'); }
-});
+    if(result){ showErr('loginError',''); Auth.setSession(user); enterApp(user); }
+  } catch(e){ if(!quiet) showErr('loginError','That didn’t work. Try again, or use your PIN.'); }
+}
+document.getElementById('biometricLoginBtn').addEventListener('click', function(){ bioLogin(false); });
 
 // ── NEW USER PIN PAD ──
 document.querySelectorAll('.pin-key[data-new]').forEach(k=>{
@@ -1636,13 +1666,7 @@ document.getElementById('createAccountBtn').addEventListener('click', function()
   Auth.saveUsers(users);
   Auth.setSession(newUser);
 
-  // Offer biometric after account creation
-  if(window.PublicKeyCredential && window.crypto && window.crypto.getRandomValues){
-    if(confirm('Account created! Would you like to set up fingerprint or Face ID for faster login?')){
-      setupBiometric(newUser).then(()=>enterApp(newUser)).catch(()=>enterApp(newUser));
-      return;
-    }
-  }
+  // Face ID / fingerprint can be turned on any time from Me → "Opening the app".
   enterApp(newUser);
 });
 
@@ -1658,19 +1682,18 @@ async function setupBiometric(user){
         rp:{ name:'ElderXonnect' },
         user:{ id:userId, name:user.username, displayName:user.name },
         pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
-        authenticatorSelection:{ userVerification:'preferred' },
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required', residentKey:'discouraged' },
         timeout:60000
       }
     });
     const users = Auth.getUsers();
     const idx = users.findIndex(u=>u.username===user.username);
-    if(idx>=0){
-      users[idx].credentialId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
-      Auth.saveUsers(users);
-      Auth.setSession(users[idx]);
-    }
-    alert('✅ Biometric login set up! Next time just tap the fingerprint button.');
-  } catch(e){ /* skip */ }
+    if(idx<0 || !cred) return false;
+    users[idx].credentialId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    Auth.saveUsers(users);
+    Auth.setSession(users[idx]);
+    return true;
+  } catch(e){ return false; }
 }
 
 // ── ENTER APP ──
@@ -1695,6 +1718,15 @@ function enterApp(user){
     };
   }
 }
+
+// Using the app keeps it open; after 12 idle hours it asks again (unless set to just open).
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev, ()=>Auth.touch(), true));
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden) return;
+  const locked = document.getElementById('mainApp').classList.contains('hidden');
+  if(!locked && !Auth.isSessionValid()) location.reload();
+  else Auth.touch();
+});
 
 // ── BOOT ──
 try {
@@ -2783,6 +2815,7 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
 <script src="/games.js" defer></script>
 <script src="/weather-logic.js" defer></script>
 <script src="/weather.js" defer></script>
+<script src="/unlock-settings.js" defer></script>
 </body>
 </html>
 

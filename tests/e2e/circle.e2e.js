@@ -26,7 +26,8 @@ const seed = (me) => ({
     circle_messages: [{ id: 'm0', elder_id: 'elder-1', sender_id: 'elder-1', sender_name: 'Edna Testerson', body: '<img src=x onerror="window.__xss=1">', created_at: hoursAgo(3) }],
     circle_tasks: [], circle_visits: [],
     profiles: [{ user_id: 'elder-1', profile_data: { name: 'Edna Testerson' } }],
-    checkins: [{ user_id: 'elder-1', occurred_at: hoursAgo(1), mood: 'good' }],
+    // Earlier today, even just after midnight.
+    checkins: [{ user_id: 'elder-1', occurred_at: new Date(Date.now() - Math.min(3600000, (Date.now() - new Date().setHours(0, 0, 0, 0)) / 2)).toISOString(), mood: 'good' }],
   },
 });
 

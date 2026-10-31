@@ -191,3 +191,23 @@ html.stage-open, html.stage-open body { overflow: hidden; }
 .tm-tile.free { opacity: 1; filter: none; background: #fbfaf3 !important; }
 .tm-tile.sel { background: #fde68a !important; outline: 4px solid #b45309; }
 .tm-tile.hint { outline: 4px solid #16a34a; }
+
+/* Me → Opening the app */
+.unlock-choices { display: grid; gap: 10px; margin-top: 12px; }
+.unlock-choice { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 72px; padding: 12px 14px; text-align: left;
+  border-radius: 16px; border: 2px solid var(--line); background: var(--surface-2, transparent); color: var(--text); font: inherit; cursor: pointer; }
+.unlock-choice b { display: block; font-size: 18px; }
+.unlock-choice small { display: block; color: var(--muted); font-size: 14px; line-height: 1.35; margin-top: 2px; }
+.unlock-choice .uc-icon { font-size: 30px; flex: none; }
+.unlock-choice { background: var(--card) !important; }
+.unlock-choice[aria-pressed="true"] { border: 3px solid var(--green) !important; background: var(--accent-soft, rgba(46,204,138,.12)) !important; }
+.unlock-choice[aria-pressed="true"] b::after { content: '  ✓'; color: var(--green); }
+.unlock-choice[hidden] { display: none; }
+.unlock-note { margin-top: 10px; }
+.use-pin-btn { display: block; margin: 14px auto 4px; font-size: 17px; }
+#biometricLoginBtn { min-height: 96px; }
+.auth-more { margin-top: 18px; text-align: center; }
+.auth-more > summary { cursor: pointer; color: var(--muted); font-size: 16px; padding: 12px; list-style: none; text-decoration: underline; }
+.auth-more > summary::-webkit-details-marker { display: none; }
+.auth-more[open] > summary { margin-bottom: 4px; }
+.auth-more .auth-card { text-align: left; }

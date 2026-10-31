@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v35";
+const CACHE_NAME = "elderxonnect-v36";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/push-config.js",
@@ -34,6 +34,7 @@ const STATIC_ASSETS = [
   "/games.js",
   "/weather-logic.js",
   "/weather.js",
+  "/unlock-settings.js",
   "/circle-logic.js"
 ];
 
@@ -96,7 +97,8 @@ function enhanceResponse(response, pathname) {
     "/games-logic.js",
     "/games.js",
     "/weather-logic.js",
-    "/weather.js"
+    "/weather.js",
+    "/unlock-settings.js"
   ]);
 }
 

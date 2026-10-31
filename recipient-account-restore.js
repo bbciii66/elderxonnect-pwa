@@ -239,8 +239,20 @@
       <button class="btn gold" id="restoreRecipientAccount" type="button">Restore Existing My Care Account</button>
       <div class="auth-error" id="restoreRecipientStatus" style="margin-top:10px"></div>`;
 
+    let hasLocalUser = false;
+    try { hasLocalUser = (JSON.parse(localStorage.getItem('auth_users')) || []).length > 0; } catch (error) { hasLocalUser = false; }
     if (FORCE_RESTORE) panel.prepend(card);
-    else panel.appendChild(card);
+    else if (hasLocalUser) {
+      // This phone already has someone: keep the unlock screen to one big choice and fold the rarely needed options away.
+      const more = document.createElement('details');
+      more.id = 'authMoreOptions';
+      more.className = 'auth-more';
+      more.innerHTML = '<summary>More options (new phone or new person)</summary>';
+      more.appendChild(card);
+      const newBtn = document.getElementById('showNewUserBtn');
+      if (newBtn) more.appendChild(newBtn);
+      panel.appendChild(more);
+    } else panel.appendChild(card);
 
     document.getElementById('restoreRecipientAccount').addEventListener('click', restoreAccount);
 

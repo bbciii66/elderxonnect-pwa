@@ -83,7 +83,7 @@
   }
 
   // Me tab: the elder's own things stay on top; setup tools for family helpers fold away.
-  var KEEP_ON_ME = { meHero: 1, caregiverBtnWrap: 1, appearanceCard: 1, meInfoCard: 1, cloudSyncCard: 1, caregivingSlot: 1, helperSettings: 1 };
+  var KEEP_ON_ME = { meHero: 1, caregiverBtnWrap: 1, appearanceCard: 1, unlockCard: 1, meInfoCard: 1, cloudSyncCard: 1, caregivingSlot: 1, helperSettings: 1 };
   function organizeMe() {
     var me = $('view-me'), slot = $('helperSlot'), helpers = $('helperSettings');
     if (!me || !slot || !helpers) return;
