@@ -1560,7 +1560,7 @@ function showReturning(){
   document.getElementById('authNewUser').style.display = 'none';
   if(user){
     document.getElementById('authReturnName').textContent = user.name;
-    const hasBio = !!(user.credentialId && window.PublicKeyCredential);
+    const hasBio = !!(user.credentialId && window.PublicKeyCredential && Auth.getUnlock()==='bio');
     document.getElementById('biometricLoginBtn').style.display = hasBio ? 'flex' : 'none';
     document.getElementById('authDivider').style.display = 'none';
     // With Face ID set up, the PIN pad stays tucked away behind "Use my PIN instead".
@@ -1622,7 +1622,7 @@ function checkPin(){
 async function bioLogin(quiet){
   const users = Auth.getUsers();
   const user = users[0];
-  if(!user || !user.credentialId){ if(!quiet) showErr('loginError','Face ID is not set up. Use your PIN.'); return; }
+  if(!user || !user.credentialId || Auth.getUnlock()!=='bio'){ if(!quiet) showErr('loginError','Face ID is not turned on. Use your PIN.'); return; }
   try {
     const credId = Uint8Array.from(atob(user.credentialId), c=>c.charCodeAt(0));
     const challenge = new Uint8Array(32);

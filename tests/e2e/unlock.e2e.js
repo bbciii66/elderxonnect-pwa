@@ -123,6 +123,14 @@ let port;
     check(await shown(p, '#pinArea'), 'bio: "Use my PIN instead" shows the PIN pad');
     await typePin(p, '1234');
     check(await inApp(p), 'bio: the PIN still works as a backup');
+    // Switching back to PIN in Me really means PIN, even with Face ID still on the phone.
+    await meCard(p); await p.click('[data-unlock="pin"]');
+    await auth.cdp.send('WebAuthn.setUserVerified', { authenticatorId: auth.authenticatorId, isUserVerified: true });
+    await age(p, 13); await p.reload(); await p.waitForTimeout(1200);
+    check(!(await inApp(p)) && !(await shown(p, '#biometricLoginBtn')) && await shown(p, '#pinArea'), 'bio: choosing PIN after Face ID shows the PIN pad, not Face ID');
+    await typePin(p, '1234'); await meCard(p);
+    await p.click('[data-unlock="bio"]'); await p.waitForTimeout(300);
+    check(/Face ID or fingerprint is on/.test(await p.textContent('#unlockNote')), 'bio: turning Face ID back on reuses the saved one');
     check(errors.length === 0, 'bio: no script errors ' + errors.join(' | '));
     await ctx.close();
   }
