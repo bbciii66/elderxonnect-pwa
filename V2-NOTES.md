@@ -30,6 +30,13 @@ Made-up people only. Do not put real health information in until the privacy pha
 - To turn it on for v2 (Ben, from the Mac): deploy the function to elderxonnect-v2, and set two secrets in Supabase: `RESEND_API_KEY` and (once a sending domain is verified) `CAREGIVER_INVITE_FROM`. Until a key is set the function answers "Email delivery is not configured" and sends nothing, and the app falls back to the copy-link button.
 - Resend's free test sender only delivers to the account owner's own address. A verified domain is needed to email family.
 
+## Opening the app (Me → "Opening the app")
+- Three choices on each phone: **Face ID or fingerprint** (shown only when the phone supports it; the PIN stays as a backup behind "Use my PIN instead"), **4-digit PIN**, or **Just open it** (no lock; for phones that are already locked).
+- The PIN or Face ID is asked for only after 12 hours of not using the app. Before, it was asked 12 hours after unlocking, even in the middle of use.
+- The lock screen shows one big choice. Restoring an account and setting up a new person are folded under "More options". On a phone with no account yet, restore stays visible.
+- Face ID here is a lock on this phone only (WebAuthn, no server). The cloud account (Care Circle) stays signed in through Supabase.
+- Checked by `tests/e2e/unlock.e2e.js` with Chrome's virtual Face ID device.
+
 ## AI chat (links, no API)
 - The Chat tab has buttons that open a free AI in a new window: Duck.ai (free, no account), ChatGPT (works without signing in), Claude and Gemini (need a free account). Nothing is sent from our app and there is no key to manage. Close the window to come back.
 
