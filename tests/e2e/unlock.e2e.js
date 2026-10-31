@@ -144,6 +144,10 @@ let port;
     await p.route('**/supabase-config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: '' }));
     await p.addInitScript(() => localStorage.setItem('elderxonnect_role_mode', 'recipient'));
     await p.goto('http://localhost:' + port + '/'); await p.waitForTimeout(700);
+    // The new-account screen is taller than the phone: its top must not be cut off.
+    const top = await p.evaluate(() => { document.getElementById('authScreen').scrollTop = 0; return document.querySelector('.auth-logo').getBoundingClientRect().top; });
+    check(top >= 0, 'new phone: the top of the sign-in screen is not cut off (logo at ' + Math.round(top) + 'px)');
+    if (SHOTS) await p.screenshot({ path: `${SHOTS}/new-account-top.png` });
     await p.fill('#setupName', 'Walt Example'); await p.fill('#setupUsername', 'walt');
     for (const d of '2468') await p.click(`.pin-key[data-new="${d}"]`);
     check(await shown(p, '#recipientAccountRestoreCard') && !(await p.$('#authMoreOptions')), 'new phone: restore form is shown openly');

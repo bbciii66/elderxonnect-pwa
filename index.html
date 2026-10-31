@@ -618,8 +618,9 @@
     #authScreen {
       position:fixed;inset:0;z-index:1000;
       background:var(--bg);
-      display:flex;align-items:center;justify-content:center;
-      padding:20px;
+      /* Centered when it fits; when it is taller than the screen it starts at the top and scrolls (no cut-off top). */
+      display:flex;align-items:flex-start;justify-content:center;
+      padding:max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
       background-image:
         radial-gradient(ellipse 60% 40% at 80% 10%, rgba(46,204,138,.08) 0%, transparent 60%),
         radial-gradient(ellipse 40% 50% at 20% 80%, rgba(26,107,74,.1) 0%, transparent 60%);
@@ -629,7 +630,7 @@
     #mainApp.hidden { display:none; }
 
     .auth-panel {
-      width:100%;max-width:400px;
+      width:100%;max-width:400px;margin:auto 0;
       animation:fadeUp .35s ease;
     }
     @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
