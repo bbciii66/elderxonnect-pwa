@@ -51,7 +51,6 @@ Deno.serve(async (req) => {
       .from('caregiver_access')
       .select('id, elder_id, caregiver_email, status')
       .eq('id', invitation)
-      .eq('elder_id', userData.user.id)
       .maybeSingle();
 
     if (accessError) return json({ error: accessError.message }, 500);
@@ -59,9 +58,19 @@ Deno.serve(async (req) => {
       return json({ error: 'Invitation not found or no longer pending' }, 404);
     }
 
+    // Whoever may manage this circle (the person themself, or their administrator in managed mode) may send the invite.
+    // Asked as the caller, so the database rule decides, not this function.
+    const { data: canManage, error: manageError } = await callerClient.rpc('circle_can_manage', { target_elder: access.elder_id });
+    if (manageError) return json({ error: 'Could not check permission' }, 500);
+    if (canManage !== true) return json({ error: 'Invitation not found or no longer pending' }, 404);
+
     const link = buildInviteLink(portalUrl, email, parseAllowedOrigins(Deno.env.get('INVITE_ALLOWED_ORIGINS')));
     if (!link) return json({ error: 'Invalid invitation link' }, 400);
-    const elderName = String(userData.user.user_metadata?.full_name || userData.user.email || 'Someone you know');
+    let elderName = String(userData.user.user_metadata?.full_name || userData.user.email || 'Someone you know');
+    if (access.elder_id !== userData.user.id) {
+      const { data: elderData } = await admin.auth.admin.getUserById(access.elder_id);
+      elderName = String(elderData?.user?.user_metadata?.full_name || elderData?.user?.email || 'Someone you know');
+    }
     const { subject, html } = buildInviteEmail({ elderName, link });
     const mailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',

@@ -92,3 +92,16 @@ test('who may manage: elder until an administrator accepts; then only administra
   assert.equal(L.canManage({ role: 'admin' }, { mode: 'self' }, act), false);
   assert.equal(L.canManage({ role: 'family' }, { mode: 'managed' }, act), false);
 });
+
+test('invite link carries the lowercased, encoded email and ignores trailing slashes', () => {
+  assert.equal(L.inviteLink('https://elderxonnect-pwa.vercel.app/', ' Pat+T@Example.com '), 'https://elderxonnect-pwa.vercel.app/caregiver.html?email=pat%2Bt%40example.com');
+});
+
+test('only a clear "sent" counts as emailed; everything else falls back to sharing the link', () => {
+  assert.equal(L.inviteOutcome('a@b.co', { data: { sent: true }, error: null }).sent, true);
+  for (const r of [null, undefined, {}, { data: { sent: false } }, { data: null, error: { message: 'x' } }, { data: { sent: true }, error: { message: 'x' } }]) {
+    const o = L.inviteOutcome('a@b.co', r);
+    assert.equal(o.sent, false);
+    assert.match(o.text, /send them the link/);
+  }
+});

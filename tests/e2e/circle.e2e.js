@@ -66,6 +66,10 @@ let port;
   await p.fill('#inviteEmail', 'Omar.Aide@Example.com'); await p.selectOption('#inviteRole', 'onsite'); await p.click('#sendInvite');
   await p.waitForFunction(() => document.querySelectorAll('#roles select').length === 4);
   check(await p.evaluate(() => { const r = window.__FAKE_DB__.tables.caregiver_access.find((x) => x.caregiver_email === 'omar.aide@example.com'); return r && r.status === 'pending' && r.role === 'onsite'; }), 'elder can invite someone with a chosen role');
+  check(await p.evaluate(() => { const c = (window.__FAKE_DB__.fnCalls || [])[0]; return !!c && c.name === 'send-caregiver-invite' && c.body.caregiverEmail === 'omar.aide@example.com' && !!c.body.invitationId && c.body.portalUrl.endsWith('/caregiver.html'); }), 'inviting asks the email helper to send, with the invitation id');
+  check((await p.textContent('#inviteResultText')).includes('could not email'), 'when email cannot be sent, the elder is told plainly');
+  check((await p.inputValue('#inviteLinkBox')).endsWith('/caregiver.html?email=omar.aide%40example.com'), 'a link to share by hand is shown with the invited email');
+  check(await p.evaluate(() => window.__FAKE_DB__.tables.caregiver_access.some((x) => x.caregiver_email === 'omar.aide@example.com' && x.status === 'pending')), 'a failed email does not undo the invitation');
   await p.fill('#inviteEmail', 'omar.aide@example.com'); await p.click('#sendInvite');
   check((await p.textContent('#error')).includes('already in the circle'), 'inviting the same person twice is explained');
   await p.fill('#inviteEmail', 'edna@example.com'); await p.click('#sendInvite');
@@ -118,6 +122,7 @@ let port;
   await p.fill('#setupEmail', 'dana@example.com'); await p.click('#setupInvite');
   await p.waitForFunction(() => document.getElementById('setupText').textContent.includes('Waiting for dana@example.com'));
   check(await p.evaluate(() => { const d = window.__FAKE_DB__.tables; const a = d.caregiver_access.find((r) => r.caregiver_email === 'dana@example.com'); return a && a.role === 'admin' && a.status === 'pending' && d.circle_settings[0].mode === 'managed'; }), 'inviting an administrator saves them and managed mode');
+  check(await p.evaluate(() => (window.__FAKE_DB__.fnCalls || []).some((c) => c.body.caregiverEmail === 'dana@example.com')) && (await p.textContent('#inviteResultText')).includes('dana@example.com'), 'inviting an administrator also sends the invitation email (or the link fallback)');
   check(await p.isVisible('#setupBack') && (await p.locator('#roles select').count()) >= 3, 'while the administrator is pending the elder keeps control');
   await p.click('#setupBack');
   await p.waitForFunction(() => window.__FAKE_DB__.tables.circle_settings[0].mode === 'self');
@@ -132,6 +137,18 @@ let port;
   await p.waitForFunction(() => window.__FAKE_DB__.tables.caregiver_access.find((r) => r.id === 'a1').sections.includes('profile'));
   check(true, 'elder can open a section for one person');
   check(errors.length === 0, 'no script errors (admin setup) ' + errors.join(' | ')); await ctx.close();
+
+  // Email helper works: elder is told it was emailed. The shared link opens the caregiver page with the email filled in.
+  ({ p, errors, ctx } = await open(browser, EDNA, '/circle.html', undefined, undefined, (s) => { s.fnAnswer = { data: { sent: true, id: 'fake-email-1' }, error: null }; })); await p.waitForSelector('#messages .msg');
+  await p.fill('#inviteEmail', 'casey.helper@example.com'); await p.click('#sendInvite');
+  await p.waitForFunction(() => !document.getElementById('inviteResult').classList.contains('hidden'));
+  check((await p.textContent('#inviteResultText')).includes('emailed to casey.helper@example.com'), 'when email is sent, the elder is told it was emailed');
+  const link = await p.inputValue('#inviteLinkBox');
+  check(await p.isVisible('#copyInviteLink'), 'copy-link button is offered even when email worked');
+  await ctx.close();
+  ({ p, ctx } = await open(browser, null, link.replace(/^https?:\/\/[^/]+/, ''))); // the invited person, not signed in yet
+  await p.waitForSelector('#email');
+  check(await p.inputValue('#email') === 'casey.helper@example.com', 'the invitation link opens the caregiver page with the email filled in'); await ctx.close();
 
   // Managed and accepted: the elder can look and post but not manage
   const managed = (s) => { s.tables.circle_settings = [{ elder_id: 'elder-1', mode: 'managed' }]; s.tables.caregiver_access.push({ id: 'a9', elder_id: 'elder-1', caregiver_id: 'adm-1', caregiver_email: 'dana@example.com', role: 'admin', sections: [], status: 'active', recipient_display_name: 'Edna Testerson', invited_at: hoursAgo(60) }); };

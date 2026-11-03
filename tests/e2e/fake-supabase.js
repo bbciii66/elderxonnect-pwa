@@ -40,6 +40,11 @@
     return q;
   }
   window.supabase = { createClient() {
-    return { from: table, auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
+    const functions = { async invoke(name, opts) {
+      (DB.fnCalls = DB.fnCalls || []).push({ name, body: opts && opts.body }); save();
+      // Tests choose the answer: DB.fnAnswer = { data } or { error }. Default: email not configured, like before the key is set.
+      return DB.fnAnswer || { data: null, error: { message: 'Edge Function returned a non-2xx status code' } };
+    } };
+    return { from: table, functions, auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
   } };
 })();

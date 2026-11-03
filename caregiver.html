@@ -80,5 +80,16 @@
     async function signOut(){await client.auth.signOut();session=null;selectedElder=null;byId('portal').classList.add('hidden');byId('accessCard').classList.add('hidden');byId('loginCard').classList.remove('hidden');byId('password').value='';byId('loginStatus').textContent='Signed out.'}
     byId('signIn').onclick=()=>auth('signin');byId('createAccount').onclick=()=>auth('signup');byId('password').addEventListener('keydown',e=>{if(e.key==='Enter')auth('signin')});byId('refresh').onclick=loadDashboard;byId('backToAccess').onclick=showAccess;byId('signOut').onclick=signOut;byId('signOutAccess').onclick=signOut;byId('elderSelect').onchange=e=>openDashboard(e.target.value);init().catch(showError);
   </script>
+<script>
+  // An emailed invitation link carries the invited address. Do this here, not only in a patch script, because the
+  // very first visit happens before the app's service worker exists to add the patch scripts.
+  (function () {
+    try {
+      var invited = (new URLSearchParams(location.search).get('email') || '').trim().toLowerCase();
+      var box = document.getElementById('email');
+      if (invited && box && !box.value) { box.value = invited; box.readOnly = true; }
+    } catch (e) {}
+  })();
+</script>
 </body>
 </html>
