@@ -116,7 +116,12 @@
         <label for="inviteRole" class="sub" style="display:block;margin-top:10px">What can they do?</label>
         <select id="inviteRole" style="width:100%"></select>
         <button id="sendInvite">Add to the circle</button>
-        <p class="sub" style="margin-top:8px">They sign in on the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> with this same email. No email is sent, so tell them yourself. Everyone starts with messages, tasks and visits only; you choose what else they see.</p>
+        <p class="sub" style="margin-top:8px">We email them a link to the <a style="color:var(--green)" href="/caregiver.html">caregiver page</a> where they sign in with this same email. If the email can't be sent, you get a link to share yourself. Everyone starts with messages, tasks and visits only; you choose what else they see.</p>
+        <div id="inviteResult" class="hidden" role="status" aria-live="polite">
+          <p class="sub" id="inviteResultText"></p>
+          <input id="inviteLinkBox" type="text" readonly aria-label="Invitation link" />
+          <button id="copyInviteLink" class="secondary">Copy link</button>
+        </div>
       </div>
     </section>
     <section class="card hidden" id="alertsCard">

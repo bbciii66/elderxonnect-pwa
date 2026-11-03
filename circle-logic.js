@@ -82,5 +82,17 @@
     return Number.isInteger(n) && n >= 1 && n <= 1440 ? n : NaN;
   }
 
-  return { ROLES, ROLE_LABELS, SECTIONS, SECTION_LABELS, ROLE_DEFAULT_SECTIONS, QUICK_MESSAGES, canWrite, sectionsForRole, canSee, setupState, canManage, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
+  // The link a new person opens to join. Same shape the email function builds, so the copy-link fallback matches the email.
+  function inviteLink(origin, email) {
+    return String(origin || '').replace(/\/+$/, '') + '/caregiver.html?email=' + encodeURIComponent(String(email || '').trim().toLowerCase());
+  }
+
+  // Turn the email helper's answer into one plain sentence. Anything but a clear "sent" falls back to sharing the link by hand.
+  function inviteOutcome(email, result) {
+    const data = result && result.data, err = result && result.error;
+    if (!err && data && data.sent === true) return { sent: true, text: 'Invitation emailed to ' + email + '. They can also use the link below.' };
+    return { sent: false, text: 'Added ' + email + ' to the circle. We could not email them, so please send them the link below yourself.' };
+  }
+
+  return { inviteLink, inviteOutcome, ROLES, ROLE_LABELS, SECTIONS, SECTION_LABELS, ROLE_DEFAULT_SECTIONS, QUICK_MESSAGES, canWrite, sectionsForRole, canSee, setupState, canManage, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
 });

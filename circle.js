@@ -159,7 +159,25 @@
 
   async function addPerson(email, role) {
     const row = { elder_id: elderId, caregiver_email: email, status: 'pending', role, sections: L.sectionsForRole(role) };
-    return client.from('caregiver_access').insert(row);
+    return client.from('caregiver_access').insert(row).select('id').maybeSingle();
+  }
+
+  // Email the invitation, then always show a link to share by hand. A failed email never undoes the invitation.
+  async function sendInviteEmail(row, email) {
+    let result;
+    try {
+      result = row && row.id
+        ? await client.functions.invoke('send-caregiver-invite', { body: { invitationId: row.id, caregiverEmail: email, portalUrl: location.origin + '/caregiver.html' } })
+        : { error: new Error('no id') };
+    } catch (e) { result = { error: e }; }
+    const out = L.inviteOutcome(email, result);
+    $('inviteResultText').textContent = out.text;
+    $('inviteLinkBox').value = L.inviteLink(location.origin, email);
+    $('inviteResult').classList.remove('hidden');
+  }
+  async function copyInviteLink() {
+    const box = $('inviteLinkBox'); box.select();
+    try { await navigator.clipboard.writeText(box.value); $('copyInviteLink').textContent = 'Copied'; } catch { $('copyInviteLink').textContent = 'Press and hold the link to copy'; }
   }
 
   async function invite() {
@@ -171,6 +189,7 @@
       const r = await addPerson(email, $('inviteRole').value);
       if (r.error) throw (r.error.code === '23505' ? new Error('That person is already in the circle. Change their role above.') : r.error);
       $('inviteEmail').value = ''; loadManage();
+      await sendInviteEmail(r.data, email);
     } catch (e) { showError(e); }
   }
 
@@ -182,9 +201,10 @@
     try {
       showError('');
       let r = await addPerson(email, 'admin');
-      if (r.error && r.error.code === '23505') r = await client.from('caregiver_access').update({ role: 'admin', sections: L.sectionsForRole('admin') }).eq('elder_id', elderId).eq('caregiver_email', email);
+      if (r.error && r.error.code === '23505') r = await client.from('caregiver_access').update({ role: 'admin', sections: L.sectionsForRole('admin') }).eq('elder_id', elderId).eq('caregiver_email', email).select('id').maybeSingle();
       if (r.error) throw r.error;
       await saveMode('managed'); $('setupEmail').value = ''; loadManage();
+      await sendInviteEmail(r.data, email);
     } catch (e) { showError(e); }
   }
 
@@ -216,6 +236,7 @@
   $('inviteRole').innerHTML = L.ROLES.map((role) => `<option value="${role}">${esc(L.ROLE_LABELS[role])}</option>`).join('');
   $('inviteRole').value = 'viewer';
   $('sendInvite').onclick = invite;
+  $('copyInviteLink').onclick = copyInviteLink;
   $('setupSelf').onclick = chooseSelf;
   $('setupManaged').onclick = () => $('setupForm').classList.toggle('hidden');
   $('setupInvite').onclick = inviteAdmin;

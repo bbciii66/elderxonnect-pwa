@@ -25,7 +25,12 @@ Made-up people only. Do not put real health information in until the privacy pha
 - **Patch pile**: ~20 small scripts (`caregiver-*.js`, `profile-*.js`, `reminder-*.js`, ...) are still layered on `index.html`. They are all loaded by the service worker and untangling them needs a logged-in click-through on a real v2 project, so it is deferred rather than risked blind.
 - Invite email helper (Resend) not on v2 yet; no-check-in alerts and push (Phase 3); not clicked through against the real v2 Supabase (only a fake one and a throwaway database).
 
-## Invite emails (not live yet)
+## Invite emails (wired in the app; sending not switched on)
+- Adding someone on the circle screen (or inviting an administrator) now asks `send-caregiver-invite` to email them. Whatever happens, the screen then shows a plain sentence ("emailed" or "could not email, send the link yourself") and a copy-link box, so an invitation never gets stuck on email. The function also accepts an administrator in managed mode (permission is asked of the database via `circle_can_manage`, as the caller).
+- `caregiver.html` now fills in the invited email by itself from the link, because the first visit happens before the service worker exists to add the patch scripts.
+- Robot: `tests/e2e/circle.e2e.js` uses a fake `functions.invoke` (no real email is ever sent) for both outcomes, and opens the shared link as the signed-out invited person.
+
+## Invite emails (older notes)
 - The email helper is `supabase/functions/send-caregiver-invite`. It now only accepts a link to our own `/caregiver.html` (allowed sites: `INVITE_ALLOWED_ORIGINS`, default the Vercel site) and escapes the elder's name, so it can't be used to send a link to another site.
 - To turn it on for v2 (Ben, from the Mac): deploy the function to elderxonnect-v2, and set two secrets in Supabase: `RESEND_API_KEY` and (once a sending domain is verified) `CAREGIVER_INVITE_FROM`. Until a key is set the function answers "Email delivery is not configured" and sends nothing, and the app falls back to the copy-link button.
 - Resend's free test sender only delivers to the account owner's own address. A verified domain is needed to email family.
