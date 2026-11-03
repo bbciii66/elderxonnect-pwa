@@ -148,7 +148,9 @@ let port;
   await ctx.close();
   ({ p, ctx } = await open(browser, null, link.replace(/^https?:\/\/[^/]+/, ''))); // the invited person, not signed in yet
   await p.waitForSelector('#email');
-  check(await p.inputValue('#email') === 'casey.helper@example.com', 'the invitation link opens the caregiver page with the email filled in'); await ctx.close();
+  check(await p.inputValue('#email') === 'casey.helper@example.com', 'the invitation link opens the caregiver page with the email filled in');
+  await p.evaluate(() => { const b = document.getElementById('email'); b.value = 'saved.login@example.com'; b.dispatchEvent(new Event('input', { bubbles: true })); });
+  check(await p.inputValue('#email') === 'casey.helper@example.com', 'browser autofill cannot swap the invited email for another one'); await ctx.close();
 
   // Managed and accepted: the elder can look and post but not manage
   const managed = (s) => { s.tables.circle_settings = [{ elder_id: 'elder-1', mode: 'managed' }]; s.tables.caregiver_access.push({ id: 'a9', elder_id: 'elder-1', caregiver_id: 'adm-1', caregiver_email: 'dana@example.com', role: 'admin', sections: [], status: 'active', recipient_display_name: 'Edna Testerson', invited_at: hoursAgo(60) }); };
