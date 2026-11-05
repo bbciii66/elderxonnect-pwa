@@ -311,5 +311,39 @@ do $$ begin
   assert testkit.blocked($q$insert into public.alert_log(elder_id,caregiver_id,day) values ('00000000-0000-0000-0000-00000000000e','00000000-0000-0000-0000-0000000000f1',current_date)$q$), 'app users cannot write the alert log';
   assert testkit.blocked($q$select 1 from public.alert_log$q$), 'app users cannot read the alert log';
 end $$;
+-- 17. Pending and revoked caregivers never hold a copy of the profile (privacy fix)
 select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e4','{"name":"Pat","notes":"NEW-SYNTHETIC-VALUE"}');
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e4','helper@example.test','pending','viewer',array['circle','profile']);
+select public.set_care_recipient_profile('{"name":"Pat","notes":"NEW-SYNTHETIC-VALUE"}'::jsonb);
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a pending invitee must not read the profile snapshot';
+end $$;
+select public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='helper@example.test'));
+do $$ begin
+  assert (select recipient_profile->>'notes' from public.caregiver_access where caregiver_email='helper@example.test')='NEW-SYNTHETIC-VALUE', 'an active caregiver with the profile section reads the snapshot';
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+update public.caregiver_access set status='revoked' where caregiver_email='helper@example.test';
+select public.set_care_recipient_profile('{"name":"Pat","notes":"AFTER-REVOKE-VALUE"}'::jsonb);
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a revoked caregiver must not read the profile snapshot';
+  assert (select count(*) from public.profiles)=0, 'a revoked caregiver must not read the profile table';
+end $$;
+-- re-inviting gives a fresh start, never the old copy
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+update public.caregiver_access set status='pending' where caregiver_email='helper@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a re-invited (pending) person must not read the profile snapshot';
+end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED
