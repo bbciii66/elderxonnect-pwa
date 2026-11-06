@@ -1,7 +1,0 @@
-{
-  "git": {
-    "deploymentEnabled": {
-      "codex/a11y-pass": false
-    }
-  }
-}
