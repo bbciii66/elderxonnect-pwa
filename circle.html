@@ -9,9 +9,9 @@
   <style>
     :root{--bg:#0e1a14;--card:#162219;--green:#2ecc8a;--gold:#e8c97e;--text:#f1f5f2;--muted:#a9c7b4;--line:rgba(255,255,255,.14);--red:#ff8a8a;--amber:#f0b429}
     *{box-sizing:border-box}
-    body{margin:0 auto;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:19px;line-height:1.5;padding:16px 14px 40px;max-width:640px}
-    body.text-xl{font-size:23px}
-    h1{font-size:28px;margin:0 0 4px}h2{font-size:22px;margin:0 0 12px}
+    body{margin:0 auto;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:1.1875rem;line-height:1.5;padding:16px 14px 40px;max-width:640px;overflow-wrap:anywhere}
+    body.text-xl{font-size:1.4375rem}
+    h1{font-size:1.75rem;margin:0 0 4px}h2{font-size:1.375rem;margin:0 0 12px}
     .sub{color:var(--muted);margin:0 0 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
     button,input{font:inherit}
     button{width:100%;min-height:60px;border:0;border-radius:14px;padding:12px;font-weight:700;background:var(--green);color:#071209;margin-top:10px}
@@ -28,17 +28,17 @@
     .who{color:var(--muted);font-size:16px}.mine .body{color:var(--gold)}
     .body{white-space:pre-wrap;overflow-wrap:anywhere}
     .task{display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-    .task button{width:auto;min-width:96px;margin:0}
+    .task .t{min-width:0;overflow-wrap:anywhere}.task button{width:auto;min-width:96px;margin:0}
     .task.done .t{text-decoration:line-through;color:var(--muted)}
-    .row2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row2 button{width:auto;margin:0;min-width:96px}
+    .row2{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.row2 button{width:auto;margin:0;min-width:96px}
     select{font:inherit;min-height:56px;border-radius:12px;padding:8px 12px;background:#0b1510;color:var(--text);border:2px solid var(--line)}
     option{background:#162219;color:var(--text)}
     details{margin-top:8px}summary{min-height:44px;padding:10px 0;cursor:pointer;color:var(--green);font-weight:700}
     .sec{display:flex;gap:12px;align-items:center;min-height:48px}.sec input{width:28px;min-height:28px;height:28px;flex:none}
     .rolerow{padding:12px 0;border-bottom:1px solid var(--line)}.rolerow:last-child{border:0}
-    .error{color:var(--red);margin-top:8px}
+    .error{color:var(--error-text);font-weight:600}.error:not(:empty){margin-top:8px}
     a.back{color:var(--green);font-weight:700;display:inline-block;padding:14px 0;min-height:56px}
-    @media(max-width:480px){.quick{grid-template-columns:1fr}}
+    @media(max-width:480px){.quick,.row2{grid-template-columns:1fr}.row2 button{width:100%}}
   </style>
   <link rel="stylesheet" href="/theme.css" />
 </head>
@@ -69,7 +69,7 @@
       </div>
       <button id="setupBack" class="secondary hidden"></button>
     </section>
-    <div class="status unknown" id="status">Checking…</div>
+    <div class="status unknown" id="status" role="status">Checking…</div>
 
     <section class="card">
       <h2>Quick message</h2>
@@ -79,20 +79,26 @@
     <section class="card">
       <h2>Messages</h2>
       <div id="messages"></div>
-      <div class="row2" style="margin-top:12px" id="composeRow">
-        <input id="text" type="text" maxlength="1000" placeholder="Write a message" aria-label="Write a message" />
+      <label for="text" id="messageLabel" style="display:block;margin-top:12px">Write a message</label>
+      <div class="row2" id="composeRow">
+        <input id="text" type="text" maxlength="1000" placeholder="Write a message" aria-labelledby="messageLabel" />
         <button id="send">Send</button>
       </div>
+      <p class="error" id="messageError" role="alert"></p>
+      <p id="messageStatus" role="status"></p>
       <div class="status unknown hidden" id="viewerNote" style="margin-top:12px">You have view-only access, so you can read but not post.</div>
     </section>
 
     <section class="card">
       <h2>Tasks and visits</h2>
       <div id="tasks"></div>
-      <div class="row2" style="margin-top:12px" id="taskRow">
-        <input id="taskText" type="text" maxlength="200" placeholder="Add a task (e.g. refill pills)" aria-label="Add a task" />
-        <button id="addTask">Add</button>
+      <label for="taskText" id="taskLabel" style="display:block;margin-top:12px">Add a task</label>
+      <div class="row2" id="taskRow">
+        <input id="taskText" type="text" maxlength="200" placeholder="e.g., Refill pills" aria-labelledby="taskLabel" />
+        <button id="addTask">Add task</button>
       </div>
+      <p class="error" id="taskError" role="alert"></p>
+      <p id="taskStatus" role="status"></p>
     </section>
     <section class="card">
       <h2>Visit log</h2>
@@ -102,7 +108,9 @@
         <input id="visitNotes" type="text" maxlength="2000" placeholder="e.g. Brought groceries, took a walk" />
         <label for="visitMinutes" class="sub" style="display:block;margin-top:10px">How many minutes? (optional)</label>
         <input id="visitMinutes" type="number" inputmode="numeric" min="1" max="1440" />
+        <p class="error" id="visitError" role="alert"></p>
         <button id="addVisit">Log this visit</button>
+        <p id="visitStatus" role="status"></p>
       </div>
     </section>
 
@@ -129,7 +137,7 @@
       <div class="status unknown" id="alertsStatus">Checking…</div>
       <button id="alertsBtn" class="secondary">Turn on alerts</button>
     </section>
-    <button class="secondary" id="bigText">Make text bigger</button>
+    <button class="secondary" id="bigText" aria-pressed="false">Make text bigger</button>
     <section class="card"><h2>Appearance</h2><div data-theme-control></div></section>
     <div class="error" id="error" role="alert"></div>
   </main>

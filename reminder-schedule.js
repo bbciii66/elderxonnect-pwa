@@ -40,19 +40,19 @@
     const style = document.createElement('style');
     style.id = 'exCalendarStyles';
     style.textContent = `
-      .ex-calendar{margin-top:8px;padding:12px;border:1px solid var(--line2);border-radius:16px;background:rgba(0,0,0,.18)}
-      .ex-cal-head{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;margin-bottom:10px}
+      .ex-calendar{margin-top:8px;padding:12px;border:1px solid var(--line2);border-radius:16px;background:var(--surface-2,var(--card2))}
+      .ex-cal-head{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-bottom:10px}
       .ex-cal-head button{border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.05);color:var(--text);font-size:20px;padding:6px;cursor:pointer}
       .ex-cal-title{text-align:center;font-weight:700;font-family:'Lora',serif}
-      .ex-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-      .ex-cal-dow{text-align:center;color:var(--muted);font-size:10px;padding:4px 0}
-      .ex-cal-day{aspect-ratio:1;border:1px solid transparent;border-radius:10px;background:rgba(255,255,255,.035);color:var(--text);font-size:13px;cursor:pointer;padding:0}
+      .ex-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+      .ex-cal-dow{text-align:center;color:var(--muted);font-size:.8125rem;padding:4px 0}
+      .ex-cal-day{aspect-ratio:1;min-height:44px;border:1px solid var(--control-line);border-radius:10px;background:rgba(255,255,255,.035);color:var(--text);font-size:1rem;cursor:pointer;padding:0}
       .ex-cal-day:hover{border-color:rgba(46,204,138,.35)}
       .ex-cal-day.today{border-color:var(--gold);color:var(--gold)}
-      .ex-cal-day.selected{background:var(--green);color:#071209;font-weight:800}
+      .ex-cal-day[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--green);text-decoration:underline;font-weight:800}
       .ex-cal-day:disabled{opacity:.25;cursor:not-allowed}
       .ex-cal-empty{aspect-ratio:1}
-      .ex-date-summary{margin-top:8px;text-align:center;color:var(--green);font-size:13px;font-weight:700}
+      .ex-date-summary{margin-top:8px;text-align:center;color:var(--green);font-size:1rem;font-weight:700}
     `;
     document.head.appendChild(style);
   }
@@ -73,6 +73,7 @@
       const count = new Date(year,month+1,0).getDate();
       const todayKey = ymd(new Date());
       const selectedKey = input.value;
+      const activeDate = document.activeElement?.dataset.date;
       const pieces = shortDays.map(d=>`<div class="ex-cal-dow">${d}</div>`);
       for(let i=0;i<firstDay;i++) pieces.push('<div class="ex-cal-empty"></div>');
       for(let day=1;day<=count;day++) {
@@ -81,17 +82,17 @@
         const past = key < todayKey;
         const classes = ['ex-cal-day'];
         if(key===todayKey) classes.push('today');
-        if(key===selectedKey) classes.push('selected');
-        pieces.push(`<button type="button" class="${classes.join(' ')}" data-date="${key}" ${past?'disabled':''}>${day}</button>`);
+        pieces.push(`<button type="button" class="${classes.join(' ')}" data-date="${key}" aria-label="${esc(date.toLocaleDateString(undefined,{dateStyle:'full'}))}" aria-pressed="${key===selectedKey}" ${key===todayKey?'aria-current="date"':''} ${past?'disabled':''}>${day}</button>`);
       }
       grid.innerHTML = pieces.join('');
       grid.querySelectorAll('[data-date]').forEach(button => {
         button.addEventListener('click', () => {
           input.value = button.dataset.date;
+          window.setFieldError('remCalendar');
           input.dispatchEvent(new Event('change',{bubbles:true}));
-          renderCalendar();
         });
       });
+      if(activeDate) [...grid.querySelectorAll('[data-date]')].find(button => button.dataset.date === activeDate)?.focus();
       summary.textContent = input.value ? new Date(`${input.value}T12:00:00`).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}) : 'Tap a date';
     }
 
@@ -117,26 +118,28 @@
     const wrap = document.createElement('div');
     wrap.innerHTML = `
       <div class="sp8"></div>
-      <div class="label">When</div>
+      <label class="label" for="remScheduleType">When</label>
       <select id="remScheduleType">
         <option value="daily">Every day</option>
         <option value="once">One time — choose a date</option>
         <option value="weekly">Weekly — choose days</option>
       </select>
       <div id="remDateWrap" class="hidden">
-        <div class="sp8"></div><div class="label">Choose date</div>
+        <div class="sp8"></div><div class="label" id="remCalendarLabel">Choose a date</div>
         <input id="remDate" type="hidden" />
-        <div class="ex-calendar" id="remCalendar">
-          <div class="ex-cal-head"><button type="button" id="remCalPrev" aria-label="Previous month">‹</button><div class="ex-cal-title" id="remCalTitle"></div><button type="button" id="remCalNext" aria-label="Next month">›</button></div>
+        <div class="ex-calendar" id="remCalendar" role="group" tabindex="-1" aria-labelledby="remCalendarLabel">
+          <div class="ex-cal-head"><button type="button" id="remCalPrev" aria-label="Previous month">‹</button><div class="ex-cal-title" id="remCalTitle" role="status"></div><button type="button" id="remCalNext" aria-label="Next month">›</button></div>
           <div class="ex-cal-grid" id="remCalGrid"></div>
-          <div class="ex-date-summary" id="remDateSummary">Tap a date</div>
+          <div class="ex-date-summary" id="remDateSummary" role="status">Tap a date</div>
         </div>
+        <p class="field-error" id="remCalendarError" role="alert"></p>
       </div>
       <div id="remDaysWrap" class="hidden">
-        <div class="sp8"></div><div class="label">Days of week</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-          ${days.map((d,i)=>`<label style="display:flex;align-items:center;padding:9px;border:1px solid var(--line2);border-radius:12px;font-size:13px"><input type="checkbox" class="remDay" value="${i}">${d}</label>`).join('')}
+        <div class="sp8"></div><div class="label" id="remDaysLabel">Days of week</div>
+        <div class="rem-days" id="remDays" role="group" tabindex="-1" aria-labelledby="remDaysLabel">
+          ${days.map((d,i)=>`<label><input type="checkbox" class="remDay" value="${i}">${d}</label>`).join('')}
         </div>
+        <p class="field-error" id="remDaysError" role="alert"></p>
       </div>`;
     time.insertAdjacentElement('afterend', wrap);
 
@@ -145,7 +148,10 @@
     const daysWrap = document.getElementById('remDaysWrap');
     const dateInput = document.getElementById('remDate');
     makeCalendar(dateInput);
+    document.getElementById('remDays').addEventListener('change', () => window.setFieldError('remDays'));
     type.addEventListener('change', () => {
+      window.setFieldError('remCalendar');
+      window.setFieldError('remDays');
       dateWrap.classList.toggle('hidden', type.value !== 'once');
       daysWrap.classList.toggle('hidden', type.value !== 'weekly');
     });
@@ -160,11 +166,16 @@
       const scheduleDays = [...document.querySelectorAll('.remDay:checked')].map(x=>Number(x.value));
       const cat = document.getElementById('remCat').value;
       const urgent = document.getElementById('remUrgent').checked;
-      if (!title) return window.toast?.('⚠️ Enter a reminder title');
-      if (!scheduleTime) return window.toast?.('⚠️ Choose a reminder time');
-      if (scheduleType === 'once' && !scheduleDate) return window.toast?.('⚠️ Tap a date on the calendar');
-      if (scheduleType === 'weekly' && !scheduleDays.length) return window.toast?.('⚠️ Choose at least one day');
-      if (window.requestNotifPermission) await window.requestNotifPermission();
+      if (!title) return window.setFieldError('remTitle', 'Enter a reminder title.');
+      window.setFieldError('remTitle');
+      if (!scheduleTime) return window.setFieldError('remTime', 'Choose a time for this reminder.');
+      window.setFieldError('remTime');
+      if (scheduleType === 'once' && !scheduleDate) return window.setFieldError('remCalendar', 'Choose a date on the calendar.');
+      if (scheduleType === 'weekly' && !scheduleDays.length) return window.setFieldError('remDays', 'Choose at least one day.');
+      replacement.disabled = true;
+      try { await window.requestNotifPermission?.(); }
+      catch { document.getElementById('notifPermStatus').textContent = 'Browser notifications are unavailable. In-app reminders still work.'; }
+      finally { replacement.disabled = false; }
 
       const list = read('reminders', []);
       list.push({title,cat,urgent,created:Date.now(),scheduleType,scheduleTime,scheduleDate:scheduleType==='once'?scheduleDate:'',scheduleDays:scheduleType==='weekly'?scheduleDays:[],time:scheduleType==='daily'?scheduleTime:''});
@@ -175,7 +186,7 @@
       document.querySelectorAll('.remDay').forEach(x=>x.checked=false);
       document.getElementById('remUrgent').checked=false;
       type.value='daily'; type.dispatchEvent(new Event('change'));
-      render(); window.refreshHomeStats?.(); window.toast?.('🔔 Reminder added!');
+      render(); window.refreshHomeStats?.(); window.finishAddForm('addReminderBtn'); window.toast?.('🔔 Reminder added!');
     });
   }
 
@@ -189,8 +200,8 @@
       const li=document.createElement('li');
       const left=document.createElement('div'); left.style.cssText='display:flex;align-items:center;gap:10px;flex:1;';
       left.innerHTML=`<span class="rem-item-icon">${esc(r.cat||'⭐')}</span><div><div style="font-weight:600;">${esc(r.title)}${r.urgent?'<span class="urgent-badge">URGENT</span>':''}</div><div class="small">${esc(scheduleText(r))}</div></div>`;
-      const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:12px;flex-shrink:0;'; del.textContent='✕';
-      del.addEventListener('click',()=>{const next=read('reminders',[]).filter((_,i)=>i!==idx);write('reminders',next);render();window.refreshHomeStats?.();});
+      const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:12px;flex-shrink:0;'; del.textContent='✕'; del.dataset.delete=''; del.setAttribute('aria-label','Delete reminder: '+r.title);
+      del.addEventListener('click',()=>{const next=read('reminders',[]).filter((_,i)=>i!==idx);write('reminders',next);render();window.refreshHomeStats?.();window.focusListAction('#remList',idx,'#addReminderCard summary');window.toast?.('Reminder deleted.');});
       li.append(left,del); ul.appendChild(li);
     });
   }
