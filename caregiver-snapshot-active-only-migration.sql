@@ -161,6 +161,7 @@ begin
 end;
 $$;
 revoke all on function public.accept_caregiver_invitation(uuid) from public;
+revoke all on function public.accept_caregiver_invitation(uuid) from anon;
 grant execute on function public.accept_caregiver_invitation(uuid) to authenticated;
 
 -- 2c. Pending and revoked rows hold no recipient name.

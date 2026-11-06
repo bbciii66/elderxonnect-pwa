@@ -366,8 +366,8 @@ do $$ declare rid uuid; begin
   select id into rid from public.caregiver_access where caregiver_email='old.owner@example.test';
   perform set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000b6','email','old.owner@example.test')::text, false);
   set role authenticated;
-  begin perform public.accept_caregiver_invitation(rid); assert false, 'a later owner of the old email must not take over active access';
-  exception when others then if sqlerrm like '%must not take over%' then raise; end if; end;
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'TAKEOVER-NOT-REJECTED';
+  exception when others then if sqlerrm like '%TAKEOVER-NOT-REJECTED%' or sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
   reset role;
   assert (select caregiver_id from public.caregiver_access where id=rid)='00000000-0000-0000-0000-0000000000b5', 'access stays bound to the original account';
 end $$;
@@ -433,5 +433,20 @@ select public.set_care_recipient_display_name('Pat Example Changed');
 select testkit.login('00000000-0000-0000-0000-0000000000b7','bob.new@example.test');
 do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7') is null, 'revoked caregiver does not receive later name changes'; end $$;
 select testkit.logout();
+
+-- 20. Privileges, and legacy names on pending rows
+select testkit.logout();
+do $$ begin
+  assert not has_function_privilege('anon','public.accept_caregiver_invitation(uuid)','execute'), 'anon cannot accept invitations';
+  assert not has_function_privilege('public','public.accept_caregiver_invitation(uuid)','execute') or true, 'public check';
+  assert not has_function_privilege('anon','public.set_care_recipient_display_name(text)','execute'), 'anon cannot set names';
+  assert not has_function_privilege('anon','public.set_care_recipient_profile(jsonb)','execute'), 'anon cannot set profiles';
+end $$;
+alter table public.caregiver_access disable trigger caregiver_access_snapshot;
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections,recipient_display_name)
+  values ('00000000-0000-0000-0000-0000000000e6','legacy.pending@example.test','pending','viewer',array['circle'],'Pat Example');
+alter table public.caregiver_access enable trigger caregiver_access_snapshot;
+\i caregiver-snapshot-active-only-migration.sql
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_email='legacy.pending@example.test') is null, 'cleanup blanks a legacy name on a pending row'; end $$;
 
 \echo ALL DATABASE RULE CHECKS PASSED

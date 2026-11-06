@@ -24,15 +24,15 @@ export function parseAllowedOrigins(raw) {
   return list.length ? list : DEFAULT_ALLOWED_ORIGINS;
 }
 
-export function buildInviteEmail({ elderName, link }) {
-  const safeName = escapeHtml(String(elderName || 'Someone you know').slice(0, 80));
+// Deliberately generic: the email must not reveal the care recipient's name or address before the invite is accepted.
+export function buildInviteEmail({ link }) {
   const safeLink = escapeHtml(link);
   return {
-    subject: `${String(elderName || 'Someone you know').replace(/[\r\n]+/g, ' ').slice(0, 80)} invited you to ElderXonnect`,
+    subject: "You've been invited to join a care circle on ElderXonnect",
     html: `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#173126">
         <h1 style="color:#1a6b4a">ElderXonnect</h1>
-        <p><strong>${safeName}</strong> invited you to join their care circle.</p>
+        <p>You've been invited to join a care circle.</p>
         <p>You will use your own caregiver account, never theirs.</p>
         <p style="margin:28px 0"><a href="${safeLink}" style="background:#2ecc8a;color:#071209;text-decoration:none;padding:13px 20px;border-radius:10px;font-weight:bold">Open Caregiver Invitation</a></p>
         <p style="font-size:13px;color:#61756a">Create an account with this same email address, confirm it, then accept the invitation.</p>
