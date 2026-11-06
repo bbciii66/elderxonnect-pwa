@@ -74,6 +74,6 @@ Made-up people only. Do not put real health information in until the privacy pha
 ## Privacy migration and run order (caregiver-snapshot-active-only-migration.sql)
 - Pending and revoked caregivers hold no profile copy and no recipient name; active access is bound to the account, not the email address.
 - **Run it LAST.** For a new project: `full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file, then `push-alerts-migration.sql`.
-- **Never re-run `full-setup-v2.sql` (or `care-circle-admin-migration.sql`) on its own on a live database**: it restores the older, looser functions and policies. If you do, run this file again straight after. It is safe to run twice.
+- **Never re-run `full-setup-v2.sql` on its own on a live database**: it restores older, looser policies and functions. If you do, run the full sequence again (`full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file). This file also re-applies the section-limited read rules and grants itself, but it needs the admin migration's helper functions to exist. All are safe to run twice.
 - The invitation email is deliberately generic (no name or email of the care recipient).
 - Not done yet: invitations never expire; the caregiver page can keep showing a profile loaded before access was withdrawn.

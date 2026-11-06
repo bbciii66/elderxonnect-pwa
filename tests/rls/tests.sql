@@ -449,4 +449,37 @@ alter table public.caregiver_access enable trigger caregiver_access_snapshot;
 \i caregiver-snapshot-active-only-migration.sql
 do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_email='legacy.pending@example.test') is null, 'cleanup blanks a legacy name on a pending row'; end $$;
 
+-- 21. Re-running the old full setup, then only the privacy file, leaves section limits and grants intact
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e7','rita.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e7','{"name":"Rita","notes":"RITA-SYNTHETIC"}');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e7','00000000-0000-0000-0000-0000000000b8','bob2@example.test','active','viewer',array['circle']);
+\i full-setup-v2.sql
+grant execute on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) to anon;
+\i caregiver-snapshot-active-only-migration.sql
+select testkit.login('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+do $$ begin
+  assert (select count(*) from public.profiles)=0, 'circle-only caregiver cannot read profiles after a full-setup re-run plus the privacy file';
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='bob2@example.test')='{}'::jsonb, 'circle-only caregiver holds no snapshot';
+end $$;
+select testkit.logout();
+do $$ begin
+  assert not has_function_privilege('anon','public.set_care_recipient_profile(jsonb)','execute'), 'old anon grant on profile setter is revoked';
+  assert not has_function_privilege('anon','public.set_care_recipient_display_name(text)','execute'), 'old anon grant on name setter is revoked';
+  assert not has_function_privilege('anon','public.get_caregiver_shared_profiles()','execute'), 'anon cannot call the shared-profile function';
+end $$;
+-- a revoked person cannot accept again, and a separate pending invitation for the same email is independent
+select testkit.login('00000000-0000-0000-0000-0000000000e7','rita.recipient@example.com','Rita');
+update public.caregiver_access set status='revoked' where caregiver_email='bob2@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='bob2@example.test';
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'REVOKED-ACCEPT-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED

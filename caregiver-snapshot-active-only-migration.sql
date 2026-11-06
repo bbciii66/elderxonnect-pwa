@@ -167,6 +167,38 @@ grant execute on function public.accept_caregiver_invitation(uuid) to authentica
 -- 2c. Pending and revoked rows hold no recipient name.
 update public.caregiver_access set recipient_display_name = null where status <> 'active' and recipient_display_name is not null;
 
+-- 2d. Re-assert the section-limited read rules and function grants. full-setup-v2.sql restores older, looser
+--     copies of these, so this file must be the last word whenever it is run (it is safe to run twice).
+drop policy if exists caregiver_read_shared_profiles on public.profiles;
+drop policy if exists "Caregivers read shared profiles" on public.profiles;
+create policy "Caregivers read shared profiles" on public.profiles for select to authenticated
+  using (public.circle_has_section(user_id, 'profile'));
+drop policy if exists "Caregivers read shared checkins" on public.checkins;
+create policy "Caregivers read shared checkins" on public.checkins for select to authenticated
+  using (public.circle_has_section(user_id, 'checkins'));
+drop policy if exists "Caregivers read shared reminders" on public.reminders;
+create policy "Caregivers read shared reminders" on public.reminders for select to authenticated
+  using (public.circle_has_section(user_id, 'reminders'));
+drop policy if exists "Caregivers read shared contacts" on public.contacts;
+create policy "Caregivers read shared contacts" on public.contacts for select to authenticated
+  using (public.circle_has_section(user_id, 'contacts'));
+
+create or replace function public.get_caregiver_shared_profiles()
+returns table (elder_id uuid, profile_data jsonb)
+language sql stable security definer set search_path = public as $$
+  select ca.elder_id,
+         case when ca.role = 'admin' or 'profile' = any(ca.sections)
+              then coalesce(p.profile_data, '{}'::jsonb) else '{}'::jsonb end
+  from public.caregiver_access ca
+  left join public.profiles p on p.user_id = ca.elder_id
+  where ca.caregiver_id = auth.uid() and ca.status = 'active';
+$$;
+revoke all on function public.get_caregiver_shared_profiles() from public, anon;
+grant execute on function public.get_caregiver_shared_profiles() to authenticated;
+
+revoke all on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) from public, anon;
+grant execute on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) to authenticated;
+
 -- 3. One-time cleanup: blank every snapshot that belongs to a pending or revoked row, or to a row that may not see it.
 --    (The trigger re-runs on this update and blanks them; the where clause just limits the work.)
 update public.caregiver_access
