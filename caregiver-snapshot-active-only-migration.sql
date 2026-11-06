@@ -12,6 +12,7 @@
 create or replace function public.circle_snapshot_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  if new.status = 'revoked' then new.recipient_display_name := null; end if;
   if new.status = 'active' and (new.role = 'admin' or 'profile' = any(new.sections)) then
     if tg_op = 'INSERT' or new.recipient_profile = '{}'::jsonb
        or (old.role <> 'admin' and not ('profile' = any(old.sections)) and old.recipient_profile = '{}'::jsonb)
@@ -73,6 +74,56 @@ end;
 $$;
 revoke all on function public.set_care_recipient_profile(jsonb) from public;
 grant execute on function public.set_care_recipient_profile(jsonb) to authenticated;
+
+-- 2b. A person is recognised by their account, not by an email address. Only a PENDING invitation can be matched
+--     by email; active access needs the bound user id. Otherwise someone who later takes over an old email address
+--     could read the active row (and its snapshot) or take the access over.
+drop policy if exists "Caregivers view their invitations" on public.caregiver_access;
+create policy "Caregivers view their invitations"
+on public.caregiver_access for select to authenticated
+using (
+  caregiver_id = (select auth.uid())
+  or (status = 'pending' and lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), '')))
+);
+
+create or replace function public.accept_caregiver_invitation(invitation_id uuid)
+returns public.caregiver_access
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  accepted public.caregiver_access;
+  signed_in_email text;
+begin
+  signed_in_email := lower(coalesce(auth.jwt()->>'email', ''));
+  if auth.uid() is null or signed_in_email = '' then
+    raise exception 'You must be signed in with a verified email address.';
+  end if;
+
+  update public.caregiver_access
+     set caregiver_id = auth.uid(),
+         status = 'active',
+         accepted_at = coalesce(accepted_at, now()),
+         updated_at = now()
+   where id = invitation_id
+     and (
+       (status = 'pending' and lower(caregiver_email) = signed_in_email)
+       or (status = 'active' and caregiver_id = auth.uid())
+     )
+  returning * into accepted;
+
+  if accepted.id is null then
+    raise exception 'No matching pending invitation was found for this email address.';
+  end if;
+
+  return accepted;
+end;
+$$;
+grant execute on function public.accept_caregiver_invitation(uuid) to authenticated;
+
+-- 2c. Revoked rows also lose the recipient's name (set_care_recipient_profile now only writes active rows).
+update public.caregiver_access set recipient_display_name = null where status = 'revoked' and recipient_display_name is not null;
 
 -- 3. One-time cleanup: blank every snapshot that belongs to a pending or revoked row, or to a row that may not see it.
 --    (The trigger re-runs on this update and blanks them; the where clause just limits the work.)

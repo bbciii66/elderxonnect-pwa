@@ -346,4 +346,60 @@ do $$ begin
 end $$;
 select testkit.logout();
 
+-- 18. Email takeover, shared-profile function, removal, and leaked-snapshot cleanup
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b5','old.owner@example.test'),
+ ('00000000-0000-0000-0000-0000000000b6','new.owner@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e5','{"name":"Quinn","notes":"QUINN-SYNTHETIC"}');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e5','00000000-0000-0000-0000-0000000000b5','old.owner@example.test','active','viewer',array['circle','profile']);
+-- the old owner changed their account email; someone else now holds the address old.owner@example.test
+update auth.users set email='moved@example.test' where id='00000000-0000-0000-0000-0000000000b5';
+select testkit.login('00000000-0000-0000-0000-0000000000b6','old.owner@example.test');
+do $$ begin
+  assert (select count(*) from public.caregiver_access where elder_id='00000000-0000-0000-0000-0000000000e5')=0, 'a later owner of the old email must not see the active row';
+end $$;
+select testkit.logout();
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='old.owner@example.test';
+  perform set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000b6','email','old.owner@example.test')::text, false);
+  set role authenticated;
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'a later owner of the old email must not take over active access';
+  exception when others then if sqlerrm like '%must not take over%' then raise; end if; end;
+  reset role;
+  assert (select caregiver_id from public.caregiver_access where id=rid)='00000000-0000-0000-0000-0000000000b5', 'access stays bound to the original account';
+end $$;
+-- the original account still holds access and its snapshot
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin
+  assert (select recipient_profile->>'notes' from public.caregiver_access where caregiver_email='old.owner@example.test')='QUINN-SYNTHETIC', 'the bound account keeps its access after an email change';
+  assert (select count(*) from public.get_caregiver_shared_profiles())=1, 'active caregiver sees the shared profile';
+end $$;
+-- shared-profile function: nothing for pending, revoked or removed rows
+select testkit.login('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com','Quinn');
+update public.caregiver_access set status='revoked' where caregiver_email='old.owner@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin
+  assert (select count(*) from public.get_caregiver_shared_profiles())=0, 'revoked caregiver gets nothing from the shared-profile function';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='old.owner@example.test') is null, 'revoked row loses the recipient name';
+end $$;
+-- removal
+select testkit.login('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com','Quinn');
+delete from public.caregiver_access where caregiver_email='old.owner@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin assert (select count(*) from public.caregiver_access)=0 and (select count(*) from public.get_caregiver_shared_profiles())=0, 'removed caregiver holds nothing'; end $$;
+-- snapshots that already leaked are cleaned up by the migration's one-time cleanup
+select testkit.logout();
+alter table public.caregiver_access disable trigger caregiver_access_snapshot;
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections,recipient_profile,recipient_display_name)
+  values ('00000000-0000-0000-0000-0000000000e5','00000000-0000-0000-0000-0000000000b6','leak@example.test','revoked','viewer',array['circle','profile'],'{"notes":"LEAKED"}','Quinn');
+alter table public.caregiver_access enable trigger caregiver_access_snapshot;
+\i caregiver-snapshot-active-only-migration.sql
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='leak@example.test')='{}'::jsonb, 'cleanup blanks an already-leaked snapshot';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='leak@example.test') is null, 'cleanup blanks a revoked recipient name';
+end $$;
+
 \echo ALL DATABASE RULE CHECKS PASSED

@@ -1,5 +1,7 @@
 -- ElderXonnect FULL SETUP for a brand-new Supabase project (e.g. elderxonnect-v2).
 -- All files below in dependency order; every statement is safe to re-run. Run once in SQL Editor.
+-- RUN ORDER for a new project: this file, then care-circle-v2-migration.sql, care-circle-admin-migration.sql,
+-- caregiver-snapshot-active-only-migration.sql (which supersedes the older snapshot functions below), push-alerts-migration.sql.
 
 -- ========== supabase-schema.sql ==========
 -- ElderXonnect Supabase schema
@@ -153,7 +155,7 @@ create policy "Caregivers view their invitations"
 on public.caregiver_access for select to authenticated
 using (
   caregiver_id = (select auth.uid())
-  or lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), ''))
+  or (status = 'pending' and lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), '')))
 );
 
 grant select, insert, update, delete on public.caregiver_access to authenticated;
@@ -179,8 +181,10 @@ begin
          accepted_at = coalesce(accepted_at, now()),
          updated_at = now()
    where id = invitation_id
-     and lower(caregiver_email) = signed_in_email
-     and status in ('pending','active')
+     and (
+       (status = 'pending' and lower(caregiver_email) = signed_in_email)
+       or (status = 'active' and caregiver_id = auth.uid())
+     )
   returning * into accepted;
 
   if accepted.id is null then

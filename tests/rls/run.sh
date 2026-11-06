@@ -5,6 +5,7 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"; root="$(cd "$here/../.." && pwd)"
 PGBIN="$(ls -d /usr/lib/postgresql/*/bin | tail -1)"; PORT=54329; DATA="$(mktemp -d)"; chmod 755 "$DATA"
 cp "$root"/full-setup-v2.sql "$root"/care-circle-v2-migration.sql "$root"/care-circle-admin-migration.sql "$root"/caregiver-snapshot-active-only-migration.sql "$root"/push-alerts-migration.sql "$here"/setup.sql "$here"/tests.sql "$DATA"/
+cd "$DATA"
 chown -R postgres "$DATA" 2>/dev/null || true
 as_pg() { if [ "$(id -u)" = 0 ]; then su postgres -c "$*"; else bash -c "$*"; fi; }
 as_pg "$PGBIN/initdb -D $DATA/db -A trust >/dev/null"
