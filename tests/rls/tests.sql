@@ -402,4 +402,36 @@ do $$ begin
   assert (select recipient_display_name from public.caregiver_access where caregiver_email='leak@example.test') is null, 'cleanup blanks a revoked recipient name';
 end $$;
 
+-- 19. Pending invitees cannot read the recipient's name either; re-accept after an email change
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e6','pat.example@example.com'),
+ ('00000000-0000-0000-0000-0000000000b7','bob@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e6','{"name":"Pat Example"}');
+select testkit.login('00000000-0000-0000-0000-0000000000e6','pat.example@example.com','Pat');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role) values ('00000000-0000-0000-0000-0000000000e6','bob@example.test','pending','viewer');
+select public.set_care_recipient_display_name('Pat Example');
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob@example.test');
+do $$ begin
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='bob@example.test') is null, 'a pending invitee must not read the recipient name';
+  assert (select count(*) from public.get_caregiver_shared_profiles())=0, 'pending invitee gets nothing from the shared-profile function';
+end $$;
+select public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='bob@example.test'));
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_email='bob@example.test')='Pat Example', 'name appears once access is active'; end $$;
+-- Bob changes his account email, then accepts again: still his own access, nothing changes hands
+select testkit.logout();
+update auth.users set email='bob.new@example.test' where id='00000000-0000-0000-0000-0000000000b7';
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob.new@example.test');
+do $$ begin
+  perform public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7'));
+  assert (select count(*) from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7' and status='active')=1, 'bound account can re-accept after an email change';
+end $$;
+-- revoking blanks the name; the name function skips non-active rows
+select testkit.login('00000000-0000-0000-0000-0000000000e6','pat.example@example.com','Pat');
+update public.caregiver_access set status='revoked' where caregiver_email='bob@example.test';
+select public.set_care_recipient_display_name('Pat Example Changed');
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob.new@example.test');
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7') is null, 'revoked caregiver does not receive later name changes'; end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED

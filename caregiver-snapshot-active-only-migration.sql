@@ -12,7 +12,13 @@
 create or replace function public.circle_snapshot_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.status = 'revoked' then new.recipient_display_name := null; end if;
+  -- The recipient's name, like the profile, is only held by ACTIVE rows.
+  if new.status <> 'active' then
+    new.recipient_display_name := null;
+  elsif tg_op = 'INSERT' or old.status <> 'active' then
+    select nullif(trim(p.profile_data->>'name'), '') into new.recipient_display_name
+      from public.profiles p where p.user_id = new.elder_id;
+  end if;
   if new.status = 'active' and (new.role = 'admin' or 'profile' = any(new.sections)) then
     if tg_op = 'INSERT' or new.recipient_profile = '{}'::jsonb
        or (old.role <> 'admin' and not ('profile' = any(old.sections)) and old.recipient_profile = '{}'::jsonb)
@@ -75,6 +81,40 @@ $$;
 revoke all on function public.set_care_recipient_profile(jsonb) from public;
 grant execute on function public.set_care_recipient_profile(jsonb) to authenticated;
 
+-- 2a. The name function also only writes active rows.
+create or replace function public.set_care_recipient_display_name(p_display_name text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  clean_name text;
+  changed_count integer;
+begin
+  if auth.uid() is null then
+    raise exception 'You must be signed in.';
+  end if;
+
+  clean_name := left(trim(coalesce(p_display_name, '')), 120);
+  if clean_name = '' then
+    raise exception 'A display name is required.';
+  end if;
+
+  update public.caregiver_access
+     set recipient_display_name = clean_name,
+         updated_at = now()
+   where elder_id = auth.uid()
+     and status = 'active'
+     and recipient_display_name is distinct from clean_name;
+
+  get diagnostics changed_count = row_count;
+  return changed_count;
+end;
+$$;
+revoke all on function public.set_care_recipient_display_name(text) from public;
+grant execute on function public.set_care_recipient_display_name(text) to authenticated;
+
 -- 2b. A person is recognised by their account, not by an email address. Only a PENDING invitation can be matched
 --     by email; active access needs the bound user id. Otherwise someone who later takes over an old email address
 --     could read the active row (and its snapshot) or take the access over.
@@ -120,10 +160,11 @@ begin
   return accepted;
 end;
 $$;
+revoke all on function public.accept_caregiver_invitation(uuid) from public;
 grant execute on function public.accept_caregiver_invitation(uuid) to authenticated;
 
--- 2c. Revoked rows also lose the recipient's name (set_care_recipient_profile now only writes active rows).
-update public.caregiver_access set recipient_display_name = null where status = 'revoked' and recipient_display_name is not null;
+-- 2c. Pending and revoked rows hold no recipient name.
+update public.caregiver_access set recipient_display_name = null where status <> 'active' and recipient_display_name is not null;
 
 -- 3. One-time cleanup: blank every snapshot that belongs to a pending or revoked row, or to a row that may not see it.
 --    (The trigger re-runs on this update and blanks them; the where clause just limits the work.)
