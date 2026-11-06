@@ -19,7 +19,7 @@
     var stage = $('gameStage');
     $('stageTitle').textContent = title;
     $('stageBody').innerHTML = '';
-    stage.classList.remove('hidden');
+    stage.showModal();
     document.documentElement.classList.add('stage-open');
     current = title;
     try { history.pushState({ excGame: true }, ''); } catch (e) {}
@@ -28,15 +28,15 @@
   }
   function closeStage(fromHistory) {
     var stage = $('gameStage');
-    if (!stage || stage.classList.contains('hidden')) return;
-    stage.classList.add('hidden');
+    if (!stage || !stage.open) return;
+    stage.close();
     document.documentElement.classList.remove('stage-open');
     $('stageBody').innerHTML = '';
     current = null;
     if (!fromHistory) { try { if (history.state && history.state.excGame) history.back(); } catch (e) {} }
   }
   window.addEventListener('popstate', function () { closeStage(true); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeStage(); });
+  $('gameStage').addEventListener('cancel', function (e) { e.preventDefault(); closeStage(); });
 
   function toolbar(body, buttons) {
     var bar = el('div', 'stage-tools');
@@ -63,6 +63,7 @@
     body.innerHTML = '';
     var deck = G.memoryDeck(pairs, rand), open = [], moves = 0, found = 0, busy = false;
     var status = el('p', 'stage-status', 'Find the matching pairs. Tap two cards.');
+    status.setAttribute('role', 'status');
     body.appendChild(status);
     var grid = el('div', 'mm-grid mm-' + pairs); body.appendChild(grid);
     deck.forEach(function (card) {
@@ -105,6 +106,7 @@
     var grid = game.puzzle.map(function (r) { return r.slice(); });
     var sel = null, done = false;
     var status = el('p', 'stage-status', 'Fill every row, column and box with 1 to ' + n + '. Tap a square, then a number.');
+    status.setAttribute('role', 'status');
     body.appendChild(status);
     var board = el('div', 'sd-board sd-' + n); body.appendChild(board);
     var box = G.SUDOKU_BOX[n];
@@ -148,6 +150,7 @@
     var state = G.solitaireDeal(rand), undo = [];
     var status = el('p', 'stage-status', 'Tap a card to move it. Tap the deck to turn a card.');
     var table = el('div', 'sol-table');
+    status.setAttribute('role', 'status');
     body.appendChild(status); body.appendChild(table);
     function apply(next, fail) {
       if (!next) { status.textContent = fail || 'That card can’t move yet.'; return; }
@@ -206,6 +209,7 @@
     var set = G.tileDeal(rand), pick = null;
     var status = el('p', 'stage-status', 'Match two tiles that look the same. Bright tiles can be picked; dim tiles are blocked.');
     var board = el('div', 'tm-board');
+    status.setAttribute('role', 'status');
     body.appendChild(status); body.appendChild(board);
     function draw(hint) {
       board.innerHTML = '';
