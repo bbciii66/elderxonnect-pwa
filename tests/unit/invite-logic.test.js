@@ -27,10 +27,13 @@ test('extra allowed origins come from the environment list', async () => {
   assert.deepStrictEqual(parseAllowedOrigins(''), ['https://elderxonnect-pwa.vercel.app']);
 });
 
-test('email escapes the elder name and cannot inject headers or HTML', async () => {
+test('email is generic: no name, no injection, only our link', async () => {
   const { buildInviteEmail } = await load();
-  const { subject, html } = buildInviteEmail({ elderName: '<script>x</script>\r\nBcc: a@b.co', link: GOOD + '?email=a%40b.co' });
+  const link = GOOD + '?email=bob%40example.test';
+  // Even if a caller still passes a name (older code did), it must never reach the email.
+  const { subject, html } = buildInviteEmail({ elderName: 'Pat Example <script>x</script>\r\nBcc: a@b.co', link });
+  assert.ok(!subject.includes('Pat') && !html.includes('Pat') && !html.includes('Example'));
   assert.ok(!html.includes('<script>'));
   assert.ok(!/[\r\n]/.test(subject));
-  assert.ok(html.includes('&lt;script&gt;'));
+  assert.ok(html.includes('care circle') && html.includes(link));
 });

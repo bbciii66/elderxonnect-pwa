@@ -1,5 +1,7 @@
 -- ElderXonnect FULL SETUP for a brand-new Supabase project (e.g. elderxonnect-v2).
 -- All files below in dependency order; every statement is safe to re-run. Run once in SQL Editor.
+-- RUN ORDER for a new project: this file, then care-circle-v2-migration.sql, care-circle-admin-migration.sql,
+-- caregiver-snapshot-active-only-migration.sql (which supersedes the older snapshot functions below), push-alerts-migration.sql.
 
 -- ========== supabase-schema.sql ==========
 -- ElderXonnect Supabase schema
@@ -148,12 +150,22 @@ on public.caregiver_access for all to authenticated
 using ((select auth.uid()) = elder_id)
 with check ((select auth.uid()) = elder_id);
 
+create or replace function public.caregiver_email_confirmed(target_email text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from auth.users u
+                 where u.id = auth.uid() and u.email_confirmed_at is not null
+                   and lower(u.email) = lower(coalesce(target_email, '')));
+$$;
+revoke all on function public.caregiver_email_confirmed(text) from public, anon;
+grant execute on function public.caregiver_email_confirmed(text) to authenticated;
+
 drop policy if exists "Caregivers view their invitations" on public.caregiver_access;
 create policy "Caregivers view their invitations"
 on public.caregiver_access for select to authenticated
 using (
   caregiver_id = (select auth.uid())
-  or lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), ''))
+  or (status = 'pending' and lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), ''))
+      and public.caregiver_email_confirmed(caregiver_email))
 );
 
 grant select, insert, update, delete on public.caregiver_access to authenticated;
@@ -179,8 +191,11 @@ begin
          accepted_at = coalesce(accepted_at, now()),
          updated_at = now()
    where id = invitation_id
-     and lower(caregiver_email) = signed_in_email
-     and status in ('pending','active')
+     and (
+       (status = 'pending' and lower(caregiver_email) = signed_in_email
+        and public.caregiver_email_confirmed(caregiver_email))
+       or (status = 'active' and caregiver_id = auth.uid())
+     )
   returning * into accepted;
 
   if accepted.id is null then

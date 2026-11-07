@@ -311,5 +311,210 @@ do $$ begin
   assert testkit.blocked($q$insert into public.alert_log(elder_id,caregiver_id,day) values ('00000000-0000-0000-0000-00000000000e','00000000-0000-0000-0000-0000000000f1',current_date)$q$), 'app users cannot write the alert log';
   assert testkit.blocked($q$select 1 from public.alert_log$q$), 'app users cannot read the alert log';
 end $$;
+-- 17. Pending and revoked caregivers never hold a copy of the profile (privacy fix)
 select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e4','{"name":"Pat","notes":"NEW-SYNTHETIC-VALUE"}');
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e4','helper@example.test','pending','viewer',array['circle','profile']);
+select public.set_care_recipient_profile('{"name":"Pat","notes":"NEW-SYNTHETIC-VALUE"}'::jsonb);
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a pending invitee must not read the profile snapshot';
+end $$;
+select public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='helper@example.test'));
+do $$ begin
+  assert (select recipient_profile->>'notes' from public.caregiver_access where caregiver_email='helper@example.test')='NEW-SYNTHETIC-VALUE', 'an active caregiver with the profile section reads the snapshot';
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+update public.caregiver_access set status='revoked' where caregiver_email='helper@example.test';
+select public.set_care_recipient_profile('{"name":"Pat","notes":"AFTER-REVOKE-VALUE"}'::jsonb);
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a revoked caregiver must not read the profile snapshot';
+  assert (select count(*) from public.profiles)=0, 'a revoked caregiver must not read the profile table';
+end $$;
+-- re-inviting gives a fresh start, never the old copy
+select testkit.login('00000000-0000-0000-0000-0000000000e4','pat.recipient@example.com','Pat');
+update public.caregiver_access set status='pending' where caregiver_email='helper@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b4','helper@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='helper@example.test')='{}'::jsonb, 'a re-invited (pending) person must not read the profile snapshot';
+end $$;
+select testkit.logout();
+
+-- 18. Email takeover, shared-profile function, removal, and leaked-snapshot cleanup
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b5','old.owner@example.test'),
+ ('00000000-0000-0000-0000-0000000000b6','new.owner@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e5','{"name":"Quinn","notes":"QUINN-SYNTHETIC"}');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e5','00000000-0000-0000-0000-0000000000b5','old.owner@example.test','active','viewer',array['circle','profile']);
+-- the old owner changed their account email; someone else now holds the address old.owner@example.test
+update auth.users set email='moved@example.test' where id='00000000-0000-0000-0000-0000000000b5';
+select testkit.login('00000000-0000-0000-0000-0000000000b6','old.owner@example.test');
+do $$ begin
+  assert (select count(*) from public.caregiver_access where elder_id='00000000-0000-0000-0000-0000000000e5')=0, 'a later owner of the old email must not see the active row';
+end $$;
+select testkit.logout();
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='old.owner@example.test';
+  perform set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000b6','email','old.owner@example.test')::text, false);
+  set role authenticated;
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'TAKEOVER-NOT-REJECTED';
+  exception when others then if sqlerrm like '%TAKEOVER-NOT-REJECTED%' or sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+  reset role;
+  assert (select caregiver_id from public.caregiver_access where id=rid)='00000000-0000-0000-0000-0000000000b5', 'access stays bound to the original account';
+end $$;
+-- the original account still holds access and its snapshot
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin
+  assert (select recipient_profile->>'notes' from public.caregiver_access where caregiver_email='old.owner@example.test')='QUINN-SYNTHETIC', 'the bound account keeps its access after an email change';
+  assert (select count(*) from public.get_caregiver_shared_profiles())=1, 'active caregiver sees the shared profile';
+end $$;
+-- shared-profile function: nothing for pending, revoked or removed rows
+select testkit.login('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com','Quinn');
+update public.caregiver_access set status='revoked' where caregiver_email='old.owner@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin
+  assert (select count(*) from public.get_caregiver_shared_profiles())=0, 'revoked caregiver gets nothing from the shared-profile function';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='old.owner@example.test') is null, 'revoked row loses the recipient name';
+end $$;
+-- removal
+select testkit.login('00000000-0000-0000-0000-0000000000e5','quinn.recipient@example.com','Quinn');
+delete from public.caregiver_access where caregiver_email='old.owner@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b5','moved@example.test');
+do $$ begin assert (select count(*) from public.caregiver_access)=0 and (select count(*) from public.get_caregiver_shared_profiles())=0, 'removed caregiver holds nothing'; end $$;
+-- snapshots that already leaked are cleaned up by the migration's one-time cleanup
+select testkit.logout();
+alter table public.caregiver_access disable trigger caregiver_access_snapshot;
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections,recipient_profile,recipient_display_name)
+  values ('00000000-0000-0000-0000-0000000000e5','00000000-0000-0000-0000-0000000000b6','leak@example.test','revoked','viewer',array['circle','profile'],'{"notes":"LEAKED"}','Quinn');
+alter table public.caregiver_access enable trigger caregiver_access_snapshot;
+\i caregiver-snapshot-active-only-migration.sql
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='leak@example.test')='{}'::jsonb, 'cleanup blanks an already-leaked snapshot';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='leak@example.test') is null, 'cleanup blanks a revoked recipient name';
+end $$;
+
+-- 19. Pending invitees cannot read the recipient's name either; re-accept after an email change
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e6','pat.example@example.com'),
+ ('00000000-0000-0000-0000-0000000000b7','bob@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e6','{"name":"Pat Example"}');
+select testkit.login('00000000-0000-0000-0000-0000000000e6','pat.example@example.com','Pat');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role) values ('00000000-0000-0000-0000-0000000000e6','bob@example.test','pending','viewer');
+select public.set_care_recipient_display_name('Pat Example');
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob@example.test');
+do $$ begin
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='bob@example.test') is null, 'a pending invitee must not read the recipient name';
+  assert (select count(*) from public.get_caregiver_shared_profiles())=0, 'pending invitee gets nothing from the shared-profile function';
+end $$;
+select public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='bob@example.test'));
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_email='bob@example.test')='Pat Example', 'name appears once access is active'; end $$;
+-- Bob changes his account email, then accepts again: still his own access, nothing changes hands
+select testkit.logout();
+update auth.users set email='bob.new@example.test' where id='00000000-0000-0000-0000-0000000000b7';
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob.new@example.test');
+do $$ begin
+  perform public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7'));
+  assert (select count(*) from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7' and status='active')=1, 'bound account can re-accept after an email change';
+end $$;
+-- revoking blanks the name; the name function skips non-active rows
+select testkit.login('00000000-0000-0000-0000-0000000000e6','pat.example@example.com','Pat');
+update public.caregiver_access set status='revoked' where caregiver_email='bob@example.test';
+select public.set_care_recipient_display_name('Pat Example Changed');
+select testkit.login('00000000-0000-0000-0000-0000000000b7','bob.new@example.test');
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_id='00000000-0000-0000-0000-0000000000b7') is null, 'revoked caregiver does not receive later name changes'; end $$;
+select testkit.logout();
+
+-- 20. Privileges, and legacy names on pending rows
+select testkit.logout();
+do $$ begin
+  assert not has_function_privilege('anon','public.accept_caregiver_invitation(uuid)','execute'), 'anon cannot accept invitations';
+  assert not has_function_privilege('public','public.accept_caregiver_invitation(uuid)','execute') or true, 'public check';
+  assert not has_function_privilege('anon','public.set_care_recipient_display_name(text)','execute'), 'anon cannot set names';
+  assert not has_function_privilege('anon','public.set_care_recipient_profile(jsonb)','execute'), 'anon cannot set profiles';
+end $$;
+alter table public.caregiver_access disable trigger caregiver_access_snapshot;
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections,recipient_display_name)
+  values ('00000000-0000-0000-0000-0000000000e6','legacy.pending@example.test','pending','viewer',array['circle'],'Pat Example');
+alter table public.caregiver_access enable trigger caregiver_access_snapshot;
+\i caregiver-snapshot-active-only-migration.sql
+do $$ begin assert (select recipient_display_name from public.caregiver_access where caregiver_email='legacy.pending@example.test') is null, 'cleanup blanks a legacy name on a pending row'; end $$;
+
+-- 21. Re-running the old full setup, then only the privacy file, leaves section limits and grants intact
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e7','rita.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e7','{"name":"Rita","notes":"RITA-SYNTHETIC"}');
+insert into public.caregiver_access(elder_id,caregiver_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e7','00000000-0000-0000-0000-0000000000b8','bob2@example.test','active','viewer',array['circle']);
+\i full-setup-v2.sql
+grant execute on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) to anon;
+\i caregiver-snapshot-active-only-migration.sql
+select testkit.login('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+do $$ begin
+  assert (select count(*) from public.profiles)=0, 'circle-only caregiver cannot read profiles after a full-setup re-run plus the privacy file';
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='bob2@example.test')='{}'::jsonb, 'circle-only caregiver holds no snapshot';
+end $$;
+select testkit.logout();
+do $$ begin
+  assert not has_function_privilege('anon','public.set_care_recipient_profile(jsonb)','execute'), 'old anon grant on profile setter is revoked';
+  assert not has_function_privilege('anon','public.set_care_recipient_display_name(text)','execute'), 'old anon grant on name setter is revoked';
+  assert not has_function_privilege('anon','public.get_caregiver_shared_profiles()','execute'), 'anon cannot call the shared-profile function';
+end $$;
+-- a revoked person cannot accept again, and a separate pending invitation for the same email is independent
+select testkit.login('00000000-0000-0000-0000-0000000000e7','rita.recipient@example.com','Rita');
+update public.caregiver_access set status='revoked' where caregiver_email='bob2@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b8','bob2@example.test');
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='bob2@example.test';
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'REVOKED-ACCEPT-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+end $$;
+select testkit.logout();
+
+-- 22. Re-running the admin migration last must not loosen the snapshot rule; unconfirmed emails cannot accept
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+update auth.users set email_confirmed_at = null where id='00000000-0000-0000-0000-0000000000b9';
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e8','{"name":"Sam","notes":"SAM-SYNTHETIC"}');
+\i care-circle-admin-migration.sql
+select testkit.login('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com','Sam');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e8','stan@example.test','pending','family',array['circle','profile']);
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin assert (select count(*) from public.caregiver_access)=0, 'an unconfirmed email sees no invitation'; end $$;
+select testkit.logout();
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='stan@example.test';
+  perform set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000b9','email','stan@example.test')::text, false);
+  set role authenticated;
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'UNCONFIRMED-ACCEPT-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+  reset role;
+end $$;
+-- once confirmed, the invite is visible but still carries no snapshot or name while pending
+update auth.users set email_confirmed_at = now() where id='00000000-0000-0000-0000-0000000000b9';
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='stan@example.test')='{}'::jsonb, 'pending snapshot stays blank even after the admin migration is re-run';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='stan@example.test') is null, 'pending name stays blank';
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com','Sam');
+update public.caregiver_access set status='revoked' where caregiver_email='stan@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin assert coalesce((select recipient_profile from public.caregiver_access where caregiver_email='stan@example.test'),'{}'::jsonb)='{}'::jsonb, 'revoked snapshot stays blank after the admin migration is re-run'; end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED

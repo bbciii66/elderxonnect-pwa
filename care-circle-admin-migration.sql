@@ -145,14 +145,24 @@ drop trigger if exists caregiver_access_last_admin on public.caregiver_access;
 create trigger caregiver_access_last_admin before update or delete on public.caregiver_access
   for each row execute function public.circle_last_admin_guard();
 
--- 6b. The profile snapshot kept on each access row follows the 'profile' section too.
+-- 6b. (Single definition: kept identical to caregiver-snapshot-active-only-migration.sql so re-running either file never loosens it.)
+-- The profile snapshot kept on each access row follows the 'profile' section too.
 create or replace function public.circle_snapshot_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.role = 'admin' or 'profile' = any(new.sections) then
+  -- The recipient's name, like the profile, is only held by ACTIVE rows.
+  if new.status <> 'active' then
+    new.recipient_display_name := null;
+  elsif tg_op = 'INSERT' or old.status <> 'active' then
+    select nullif(trim(p.profile_data->>'name'), '') into new.recipient_display_name
+      from public.profiles p where p.user_id = new.elder_id;
+  end if;
+  if new.status = 'active' and (new.role = 'admin' or 'profile' = any(new.sections)) then
     if tg_op = 'INSERT' or new.recipient_profile = '{}'::jsonb
-       or (old.role <> 'admin' and not ('profile' = any(old.sections)) and old.recipient_profile = '{}'::jsonb) then
-      -- Newly allowed: start from the elder's current profile rather than waiting for their next sync.
+       or (old.role <> 'admin' and not ('profile' = any(old.sections)) and old.recipient_profile = '{}'::jsonb)
+       or old.status <> 'active' then
+      -- Newly allowed (or just accepted): start from the elder's current profile, never from a stale copy.
+      if tg_op = 'UPDATE' and old.status <> 'active' then new.recipient_profile := '{}'::jsonb; end if;
       if new.recipient_profile = '{}'::jsonb then
         select coalesce(p.profile_data, '{}'::jsonb) into new.recipient_profile from public.profiles p where p.user_id = new.elder_id;
         new.recipient_profile := coalesce(new.recipient_profile, '{}'::jsonb);

@@ -1,3 +1,6 @@
+-- DO NOT RUN. Old version, kept only for history. Running it loosens privacy rules (ignores per-section sharing).
+-- Use the run order in V2-NOTES.md instead.
+
 -- Permit an authenticated caregiver to read a care recipient profile
 -- only when that caregiver has an active caregiver_access record.
 
