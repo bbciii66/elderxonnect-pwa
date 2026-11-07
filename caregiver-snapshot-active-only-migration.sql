@@ -118,12 +118,22 @@ grant execute on function public.set_care_recipient_display_name(text) to authen
 -- 2b. A person is recognised by their account, not by an email address. Only a PENDING invitation can be matched
 --     by email; active access needs the bound user id. Otherwise someone who later takes over an old email address
 --     could read the active row (and its snapshot) or take the access over.
+create or replace function public.caregiver_email_confirmed(target_email text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from auth.users u
+                 where u.id = auth.uid() and u.email_confirmed_at is not null
+                   and lower(u.email) = lower(coalesce(target_email, '')));
+$$;
+revoke all on function public.caregiver_email_confirmed(text) from public, anon;
+grant execute on function public.caregiver_email_confirmed(text) to authenticated;
+
 drop policy if exists "Caregivers view their invitations" on public.caregiver_access;
 create policy "Caregivers view their invitations"
 on public.caregiver_access for select to authenticated
 using (
   caregiver_id = (select auth.uid())
-  or (status = 'pending' and lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), '')))
+  or (status = 'pending' and lower(caregiver_email) = lower(coalesce((select auth.jwt()->>'email'), ''))
+      and public.caregiver_email_confirmed(caregiver_email))
 );
 
 create or replace function public.accept_caregiver_invitation(invitation_id uuid)
@@ -148,7 +158,8 @@ begin
          updated_at = now()
    where id = invitation_id
      and (
-       (status = 'pending' and lower(caregiver_email) = signed_in_email)
+       (status = 'pending' and lower(caregiver_email) = signed_in_email
+        and public.caregiver_email_confirmed(caregiver_email))
        or (status = 'active' and caregiver_id = auth.uid())
      )
   returning * into accepted;
@@ -198,6 +209,10 @@ grant execute on function public.get_caregiver_shared_profiles() to authenticate
 
 revoke all on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) from public, anon;
 grant execute on function public.set_care_recipient_profile(jsonb), public.set_care_recipient_display_name(text) to authenticated;
+
+-- 2e. The helper functions are for signed-in people only (Supabase also grants them to anon by default).
+revoke execute on function public.circle_is_admin(uuid), public.circle_managed(uuid),
+  public.circle_can_manage(uuid), public.circle_has_section(uuid, text) from anon;
 
 -- 3. One-time cleanup: blank every snapshot that belongs to a pending or revoked row, or to a row that may not see it.
 --    (The trigger re-runs on this update and blanks them; the where clause just limits the work.)

@@ -482,4 +482,39 @@ do $$ declare rid uuid; begin
 end $$;
 select testkit.logout();
 
+-- 22. Re-running the admin migration last must not loosen the snapshot rule; unconfirmed emails cannot accept
+select testkit.logout();
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+update auth.users set email_confirmed_at = null where id='00000000-0000-0000-0000-0000000000b9';
+insert into public.profiles(user_id,profile_data) values ('00000000-0000-0000-0000-0000000000e8','{"name":"Sam","notes":"SAM-SYNTHETIC"}');
+\i care-circle-admin-migration.sql
+select testkit.login('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com','Sam');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,sections)
+  values ('00000000-0000-0000-0000-0000000000e8','stan@example.test','pending','family',array['circle','profile']);
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin assert (select count(*) from public.caregiver_access)=0, 'an unconfirmed email sees no invitation'; end $$;
+select testkit.logout();
+do $$ declare rid uuid; begin
+  select id into rid from public.caregiver_access where caregiver_email='stan@example.test';
+  perform set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000b9','email','stan@example.test')::text, false);
+  set role authenticated;
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'UNCONFIRMED-ACCEPT-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No matching pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+  reset role;
+end $$;
+-- once confirmed, the invite is visible but still carries no snapshot or name while pending
+update auth.users set email_confirmed_at = now() where id='00000000-0000-0000-0000-0000000000b9';
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin
+  assert (select recipient_profile from public.caregiver_access where caregiver_email='stan@example.test')='{}'::jsonb, 'pending snapshot stays blank even after the admin migration is re-run';
+  assert (select recipient_display_name from public.caregiver_access where caregiver_email='stan@example.test') is null, 'pending name stays blank';
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e8','sam.recipient@example.com','Sam');
+update public.caregiver_access set status='revoked' where caregiver_email='stan@example.test';
+select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test');
+do $$ begin assert coalesce((select recipient_profile from public.caregiver_access where caregiver_email='stan@example.test'),'{}'::jsonb)='{}'::jsonb, 'revoked snapshot stays blank after the admin migration is re-run'; end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED

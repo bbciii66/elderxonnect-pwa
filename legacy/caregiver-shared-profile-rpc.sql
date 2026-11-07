@@ -1,3 +1,6 @@
+-- DO NOT RUN. Old version, kept only for history. Running it loosens privacy rules (ignores per-section sharing).
+-- Use the run order in V2-NOTES.md instead.
+
 -- Return shared profile data only for care recipients who have granted
 -- active access to the currently signed-in caregiver.
 
