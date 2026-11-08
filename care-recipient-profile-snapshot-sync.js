@@ -4,6 +4,7 @@
 
   const CFG_KEY = 'elderxonnect_supabase_config';
   const PROFILE_KEY = 'me_profile';
+  const OWNER_KEY = 'elderxonnect_snapshot_owner';
   let syncing = false;
   let lastSent = '';
 
@@ -58,7 +59,17 @@
 
       const sessionResult = await sb.auth.getSession();
       if (sessionResult.error) throw sessionResult.error;
-      if (!sessionResult.data?.session?.user?.id) return;
+      const userId = sessionResult.data?.session?.user?.id;
+      if (!userId) return;
+
+      // This device's profile belongs to one cloud account. Never publish it under a different one
+      // (for example a caregiver who signed in on the care recipient's device).
+      const owner = localStorage.getItem(OWNER_KEY);
+      if (owner && owner !== userId) {
+        console.warn('Skipped profile snapshot sync: this device\'s profile belongs to a different account.');
+        return;
+      }
+      if (!owner) localStorage.setItem(OWNER_KEY, userId);
 
       const result = await sb.rpc('set_care_recipient_profile', {
         p_profile: profile
