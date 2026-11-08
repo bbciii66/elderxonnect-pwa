@@ -279,7 +279,7 @@
     }
     .me-hero::before {
       content:'';position:absolute;top:-30px;right:-30px;
-      width:120px;height:120px;border-radius:50%;
+      width:120px;height:120px;border-radius:50%;pointer-events:none;
       background:rgba(232,201,126,.08);
     }
     .me-avatar {
@@ -827,6 +827,7 @@
 <!-- ══════════════ MAIN APP ══════════════ -->
 
 <div id="mainApp" class="hidden">
+<a class="skip-link" href="#mainContent">Skip to content</a>
 <header>
   <div class="brand">
     <h1>ElderXonnect</h1>
@@ -837,11 +838,12 @@
       <span class="dot" id="dotEl"></span>
       <span id="statusText">Online</span>
     </div>
-    <button class="me-fab-inline" id="meFabBtn" aria-label="My Profile">ME</button>
-    <button class="settings-btn" id="openSettingsBtn" aria-label="Open Settings">⚙️</button>
+    <button class="me-fab-inline" id="meFabBtn" aria-label="Me, my profile">ME</button>
+    <button class="settings-btn" id="openSettingsBtn" aria-label="Open Settings" aria-haspopup="dialog">⚙️</button>
   </div>
 </header>
 
+<main id="mainContent" tabindex="-1">
 <!-- ══════════════ HOME ══════════════ -->
 <section class="grid" id="view-home">
   <div class="hello" id="helloCard">
@@ -849,9 +851,54 @@
     <h2 class="hello-title" id="helloTitle">Hello</h2>
   </div>
 
+  <div class="card hero-card" id="checkinHeroCard">
+    <div class="checkin-hero">
+      <div class="checkin-hero-left">
+        <div class="prompt" id="checkinPrompt">How are you feeling today?</div>
+        <div class="last" id="lastCheckinLabel">Last check-in: none yet</div>
+      </div>
+      <button class="btn green" id="checkinHeroBtn" aria-controls="checkinCard" aria-expanded="false">Check In</button>
+    </div>
+  </div>
+
+  <div class="card" id="checkinCard">
+    <h2 class="card-title" id="checkinHeading" tabindex="-1">Daily Check-In</h2>
+    <div class="card-sub">A quick record of how you're doing today.</div>
+    <div class="label" id="moodLabel">How's your mood?</div>
+    <div class="mood-grid" id="moodGrid" tabindex="-1" role="group" aria-labelledby="moodLabel">
+      <button class="mood-btn" aria-pressed="false" data-mood="Great"><span class="emoji" aria-hidden="true">😊</span>Great</button>
+      <button class="mood-btn" aria-pressed="false" data-mood="Good"><span class="emoji" aria-hidden="true">🙂</span>Good</button>
+      <button class="mood-btn" aria-pressed="false" data-mood="OK"><span class="emoji" aria-hidden="true">😐</span>OK</button>
+      <button class="mood-btn" aria-pressed="false" data-mood="Tired"><span class="emoji" aria-hidden="true">😴</span>Tired</button>
+      <button class="mood-btn" aria-pressed="false" data-mood="Low"><span class="emoji" aria-hidden="true">😔</span>Low</button>
+      <button class="mood-btn" aria-pressed="false" data-mood="Anxious"><span class="emoji" aria-hidden="true">😟</span>Anxious</button>
+    </div>
+    <div class="sp12"></div>
+    <p class="field-error" id="moodGridError" role="alert"></p>
+    <label class="label" for="painInput">Pain level</label>
+    <div class="pain-display">
+      <div class="small" id="painHelp">0 = no pain · 10 = severe</div>
+      <div class="pain-val" id="painVal">0</div>
+    </div>
+    <input type="range" id="painInput" aria-describedby="painHelp" min="0" max="10" value="0" />
+    <div class="sp12"></div>
+    <label class="label" for="notesInput">Notes (optional)</label>
+    <div class="input-mic-wrap">
+      <textarea id="notesInput" placeholder="Speak or type anything on your mind today…"></textarea>
+      <button class="mic-btn-inline" data-target="notesInput" title="Speak notes" style="align-self:flex-start;margin-top:4px;">🎙️</button>
+    </div>
+    <div class="sp12"></div>
+    <button class="btn green" id="saveCheckinBtn">Save Check-In</button>
+    <div class="sp8"></div>
+    <button class="btn ghost" id="cancelCheckinBtn">Cancel</button>
+  </div>
+
+
+  <button class="call-big" id="homeCallBtn" type="button" hidden><span class="call-icon" aria-hidden="true">📞</span><span class="call-name">Call my caregiver</span></button>
+
   <div class="card weather-card" id="weatherCard">
     <div id="weatherSetup">
-      <div class="card-title">🌤️ Weather</div>
+      <h2 class="card-title">🌤️ Weather</h2>
       <p class="card-sub">See today's weather where you live.</p>
       <button class="btn green" id="weatherUseLocation" type="button">📍 Use my location</button>
       <details class="sub-details" id="weatherCityBox">
@@ -884,59 +931,15 @@
     <p class="wx-credit">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
   </div>
 
-  <div class="card hero-card" id="checkinHeroCard">
-    <div class="checkin-hero">
-      <div class="checkin-hero-left">
-        <div class="prompt" id="checkinPrompt">How are you feeling today?</div>
-        <div class="last" id="lastCheckinLabel">Last check-in: none yet</div>
-      </div>
-      <button class="btn green" id="checkinHeroBtn">Check In</button>
-    </div>
-  </div>
-
-  <div class="card" id="checkinCard">
-    <div class="card-title">Daily Check-In</div>
-    <div class="card-sub">A quick record of how you're doing today.</div>
-    <div class="label">How's your mood?</div>
-    <div class="mood-grid" id="moodGrid">
-      <button class="mood-btn" data-mood="Great"><span class="emoji">😊</span>Great</button>
-      <button class="mood-btn" data-mood="Good"><span class="emoji">🙂</span>Good</button>
-      <button class="mood-btn" data-mood="OK"><span class="emoji">😐</span>OK</button>
-      <button class="mood-btn" data-mood="Tired"><span class="emoji">😴</span>Tired</button>
-      <button class="mood-btn" data-mood="Low"><span class="emoji">😔</span>Low</button>
-      <button class="mood-btn" data-mood="Anxious"><span class="emoji">😟</span>Anxious</button>
-    </div>
-    <div class="sp12"></div>
-    <div class="label">Pain level</div>
-    <div class="pain-display">
-      <div class="small">0 = no pain · 10 = severe</div>
-      <div class="pain-val" id="painVal">0</div>
-    </div>
-    <input type="range" id="painInput" min="0" max="10" value="0" />
-    <div class="sp12"></div>
-    <div class="label">Notes (optional)</div>
-    <div class="input-mic-wrap">
-      <textarea id="notesInput" placeholder="Speak or type anything on your mind today…"></textarea>
-      <button class="mic-btn-inline" data-target="notesInput" title="Speak notes" style="align-self:flex-start;margin-top:4px;">🎙️</button>
-    </div>
-    <div class="sp12"></div>
-    <button class="btn green" id="saveCheckinBtn">Save Check-In</button>
-    <div class="sp8"></div>
-    <button class="btn ghost" id="cancelCheckinBtn">Cancel</button>
-  </div>
-
-
-  <button class="call-big" id="homeCallBtn" type="button" hidden><span class="call-icon" aria-hidden="true">📞</span><span class="call-name">Call my caregiver</span></button>
-
   <div class="card" id="todayCard">
-    <div class="card-title">🗓️ Today</div>
+    <h2 class="card-title">🗓️ Today</h2>
     <ul class="today-list" id="todayList"></ul>
     <p class="today-empty" id="todayEmpty">Nothing scheduled for today.</p>
     <button class="btn ghost" type="button" data-go="reminders">See all reminders</button>
   </div>
 
   <div class="card" id="circleCard">
-    <div class="card-title">👨‍👩‍👧 Family Circle</div>
+    <h2 class="card-title">👨‍👩‍👧 Family Circle</h2>
     <div class="card-sub">Messages, tasks and visits shared with your family.</div>
     <a class="btn green" href="/circle.html" style="display:block;text-align:center;text-decoration:none;">Open Family Circle</a>
   </div>
@@ -958,12 +961,12 @@
     <div class="fold-body">
   <!-- Trends Chart — only shown when data exists -->
   <div id="trendsCard" style="display:none;">
-    <div class="card-title">Wellness Trends</div>
+    <h2 class="card-title">Wellness Trends</h2>
     <div class="card-sub" style="margin-bottom:10px;">Your mood &amp; pain over the past 14 days.</div>
     <div class="chart-tabs">
-      <button class="chart-tab active" data-chart="both">Both</button>
-      <button class="chart-tab" data-chart="mood">Mood</button>
-      <button class="chart-tab" data-chart="pain">Pain</button>
+      <button class="chart-tab active" aria-pressed="true" data-chart="both">Both</button>
+      <button class="chart-tab" aria-pressed="false" data-chart="mood">Mood</button>
+      <button class="chart-tab" aria-pressed="false" data-chart="pain">Pain</button>
     </div>
     <div class="chart-wrap">
       <canvas class="chart-canvas" id="trendsCanvas" height="160"></canvas>
@@ -999,11 +1002,11 @@
 <!-- ══════════════ REMINDERS ══════════════ -->
 <section class="grid hidden" id="view-reminders">
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:0;">🔔 My reminders</div>
+    <div class="main-action-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-title" id="remindersHeading" style="margin-bottom:0;">🔔 My reminders</h2>
       <button class="btn ghost small-btn" id="clearRemindersBtn">Clear all</button>
     </div>
-    <div class="small" style="margin-bottom:10px;" id="notifPermStatus"></div>
+    <div class="small" style="margin-bottom:10px;" id="notifPermStatus" role="status"></div>
     <ul class="list" id="remList"></ul>
     <p class="small" id="remEmpty">No reminders yet.</p>
   </div>
@@ -1012,16 +1015,18 @@
     <summary>＋ Add a reminder</summary>
     <div class="fold-body">
     <div class="card-sub">Medications, water, appointments: anything you want to remember.</div>
-    <div class="label">Reminder title</div>
+    <label class="label" for="remTitle">Reminder title</label>
     <div class="input-mic-wrap">
       <input id="remTitle" placeholder="Type or tap 🎙️ to speak…" />
-      <button class="mic-btn-inline" data-target="remTitle" title="Speak reminder">🎙️</button>
+    <button class="mic-btn-inline" data-target="remTitle" title="Speak reminder">🎙️</button>
     </div>
+    <p class="field-error" id="remTitleError" role="alert"></p>
     <div class="sp8"></div>
-    <div class="label">Time</div>
+    <label class="label" for="remTime">Time</label>
     <input id="remTime" type="time" />
+    <p class="field-error" id="remTimeError" role="alert"></p>
     <div class="sp8"></div>
-    <div class="label">Category</div>
+    <label class="label" for="remCat">Category</label>
     <select id="remCat">
       <option value="💊">💊 Medication</option>
       <option value="💧">💧 Hydration</option>
@@ -1045,7 +1050,7 @@
 <!-- ══════════════ CHAT ══════════════ -->
 <section class="grid hidden" id="view-chat">
   <div class="card" id="aiLinksCard">
-    <div class="card-title">💬 Talk with an AI helper</div>
+    <h2 class="card-title" id="chatHeading">💬 Talk with an AI helper</h2>
     <div class="card-sub" style="margin-bottom:10px;">Ask about the weather, a recipe, a movie, anything. Each button opens a free AI in a new window; close it to come back here. Please don't share medical details or passwords.</div>
     <a class="btn green ai-link" href="https://duck.ai" target="_blank" rel="noopener noreferrer">🦆 Duck.ai <span class="ai-note">free, no sign-up</span></a>
     <a class="btn ghost ai-link" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer">ChatGPT <span class="ai-note">free, no sign-up needed</span></a>
@@ -1055,23 +1060,23 @@
 
 
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <div class="card-title" style="margin-bottom:0;">Companion Chat</div>
+    <div class="main-action-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2 class="card-title" style="margin-bottom:0;">Companion Chat</h2>
       <button class="btn ghost" id="clearChatBtn" style="width:auto;padding:7px 12px;font-size:15px;">Clear</button>
     </div>
     <p class="small" style="margin-bottom:10px;">A simple helper that stays on this phone. Nothing you type here leaves it.</p>
     <div class="chat-starter-chips" id="starterChips">
-      <div class="chip" data-msg="How are you today?">👋 Say hello</div>
-      <div class="chip" data-msg="I'm feeling lonely today.">💙 Feeling lonely</div>
-      <div class="chip" data-msg="Tell me a fun fact!">💡 Fun fact</div>
-      <div class="chip" data-msg="I'm in a bit of pain today.">🤕 Pain check</div>
-      <div class="chip" data-msg="Can we do a memory exercise?">🧠 Memory game</div>
+      <button type="button" class="chip" data-msg="How are you today?">👋 Say hello</button>
+      <button type="button" class="chip" data-msg="I'm feeling lonely today.">💙 Feeling lonely</button>
+      <button type="button" class="chip" data-msg="Tell me a fun fact!">💡 Fun fact</button>
+      <button type="button" class="chip" data-msg="I'm in a bit of pain today.">🤕 Pain check</button>
+      <button type="button" class="chip" data-msg="Can we do a memory exercise?">🧠 Memory game</button>
     </div>
-    <div class="chatlog" id="chatLog"></div>
+    <div class="chatlog" id="chatLog" role="log" aria-label="Companion chat messages"></div>
     <div class="chat-input-row">
       <button class="mic-btn" id="chatMicBtn" title="Speak your message">🎙️</button>
-      <input id="chatInput" placeholder="Type or tap 🎙️ to speak…" autocomplete="off" />
-      <button class="btn green send-btn" id="sendChatBtn">➤</button>
+      <input id="chatInput" aria-label="Message" placeholder="Type or tap 🎙️ to speak…" autocomplete="off" />
+      <button class="btn green send-btn" id="sendChatBtn" aria-label="Send message">➤</button>
     </div>
     <div id="voiceStatusBar" class="voice-status-bar hidden">
       <span class="voice-pulse"></span>
@@ -1088,7 +1093,7 @@
     <div style="text-align:right;"><div class="small">Streak</div><div class="score-num" id="streakNum">🔥 0</div></div>
   </div>
   <div class="card">
-    <div class="card-title">🎲 Games</div>
+    <h2 class="card-title" id="gamesHeading">🎲 Games</h2>
     <div class="card-sub">No ads, no sign-up. Tap a game to start; the big ✕ takes you back.</div>
     <div class="game-tiles">
       <button type="button" class="game-tile" data-game="match"><span class="gt-icon">🧩</span>Memory Match</button>
@@ -1100,7 +1105,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title">🧠 Quick quizzes</div>
+    <h2 class="card-title">🧠 Quick quizzes</h2>
     <div class="card-sub">Trivia, memory questions and word games.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn green" id="triviaBtn" style="flex:1;min-width:110px;">🧠 Trivia</button>
@@ -1120,20 +1125,22 @@
 <!-- ══════════════ CONTACTS ══════════════ -->
 <section class="grid hidden" id="view-contacts">
   <div class="card">
-    <div class="card-title">👥 My people</div>
+    <h2 class="card-title" id="contactsHeading">👥 My people</h2>
     <div id="contactList"><p class="small" id="contactEmpty">No contacts yet.</p></div>
   </div>
   <details class="card fold add-fold" id="addContactCard">
     <summary>＋ Add a person</summary>
     <div class="fold-body">
     <div class="card-sub">Family, friends or helpers you want to call with one tap.</div>
-    <div class="label">Name</div>
+    <label class="label" for="cName">Name</label>
     <input id="cName" placeholder="e.g., Mary (daughter)" />
+    <p class="field-error" id="cNameError" role="alert"></p>
     <div class="sp8"></div>
-    <div class="label">Phone number</div>
+    <label class="label" for="cPhone">Phone number</label>
     <input id="cPhone" placeholder="e.g., 12253334444" inputmode="tel" />
+    <p class="field-error" id="cPhoneError" role="alert"></p>
     <div class="sp8"></div>
-    <div class="label">Relationship</div>
+    <label class="label" for="cRel">Relationship</label>
     <select id="cRel">
       <option value="Family">Family</option>
       <option value="Friend">Friend</option>
@@ -1150,8 +1157,9 @@
   <div class="card sos-card">
     <div class="card-title sos-title">🆘 Emergency</div>
     <div class="card-sub">Save one number to call in an emergency. The red button dials it right away.</div>
-    <div class="label">Primary emergency number</div>
+    <label class="label" for="emPhone">Primary emergency number</label>
     <input id="emPhone" placeholder="e.g., 911 or a family number" inputmode="tel" />
+    <p class="field-error" id="emPhoneError" role="alert"></p>
     <div class="sp8"></div>
     <button class="btn ghost" id="savePhoneBtn">Save Emergency Number</button>
     <div class="sp12"></div>
@@ -1166,11 +1174,11 @@
 
   <!-- Hero -->
   <div class="me-hero" id="meHero">
-    <button class="me-edit-btn" id="editMeBtn">✏️ Edit</button>
+    <button class="me-edit-btn" id="editMeBtn" aria-haspopup="dialog">✏️ Edit</button>
     <div class="me-avatar" id="meAvatar">
       <span id="meAvatarEmoji">👤</span>
     </div>
-    <div class="me-name" id="meNameDisplay">Your Name</div>
+    <h2 class="me-name" id="meNameDisplay">Your Name</h2>
     <div class="me-dob" id="meDobDisplay"></div>
   </div>
 
@@ -1183,7 +1191,7 @@
   </div>
 
   <div class="card" id="appearanceCard">
-    <div class="card-title">Look and feel</div>
+    <h2 class="card-title">Look and feel</h2>
     <div class="label">Colors</div>
     <div data-theme-control></div>
     <div class="sp12"></div>
@@ -1192,7 +1200,7 @@
   </div>
 
   <div class="card" id="unlockCard">
-    <div class="card-title">Opening the app</div>
+    <h2 class="card-title">Opening the app</h2>
     <div class="card-sub">Choose how ElderXonnect opens on this phone.</div>
     <div class="unlock-choices" role="group" aria-label="Opening the app">
       <button type="button" class="unlock-choice" data-unlock="bio" hidden><span class="uc-icon">🙂</span><span><b>Face ID or fingerprint</b><small>One look or touch. Your PIN still works as a backup.</small></span></button>
@@ -1244,7 +1252,7 @@
       <p class="card-sub">Set up once by a family member. Nothing here is needed day to day.</p>
   <!-- Caregiver Portal Link -->
   <div class="card" style="border-color:rgba(46,204,138,.2);background:rgba(46,204,138,.03);">
-    <div class="card-title" style="color:var(--green);">👨‍👩‍👧 Caregiver Portal</div>
+    <h2 class="card-title" style="color:var(--green);">👨‍👩‍👧 Caregiver Portal</h2>
     <div class="card-sub">Share this with a family member so they can check in on you remotely. They'll need the PIN you set.</div>
     <div style="padding:12px 14px;background:rgba(0,0,0,.2);border:1px solid var(--line2);border-radius:14px;font-size:16px;font-family:monospace;word-break:break-all;color:var(--muted);" id="caregiverPortalUrl">Add your site URL here after deploying.</div>
     <div class="sp8"></div>
@@ -1254,56 +1262,56 @@
   </div>
 
   <!-- Voice Settings -->
-  <div class="card" id="voiceSettingsCard" style="border-color:rgba(46,204,138,.2);">
-    <div class="card-title">🎙️ Voice Settings</div>
+  <div class="card" id="voiceSettingsCard" tabindex="-1" style="border-color:rgba(46,204,138,.2);">
+    <h2 class="card-title">🎙️ Voice Settings</h2>
     <div class="card-sub">Customize how voice works throughout the app. All settings are saved to this device.</div>
 
     <div class="voice-toggle-row">
       <div class="voice-toggle-info">
-        <div class="voice-toggle-label">🎙️ Voice Input</div>
-        <div class="voice-toggle-sub">Tap the mic button to speak instead of type</div>
+        <div class="voice-toggle-label" id="voiceInputToggleLabel">🎙️ Voice Input</div>
+        <div class="voice-toggle-sub" id="voiceInputToggleHelp">Tap the mic button to speak instead of type</div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="voiceInputToggle" />
+        <input type="checkbox" id="voiceInputToggle" aria-labelledby="voiceInputToggleLabel" aria-describedby="voiceInputToggleHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
 
     <div class="voice-toggle-row">
       <div class="voice-toggle-info">
-        <div class="voice-toggle-label">🔊 Read Responses Aloud</div>
-        <div class="voice-toggle-sub">The companion's replies are read out loud</div>
+        <div class="voice-toggle-label" id="voiceOutputToggleLabel">🔊 Read Responses Aloud</div>
+        <div class="voice-toggle-sub" id="voiceOutputToggleHelp">The companion's replies are read out loud</div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="voiceOutputToggle" />
+        <input type="checkbox" id="voiceOutputToggle" aria-labelledby="voiceOutputToggleLabel" aria-describedby="voiceOutputToggleHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
 
     <div class="voice-toggle-row">
       <div class="voice-toggle-info">
-        <div class="voice-toggle-label">⚡ Auto-Send After Speaking</div>
-        <div class="voice-toggle-sub">Message sends automatically when you stop talking</div>
+        <div class="voice-toggle-label" id="voiceAutoSendToggleLabel">⚡ Auto-Send After Speaking</div>
+        <div class="voice-toggle-sub" id="voiceAutoSendToggleHelp">Message sends automatically when you stop talking</div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="voiceAutoSendToggle" />
+        <input type="checkbox" id="voiceAutoSendToggle" aria-labelledby="voiceAutoSendToggleLabel" aria-describedby="voiceAutoSendToggleHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
 
     <div class="voice-toggle-row">
       <div class="voice-toggle-info">
-        <div class="voice-toggle-label">📝 Voice in Check-In & Reminders</div>
-        <div class="voice-toggle-sub">Use mic buttons in forms throughout the app</div>
+        <div class="voice-toggle-label" id="voiceFormsToggleLabel">📝 Voice in Check-In & Reminders</div>
+        <div class="voice-toggle-sub" id="voiceFormsToggleHelp">Use mic buttons in forms throughout the app</div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="voiceFormsToggle" />
+        <input type="checkbox" id="voiceFormsToggle" aria-labelledby="voiceFormsToggleLabel" aria-describedby="voiceFormsToggleHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
 
     <div class="divider"></div>
-    <div class="label">Voice Speed</div>
+    <label class="label" for="voiceSpeedSlider">Voice Speed</label>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
       <span class="small">Slow</span>
       <input type="range" id="voiceSpeedSlider" min="0.5" max="1.5" step="0.1" value="0.9" style="flex:1;" />
@@ -1311,7 +1319,7 @@
     </div>
     <div class="small" style="text-align:center;" id="voiceSpeedLabel">Speed: 0.9×</div>
     <div class="sp8"></div>
-    <div class="label">Voice Pitch</div>
+    <label class="label" for="voicePitchSlider">Voice Pitch</label>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
       <span class="small">Low</span>
       <input type="range" id="voicePitchSlider" min="0.5" max="2" step="0.1" value="1" style="flex:1;" />
@@ -1327,20 +1335,25 @@
   </details>
 </section>
 
+</main>
+
 <!-- ══════════════ TAB BAR ══════════════ -->
-<nav class="tabs hidden" id="mainNav" role="navigation" aria-label="ElderXonnect Tabs">
-  <button type="button" class="tabbtn active" data-tab="home"><span class="icon">🏠</span>Home</button>
-  <button type="button" class="tabbtn" data-tab="reminders"><span class="icon">🔔</span>Remind</button>
-  <button type="button" class="tabbtn" data-tab="chat"><span class="icon">💬</span>Chat</button>
-  <button type="button" class="tabbtn" data-tab="games"><span class="icon">🧠</span>Games</button>
-  <button type="button" class="tabbtn" data-tab="contacts"><span class="icon">👥</span>People</button>
+<nav class="tabs hidden" id="mainNav" aria-label="Main navigation">
+  <button type="button" class="tabbtn active" data-tab="home" aria-current="page"><span class="icon" aria-hidden="true">🏠</span>Home</button>
+  <button type="button" class="tabbtn" data-tab="reminders"><span class="icon" aria-hidden="true">🔔</span>Reminders</button>
+  <button type="button" class="tabbtn" data-tab="chat"><span class="icon" aria-hidden="true">💬</span>Chat</button>
+  <button type="button" class="tabbtn" data-tab="games"><span class="icon" aria-hidden="true">🧠</span>Games</button>
+  <button type="button" class="tabbtn" data-tab="contacts"><span class="icon" aria-hidden="true">👥</span>People</button>
 </nav>
 
 <!-- ══════════════ SETTINGS DRAWER ══════════════ -->
-<div class="settings-drawer-backdrop hidden" id="settingsDrawer">
+<dialog class="settings-drawer-backdrop" id="settingsDrawer" aria-labelledby="settingsHeading">
   <div class="settings-drawer">
     <div class="drawer-handle"></div>
-    <div class="drawer-title">⚙️ Settings</div>
+    <div class="modal-header">
+      <h2 class="drawer-title" id="settingsHeading">Settings</h2>
+      <button type="button" class="modal-close" id="settingsClose" aria-label="Close settings" autofocus>✕</button>
+    </div>
     <div class="drawer-section">Colors</div>
     <div data-theme-control></div>
     <div class="drawer-section">Text size</div>
@@ -1351,12 +1364,12 @@
       <div class="drawer-row-left">
         <span class="drawer-row-icon">🎙️</span>
         <div>
-          <div class="drawer-row-label">Voice Input</div>
-          <div class="drawer-row-sub">Tap the mic button to speak instead of type</div>
+          <div class="drawer-row-label" id="qsVoiceInputLabel">Voice Input</div>
+          <div class="drawer-row-sub" id="qsVoiceInputHelp">Tap the mic button to speak instead of type</div>
         </div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="qsVoiceInput" />
+        <input type="checkbox" id="qsVoiceInput" aria-labelledby="qsVoiceInputLabel" aria-describedby="qsVoiceInputHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
@@ -1365,12 +1378,12 @@
       <div class="drawer-row-left">
         <span class="drawer-row-icon">🔊</span>
         <div>
-          <div class="drawer-row-label">Read Responses Aloud</div>
-          <div class="drawer-row-sub">The companion reads its replies out loud</div>
+          <div class="drawer-row-label" id="qsVoiceOutputLabel">Read Responses Aloud</div>
+          <div class="drawer-row-sub" id="qsVoiceOutputHelp">The companion reads its replies out loud</div>
         </div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="qsVoiceOutput" />
+        <input type="checkbox" id="qsVoiceOutput" aria-labelledby="qsVoiceOutputLabel" aria-describedby="qsVoiceOutputHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
@@ -1379,12 +1392,12 @@
       <div class="drawer-row-left">
         <span class="drawer-row-icon">⚡</span>
         <div>
-          <div class="drawer-row-label">Auto-Send After Speaking</div>
-          <div class="drawer-row-sub">Message sends when you stop talking</div>
+          <div class="drawer-row-label" id="qsAutoSendLabel">Auto-Send After Speaking</div>
+          <div class="drawer-row-sub" id="qsAutoSendHelp">Message sends when you stop talking</div>
         </div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="qsAutoSend" />
+        <input type="checkbox" id="qsAutoSend" aria-labelledby="qsAutoSendLabel" aria-describedby="qsAutoSendHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
@@ -1393,37 +1406,37 @@
       <div class="drawer-row-left">
         <span class="drawer-row-icon">📝</span>
         <div>
-          <div class="drawer-row-label">Voice in Forms</div>
-          <div class="drawer-row-sub">Mic buttons on reminders &amp; check-ins</div>
+          <div class="drawer-row-label" id="qsVoiceFormsLabel">Voice in Forms</div>
+          <div class="drawer-row-sub" id="qsVoiceFormsHelp">Mic buttons on reminders &amp; check-ins</div>
         </div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" id="qsVoiceForms" />
+        <input type="checkbox" id="qsVoiceForms" aria-labelledby="qsVoiceFormsLabel" aria-describedby="qsVoiceFormsHelp" />
         <span class="toggle-slider"></span>
       </label>
     </div>
 
     <button class="drawer-more-link" id="drawerMoreLink">More settings (speed, pitch, full profile) →</button>
   </div>
-</div>
+</dialog>
 
 </div>
-<div class="modal-backdrop hidden" id="meModal">
+<dialog class="modal-backdrop" id="meModal" aria-labelledby="profileHeading">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">✏️ Edit My Profile</div>
-      <button class="modal-close" id="meModalClose">✕</button>
+      <h2 class="modal-title" id="profileHeading">Edit My Profile</h2>
+      <button class="modal-close" id="meModalClose" aria-label="Close profile editor" autofocus>✕</button>
     </div>
 
-    <div class="label">Full Name</div>
+    <label class="label" for="meName">Full Name</label>
     <input id="meName" placeholder="Your full name" />
     <div class="sp8"></div>
 
-    <div class="label">Date of Birth</div>
+    <label class="label" for="meDob">Date of Birth</label>
     <input id="meDob" type="date" />
     <div class="sp8"></div>
 
-    <div class="label">Blood Type</div>
+    <label class="label" for="meBlood">Blood Type</label>
     <select id="meBlood">
       <option value="">Unknown</option>
       <option value="A+">A+</option><option value="A-">A-</option>
@@ -1433,43 +1446,43 @@
     </select>
     <div class="sp12"></div>
 
-    <div class="label">Home Address</div>
+    <label class="label" for="meHomeAddr">Home Address</label>
     <textarea id="meHomeAddr" placeholder="Street, City, State, ZIP" style="min-height:64px;"></textarea>
     <div class="sp8"></div>
 
-    <div class="label">Mailing Address (if different)</div>
+    <label class="label" for="meMailAddr">Mailing Address (if different)</label>
     <textarea id="meMailAddr" placeholder="Leave blank if same as home" style="min-height:64px;"></textarea>
     <div class="sp12"></div>
 
-    <div class="label">Allergies</div>
+    <label class="label" for="meAllergies">Allergies</label>
     <input id="meAllergies" placeholder="e.g., Penicillin, Peanuts" />
     <div class="sp8"></div>
 
-    <div class="label">Medical Conditions</div>
+    <label class="label" for="meConditions">Medical Conditions</label>
     <input id="meConditions" placeholder="e.g., Diabetes, Hypertension" />
     <div class="sp8"></div>
 
-    <div class="label">Primary Doctor Name</div>
+    <label class="label" for="meDoctor">Primary Doctor Name</label>
     <input id="meDoctor" placeholder="Dr. Smith" />
     <div class="sp8"></div>
 
-    <div class="label">Doctor's Phone</div>
+    <label class="label" for="meDoctorPhone">Doctor's Phone</label>
     <input id="meDoctorPhone" placeholder="e.g., 15043334444" inputmode="tel" />
     <div class="sp12"></div>
 
-    <div class="label">Primary Caregiver Name</div>
+    <label class="label" for="meCaregiverName">Primary Caregiver Name</label>
     <input id="meCaregiverName" placeholder="e.g., Susan (daughter)" />
     <div class="sp8"></div>
 
-    <div class="label">Primary Caregiver Phone</div>
+    <label class="label" for="meCaregiverPhone">Primary Caregiver Phone</label>
     <input id="meCaregiverPhone" placeholder="e.g., 15043334444" inputmode="tel" />
     <div class="sp12"></div>
 
-    <div class="label">Family Members (one per line)</div>
+    <label class="label" for="meFamilyList">Family Members (one per line)</label>
     <textarea id="meFamilyList" placeholder="e.g., Susan - daughter&#10;Tom - son&#10;Mary - sister" style="min-height:96px;"></textarea>
     <div class="sp16"></div>
 
-    <div class="label">Caregiver Access PIN (4 digits)</div>
+    <label class="label" for="meCaregiverPin">Caregiver Access PIN (4 digits)</label>
     <input id="meCaregiverPin" placeholder="e.g., 1234 — family uses this to view your info" maxlength="4" inputmode="numeric" />
     <div class="sp16"></div>
 
@@ -1477,29 +1490,29 @@
     <div class="sp8"></div>
     <button class="btn ghost" id="cancelMeBtn">Cancel</button>
   </div>
-</div>
+</dialog>
 
 <!-- ══════════════ URGENT OVERLAY ══════════════ -->
-<div class="urgent-overlay hidden" id="urgentOverlay">
+<dialog class="urgent-overlay" id="urgentOverlay" role="alertdialog" aria-labelledby="urgentTitle" aria-describedby="urgentBody urgentTime">
   <div class="urgent-icon">🚨</div>
   <div class="urgent-title" id="urgentTitle">Urgent Reminder</div>
   <div class="urgent-body" id="urgentBody">Please take your medication now.</div>
-  <button class="urgent-dismiss" id="urgentDismiss">✅ Done — Dismiss</button>
+  <button class="urgent-dismiss" id="urgentDismiss" autofocus>✅ Done — Dismiss</button>
   <div class="urgent-time" id="urgentTime"></div>
-</div>
+</dialog>
 
 <!-- ══════════════ NOTIFICATION BANNER ══════════════ -->
 <div class="notif-banner hidden" id="notifBanner">
   <div class="notif-banner-icon" id="notifBannerIcon">🔔</div>
-  <div class="notif-banner-body">
+  <div class="notif-banner-body" role="status">
     <div class="notif-banner-title" id="notifBannerTitle">Reminder</div>
     <div class="notif-banner-msg" id="notifBannerMsg"></div>
   </div>
-  <button class="notif-banner-close" id="notifBannerClose">✕</button>
+  <button class="notif-banner-close" id="notifBannerClose" aria-label="Dismiss reminder">✕</button>
 </div>
 
 
-<div id="toast"></div>
+<div id="toast" role="status"></div>
 
 <script>
 // ════════════════════════════════════
@@ -1705,19 +1718,6 @@ function enterApp(user){
   const greet = document.querySelector('#mainApp .brand p');
   if(greet && user) greet.textContent = 'Welcome, '+user.name.split(' ')[0]+' 👋';
 
-  // Wire settings gear now that mainApp is visible
-  const drawer = document.getElementById('settingsDrawer');
-  const gearBtn = document.getElementById('openSettingsBtn');
-  if(gearBtn && drawer){
-    gearBtn.onclick = function(e){
-      e.stopPropagation();
-      syncQuickSettings();
-      drawer.classList.remove('hidden');
-    };
-    drawer.onclick = function(e){
-      if(e.target === drawer) drawer.classList.add('hidden');
-    };
-  }
 }
 
 // Using the app keeps it open; after 12 idle hours it asks again (unless set to just open).
@@ -1756,7 +1756,34 @@ let _toast;
 function toast(msg,dur=2400){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
-  clearTimeout(_toast);_toast=setTimeout(()=>t.classList.remove('show'),dur);
+  clearTimeout(_toast);_toast=setTimeout(()=>{t.classList.remove('show');t.textContent='';},dur);
+}
+function setFieldError(id, message = '') {
+  const field = document.getElementById(id);
+  const error = document.getElementById(id + 'Error');
+  error.textContent = message;
+  if (message) {
+    field.setAttribute('aria-invalid', 'true');
+    field.setAttribute('aria-describedby', error.id);
+    field.focus();
+  } else {
+    field.removeAttribute('aria-invalid');
+    field.removeAttribute('aria-describedby');
+  }
+}
+document.querySelectorAll('.field-error').forEach(error => {
+  const id = error.id.slice(0, -5);
+  document.getElementById(id).addEventListener('input', () => setFieldError(id));
+});
+function finishAddForm(button) {
+  const details = document.getElementById(button).closest('details');
+  if (!details) return;
+  details.open = false;
+  details.querySelector('summary').focus();
+}
+function focusListAction(list, index, fallback) {
+  const actions = document.querySelectorAll(list + ' [data-delete]');
+  (actions[index] || actions[actions.length - 1] || document.querySelector(fallback)).focus();
 }
 function fmtDate(ts){ return new Date(ts).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
 function moodBadge(m){
@@ -1770,12 +1797,29 @@ function fmt12(t){ if(!t)return''; const[h,m]=t.split(':').map(Number),ap=h>=12?
 //  TABS — includes ME view
 // ════════════════════════════════════
 const VIEWS=['home','reminders','chat','games','contacts','me'];
-function showTab(name){
+const mainNav = document.getElementById('mainNav');
+new ResizeObserver(() => {
+  document.documentElement.style.setProperty('--nav-height', Math.ceil(mainNav.getBoundingClientRect().height) + 'px');
+}).observe(mainNav);
+function showTab(name, moveFocus = false){
   VIEWS.forEach(k=>document.getElementById('view-'+k).classList.toggle('hidden',k!==name));
-  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.tabbtn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tab===name);
+    if(b.dataset.tab===name) b.setAttribute('aria-current','page');
+    else b.removeAttribute('aria-current');
+  });
+  if(moveFocus){
+    const headingId = { home: 'helloTitle', reminders: 'remindersHeading', chat: 'chatHeading', games: 'gamesHeading', contacts: 'contactsHeading', me: 'meNameDisplay' }[name];
+    const heading = document.getElementById(headingId);
+    if(heading){
+      heading.tabIndex=-1;
+      heading.focus({preventScroll:true});
+      window.scrollTo(0,0);
+    }
+  }
 }
-document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-document.getElementById('meFabBtn').addEventListener('click',()=>showTab('me'));
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab,true)));
+document.getElementById('meFabBtn').addEventListener('click',()=>showTab('me',true));
 
 // ════════════════════════════════════
 //  STATUS & DATE
@@ -1796,28 +1840,34 @@ document.getElementById('todayDateEl').textContent=new Date().toLocaleDateString
 let selectedMood=null;
 document.querySelectorAll('.mood-btn').forEach(b=>{
   b.addEventListener('click',()=>{
-    document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
-    b.classList.add('selected'); selectedMood=b.dataset.mood;
+    document.querySelectorAll('.mood-btn').forEach(x=>{
+      x.classList.toggle('selected',x===b);
+      x.setAttribute('aria-pressed',String(x===b));
+    });
+    setFieldError('moodGrid');
+    selectedMood=b.dataset.mood;
   });
 });
 const painInput=document.getElementById('painInput'),painVal=document.getElementById('painVal');
 painInput.addEventListener('input',()=>{ const v=painInput.value; painVal.textContent=v; painVal.className='pain-val pain-color-'+v; });
 document.getElementById('checkinHeroBtn').addEventListener('click',()=>{
   document.getElementById('checkinCard').classList.add('open');
-  document.getElementById('checkinHeroCard').style.opacity='.4';
-  document.getElementById('checkinCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('checkinHeroBtn').setAttribute('aria-expanded','true');
+  document.getElementById('checkinHeading').focus();
 });
 function closeCheckin(){
   document.getElementById('checkinCard').classList.remove('open');
-  document.getElementById('checkinHeroCard').style.opacity='1';
+  document.getElementById('checkinHeroBtn').setAttribute('aria-expanded','false');
+  document.getElementById('checkinHeroBtn').focus();
+  setFieldError('moodGrid');
   selectedMood=null;
-  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.mood-btn').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false');});
   painInput.value='0'; painVal.textContent='0'; painVal.className='pain-val';
   document.getElementById('notesInput').value='';
 }
 document.getElementById('cancelCheckinBtn').addEventListener('click',closeCheckin);
 document.getElementById('saveCheckinBtn').addEventListener('click',()=>{
-  if(!selectedMood){toast('⚠️ Please select a mood first');return;}
+  if(!selectedMood){setFieldError('moodGrid','Choose how you feel before saving your check-in.');return;}
   const entry={ts:Date.now(),mood:selectedMood,pain:Number(painInput.value),notes:document.getElementById('notesInput').value.trim()};
   const list=S.get('checkins_v2',[]); list.unshift(entry); S.set('checkins_v2',list);
   closeCheckin(); renderCheckins(); refreshHomeStats(); refreshChart(); toast('✅ Check-in saved!');
@@ -1931,15 +1981,17 @@ function showUrgentOverlay(title, body){
   document.getElementById('urgentTitle').textContent=title;
   document.getElementById('urgentBody').textContent=body;
   document.getElementById('urgentTime').textContent='Tap the button below to confirm you\'ve done this.';
-  document.getElementById('urgentOverlay').classList.remove('hidden');
+  const overlay = document.getElementById('urgentOverlay');
+  if (!overlay.open) overlay.showModal();
   // Vibrate
   if(navigator.vibrate) navigator.vibrate([400,150,400,150,400]);
   // Play alert sound
   playAlertSound();
 }
 
+document.getElementById('urgentOverlay').addEventListener('cancel', e=>e.preventDefault());
 document.getElementById('urgentDismiss').addEventListener('click',()=>{
-  document.getElementById('urgentOverlay').classList.add('hidden');
+  document.getElementById('urgentOverlay').close();
   document.getElementById('notifBanner').classList.add('hidden');
   toast('✅ Marked as done!');
 });
@@ -1995,7 +2047,8 @@ document.getElementById('addReminderBtn').addEventListener('click',async()=>{
   const time=document.getElementById('remTime').value;
   const cat=document.getElementById('remCat').value;
   const urgent=document.getElementById('remUrgent').checked;
-  if(!title){toast('⚠️ Enter a reminder title');return;}
+  if(!title){setFieldError('remTitle','Enter a reminder title.');return;}
+  setFieldError('remTitle');
   if(time){ await requestNotifPermission(); }
   const list=S.get('reminders',[]);
   list.push({title,time,cat,urgent,created:Date.now()});
@@ -2003,7 +2056,7 @@ document.getElementById('addReminderBtn').addEventListener('click',async()=>{
   document.getElementById('remTitle').value='';
   document.getElementById('remTime').value='';
   document.getElementById('remUrgent').checked=false;
-  renderReminders(); refreshHomeStats(); toast('🔔 Reminder added!');
+  renderReminders(); refreshHomeStats(); finishAddForm('addReminderBtn'); toast('🔔 Reminder added!');
 });
 document.getElementById('clearRemindersBtn').addEventListener('click',()=>{
   if(!confirm('Clear all reminders?'))return;
@@ -2017,8 +2070,8 @@ function renderReminders(){
     const li=document.createElement('li');
     const left=document.createElement('div'); left.style.cssText='display:flex;align-items:center;gap:10px;flex:1;';
     left.innerHTML=`<span class="rem-item-icon">${esc(r.cat||'⭐')}</span><div><div style="font-weight:600;">${esc(r.title)}${r.urgent?'<span class="urgent-badge">URGENT</span>':''}</div><div class="small">${r.time?fmt12(r.time):'No time set'}</div></div>`;
-    const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:15px;flex-shrink:0;'; del.textContent='✕';
-    del.addEventListener('click',()=>{ const l=S.get('reminders',[]).filter((_,i)=>i!==idx); S.set('reminders',l); renderReminders(); refreshHomeStats(); });
+    const del=document.createElement('button'); del.className='btn ghost'; del.style.cssText='width:auto;padding:8px 10px;font-size:15px;flex-shrink:0;'; del.textContent='✕'; del.dataset.delete=''; del.setAttribute('aria-label','Delete reminder: '+r.title);
+    del.addEventListener('click',()=>{ const l=S.get('reminders',[]).filter((_,i)=>i!==idx); S.set('reminders',l); renderReminders(); refreshHomeStats(); focusListAction('#remList',idx,'#addReminderCard summary'); toast('Reminder deleted.'); });
     li.appendChild(left); li.appendChild(del); ul.appendChild(li);
   });
 }
@@ -2076,13 +2129,12 @@ function openMeModal(){
   document.getElementById('meCaregiverPhone').value=p.caregiverPhone||'';
   document.getElementById('meCaregiverPin').value=p.caregiverPin||'';
   document.getElementById('meFamilyList').value=p.familyList||'';
-  document.getElementById('meModal').classList.remove('hidden');
+  document.getElementById('meModal').showModal();
 }
 
-function closeMeModal(){ document.getElementById('meModal').classList.add('hidden'); }
+function closeMeModal(){ document.getElementById('meModal').close(); }
 
 document.getElementById('editMeBtn').addEventListener('click',openMeModal);
-document.getElementById('meFabBtn').addEventListener('click',()=>{ showTab('me'); });
 document.getElementById('meModalClose').addEventListener('click',closeMeModal);
 document.getElementById('cancelMeBtn').addEventListener('click',closeMeModal);
 document.getElementById('meModal').addEventListener('click',e=>{ if(e.target===document.getElementById('meModal'))closeMeModal(); });
@@ -2114,10 +2166,13 @@ document.getElementById('saveMeBtn').addEventListener('click',()=>{
 // ════════════════════════════════════
 document.getElementById('addContactBtn').addEventListener('click',()=>{
   const name=document.getElementById('cName').value.trim(),phone=document.getElementById('cPhone').value.trim().replace(/\s+/g,''),rel=document.getElementById('cRel').value;
-  if(!name){toast('⚠️ Enter a name');return;} if(!phone){toast('⚠️ Enter a phone number');return;}
+  if(!name){setFieldError('cName','Enter the person’s name.');return;}
+  setFieldError('cName');
+  if(!phone){setFieldError('cPhone','Enter a phone number.');return;}
+  setFieldError('cPhone');
   const list=S.get('contacts',[]); list.push({name,phone,rel,created:Date.now()}); S.set('contacts',list);
   document.getElementById('cName').value=''; document.getElementById('cPhone').value='';
-  renderContacts(); toast('👥 Contact added!');
+  renderContacts(); finishAddForm('addContactBtn'); toast('👥 Contact added!');
 });
 function relEmoji(r){ return{Family:'👨‍👩‍👧',Friend:'👋',Doctor:'🏥',Caregiver:'🤝',Neighbor:'🏡',Other:'⭐'}[r]||'👤'; }
 function renderContacts(){
@@ -2125,14 +2180,14 @@ function renderContacts(){
   c.innerHTML=''; empty.style.display=list.length?'none':'block';
   list.forEach((ct,idx)=>{
     const div=document.createElement('div'); div.className='contact-card';
-    div.innerHTML=`<div class="contact-avatar">${relEmoji(ct.rel)}</div><div class="contact-info"><div class="contact-name">${esc(ct.name)}</div><div class="contact-rel">${esc(ct.rel)} · ${esc(ct.phone)}</div></div><div class="contact-actions"><button class="icon-btn call" data-phone="${esc(ct.phone)}">📞</button><button class="icon-btn" data-idx="${idx}">🗑️</button></div>`;
+    div.innerHTML=`<div class="contact-avatar">${relEmoji(ct.rel)}</div><div class="contact-info"><div class="contact-name">${esc(ct.name)}</div><div class="contact-rel">${esc(ct.rel)} · ${esc(ct.phone)}</div></div><div class="contact-actions"><button class="icon-btn call" aria-label="Call ${esc(ct.name)}" data-phone="${esc(ct.phone)}">📞</button><button class="icon-btn" aria-label="Delete contact: ${esc(ct.name)}" data-delete data-idx="${idx}">🗑️</button></div>`;
     c.appendChild(div);
   });
   c.appendChild(empty);
   c.querySelectorAll('.icon-btn.call').forEach(b=>b.addEventListener('click',()=>window.location.href='tel:'+b.dataset.phone));
   c.querySelectorAll('.icon-btn[data-idx]').forEach(b=>b.addEventListener('click',()=>{
     if(b.classList.contains('call'))return;
-    const l=S.get('contacts',[]).filter((_,i)=>i!==Number(b.dataset.idx)); S.set('contacts',l); renderContacts(); toast('🗑️ Removed');
+    const l=S.get('contacts',[]).filter((_,i)=>i!==Number(b.dataset.idx)); S.set('contacts',l); renderContacts(); focusListAction('#contactList',Number(b.dataset.idx),'#addContactCard summary'); toast('Contact deleted.');
   }));
 }
 function refreshPhone(){
@@ -2142,7 +2197,8 @@ function refreshPhone(){
 }
 document.getElementById('savePhoneBtn').addEventListener('click',()=>{
   const r=document.getElementById('emPhone').value.trim().replace(/\s+/g,'');
-  if(!r){toast('⚠️ Enter a number');return;}
+  if(!r){setFieldError('emPhone','Enter a number to call in an emergency.');return;}
+  setFieldError('emPhone');
   S.set('em_phone',r); refreshPhone(); toast('✅ Emergency number saved');
 });
 document.getElementById('callNowBtn').addEventListener('click',()=>{
@@ -2157,7 +2213,14 @@ let chatHistory=[];
 // Retire keys that older versions asked the elder to paste into the app.
 ['anthropic_key','deepseek_key','ai_provider'].forEach(k=>{ try{ S.set(k,''); }catch(e){} });
 
-document.querySelectorAll('.chip').forEach(c=>{ c.addEventListener('click',()=>{ document.getElementById('chatInput').value=c.dataset.msg; sendChat(); }); });
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click',event=>{
+    const input=document.getElementById('chatInput');
+    input.value=chip.dataset.msg;
+    if(event.detail===0)input.focus();
+    sendChat();
+  });
+});
 
 function localReply(t){
   const s=t.toLowerCase();
@@ -2175,7 +2238,9 @@ async function sendChat(){
   const tid='t'+Date.now(); addBubble('<div class="typing-dots"><span></span><span></span><span></span></div>','ai typing',tid);
   chatHistory.push({role:'user',content:msg});
 
-  await new Promise(r=>setTimeout(r,600)); removeEl(tid);
+  await new Promise(r=>setTimeout(r,600));
+  if(!document.getElementById(tid))return;
+  removeEl(tid);
   const r=localReply(msg); addBubble(r,'ai'); chatHistory.push({role:'assistant',content:r});
 }
 
@@ -2193,7 +2258,7 @@ function addBubble(html,cls,id){
 function removeEl(id){ const e=document.getElementById(id); if(e)e.remove(); }
 document.getElementById('sendChatBtn').addEventListener('click',sendChat);
 document.getElementById('chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();} });
-document.getElementById('clearChatBtn').addEventListener('click',()=>{ chatHistory=[]; document.getElementById('chatLog').innerHTML=''; document.getElementById('starterChips').style.display='flex'; toast('💬 Chat cleared'); });
+document.getElementById('clearChatBtn').addEventListener('click',()=>{ if(!chatHistory.length || !confirm('Clear this conversation?')) return; chatHistory=[]; document.getElementById('chatLog').innerHTML=''; document.getElementById('starterChips').style.display='flex'; toast('💬 Chat cleared'); });
 
 // ════════════════════════════════════
 //  GAMES
@@ -2437,8 +2502,10 @@ function drawChart(mode) {
 
 document.querySelectorAll('.chart-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+    document.querySelectorAll('.chart-tab').forEach(t => {
+      t.classList.toggle('active', t === tab);
+      t.setAttribute('aria-pressed', String(t === tab));
+    });
     currentChartMode = tab.dataset.chart;
     drawChart(currentChartMode);
   });
@@ -2748,16 +2815,18 @@ const settingsDrawer = document.getElementById('settingsDrawer');
 document.getElementById('openSettingsBtn').addEventListener('click', function(e){
   e.stopPropagation();
   syncQuickSettings();
-  settingsDrawer.classList.remove('hidden');
+  settingsDrawer.showModal();
 });
 
+document.getElementById('settingsClose').addEventListener('click', ()=>settingsDrawer.close());
 settingsDrawer.addEventListener('click', function(e){
-  if(e.target === settingsDrawer) settingsDrawer.classList.add('hidden');
+  if(e.target === settingsDrawer) settingsDrawer.close();
 });
 document.getElementById('drawerMoreLink').addEventListener('click', ()=>{
-  settingsDrawer.classList.add('hidden');
+  settingsDrawer.close();
   showTab('me');
-  setTimeout(()=>document.getElementById('voiceSettingsCard')?.scrollIntoView({behavior:'smooth',block:'start'}), 150);
+  document.getElementById('helperSettings').open=true;
+  document.getElementById('voiceSettingsCard').focus();
 });
 
 syncQuickSettings();
@@ -2789,13 +2858,13 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
   }); });
 })();
 </script>
-<div class="game-stage hidden" id="gameStage" role="dialog" aria-modal="true" aria-labelledby="stageTitle">
+<dialog class="game-stage" id="gameStage" aria-labelledby="stageTitle">
   <div class="stage-head">
     <h2 id="stageTitle"></h2>
-    <button type="button" class="stage-close" id="stageClose" aria-label="Close game">✕</button>
+    <button type="button" class="stage-close" id="stageClose" autofocus aria-label="Close game">✕</button>
   </div>
   <div class="stage-body" id="stageBody"></div>
-</div>
+</dialog>
 
 <!-- Add-on scripts, loaded here so the page works the same with or without the offline cache. -->
 <script src="/fixes.js" defer></script>

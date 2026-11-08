@@ -194,6 +194,8 @@
 
       store('auth_users', [localUser]);
       store('auth_session', { ...localUser, ts: Date.now() });
+      // The profile on this device now belongs to the restored account (see care-recipient-profile-snapshot-sync.js).
+      localStorage.setItem('elderxonnect_snapshot_owner', user.id);
       localStorage.setItem(`${READY_PREFIX}${user.id}`, 'true');
       localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
 

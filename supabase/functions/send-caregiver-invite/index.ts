@@ -66,12 +66,7 @@ Deno.serve(async (req) => {
 
     const link = buildInviteLink(portalUrl, email, parseAllowedOrigins(Deno.env.get('INVITE_ALLOWED_ORIGINS')));
     if (!link) return json({ error: 'Invalid invitation link' }, 400);
-    let elderName = String(userData.user.user_metadata?.full_name || userData.user.email || 'Someone you know');
-    if (access.elder_id !== userData.user.id) {
-      const { data: elderData } = await admin.auth.admin.getUserById(access.elder_id);
-      elderName = String(elderData?.user?.user_metadata?.full_name || elderData?.user?.email || 'Someone you know');
-    }
-    const { subject, html } = buildInviteEmail({ elderName, link });
+    const { subject, html } = buildInviteEmail({ link });
     const mailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {

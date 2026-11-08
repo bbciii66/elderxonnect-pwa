@@ -57,7 +57,7 @@ async function open(browser, scheme, { geo = true, failForecast = false } = {}) 
 const tab = async (p, name) => { await p.evaluate((n) => showTab(n), name); await p.waitForTimeout(200); };
 const noSideScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 const visible = (p, sel) => p.evaluate((s) => { const e = document.querySelector(s); return !!e && !e.hidden && !e.closest('[hidden]') && e.getClientRects().length > 0; }, sel);
-const stageOpen = (p) => p.evaluate(() => !document.getElementById('gameStage').classList.contains('hidden'));
+const stageOpen = (p) => p.evaluate(() => document.getElementById('gameStage').open);
 
 let port;
 (async () => {

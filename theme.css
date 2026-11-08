@@ -40,7 +40,7 @@ html[data-theme="light"] .status.unknown{background:var(--ghost-bg);border-color
 html[data-theme="light"] .mine .body{color:var(--gold)}
 html[data-theme="light"] .error{color:#b3392f}
 html[data-theme="light"] a.back,html[data-theme="light"] summary{color:var(--green)}
-html[data-theme="light"] .card a,html[data-theme="light"] .sub a{color:var(--green)!important}
+html[data-theme="light"] .card a:not(.btn),html[data-theme="light"] .sub a{color:var(--green)}
 /* main page: translucent-white surfaces become soft tints, dark bars become light bars */
 html[data-theme="light"] .bottom-nav,html[data-theme="light"] nav{background:var(--nav-bg);border-top-color:var(--line);box-shadow:0 -4px 18px rgba(28,37,51,.12)}
 html[data-theme="light"] .modal-overlay,html[data-theme="light"] .overlay{background:rgba(28,37,51,.45)}
@@ -69,3 +69,31 @@ html[data-theme="light"] details.add-fold > summary{color:var(--green)}
 html[data-theme="light"] .tabbtn{background:transparent;border:1px solid transparent;color:var(--muted)}
 html[data-theme="light"] .tabbtn.active{background:var(--btn-bg);border-color:var(--btn-line);color:var(--btn-text)}
 html[data-theme="light"] .caregiver-btn{background:var(--ok-btn);color:var(--ok-btn-text);border-color:#2e7d57}
+
+/* Keep the oat surfaces while using darker text and distinct control outlines. */
+:root {
+  --control-line: #789184;
+  --focus: #e8c97e;
+  --error-text: #ff9a94;
+}
+html[data-theme="light"] {
+  --green: #3d5948;
+  --control-line: #67796b;
+  --input-line: var(--control-line);
+  --btn-line: var(--control-line);
+  --placeholder: #5b574f;
+  --focus: #324f3f;
+  --error-text: #922c24;
+}
+:is(input, textarea, select):not([type="checkbox"]):not([type="range"]) { border-color: var(--control-line); }
+html[data-theme="light"] .tabbtn:not(.active) { border-color: transparent; }
+html[data-theme="light"] .btn.ghost, html[data-theme="light"] button.secondary { border-color: var(--control-line); }
+html[data-theme="light"] .mood-btn.selected { background: var(--ok-btn); border-color: var(--green); color: var(--green); }
+.mood-btn[aria-pressed="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+:focus-visible, html[data-theme="light"] :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+html[data-theme="light"] .urgent-dismiss { background: #ad332b; border-color: #ffdada; color: #fff; }
+html[data-theme="light"] .urgent-overlay :focus-visible { outline-color: #ffdada; }
+html[data-theme="light"] .pain-val { color: var(--text) !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

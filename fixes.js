@@ -67,7 +67,7 @@
     window.showUrgentOverlay = function showUrgentOverlayFixed(title, body) {
       const overlay = document.getElementById('urgentOverlay');
       const key = `${title}|${body}`;
-      if (overlay && !overlay.classList.contains('hidden') && activeAlertKey === key) return;
+      if (overlay && overlay.open && activeAlertKey === key) return;
       activeAlertKey = key;
       return originalShowUrgentOverlay(title, body);
     };

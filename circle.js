@@ -20,6 +20,7 @@
     if (!data.session) return;
     me = data.session.user;
     try { if (localStorage.getItem('exc_text_xl') === '1') document.body.classList.add('text-xl'); } catch {}
+    syncTextButton();
     $('signin').classList.add('hidden');
     $('app').classList.remove('hidden');
 
@@ -54,7 +55,8 @@
 
   function choose(c) {
     circle = c; elderId = c.id; canWrite = L.canWrite(c.role);
-    ['composeRow', 'taskRow', 'visitForm'].forEach((i) => $(i).classList.toggle('hidden', !canWrite));
+    ['messageLabel', 'composeRow', 'taskLabel', 'taskRow', 'visitForm'].forEach((i) => $(i).classList.toggle('hidden', !canWrite));
+    ['message', 'task', 'visit'].forEach(clearFeedback);
     $('viewerNote').classList.toggle('hidden', canWrite);
     $('quick').parentElement.classList.toggle('hidden', !canWrite);
     settings = null; accessRows = [];
@@ -80,7 +82,8 @@
       // The visit log is newer than the rest; if it is unavailable, keep every other panel working.
       $('visits').innerHTML = v.error ? '<p class="sub">The visit log is not available yet.</p>' : (v.data || []).map((x) => `<div class="msg"><div class="who">${esc(x.visitor_name || 'Someone')} · ${esc(when(x.visited_at))}${x.minutes ? ' · ' + esc(x.minutes) + ' min' : ''}</div><div class="body">${esc(x.notes || '(no notes)')}</div></div>`).join('') || '<p class="sub">No visits logged yet.</p>';
       const s = L.checkinStatus(k.data === 'not-shared' ? 'not-shared' : k.error ? null : (k.data || [])[0], new Date());
-      $('status').className = 'status ' + s.level; $('status').textContent = s.text;
+      $('status').className = 'status ' + s.level;
+      if ($('status').textContent !== s.text) $('status').textContent = s.text;
       if (circle.own || circle.role === 'admin') loadManage();
     } catch (e) { showError(e); }
   }
@@ -208,27 +211,72 @@
     } catch (e) { showError(e); }
   }
 
+  function clearFeedback(kind) {
+    $(kind + 'Error').textContent = '';
+    $(kind + 'Status').textContent = '';
+    const fields = { message: ['text'], task: ['taskText'], visit: ['visitNotes', 'visitMinutes'] };
+    fields[kind].forEach(id => {
+      $(id).removeAttribute('aria-invalid');
+      $(id).removeAttribute('aria-describedby');
+    });
+  }
+
+  function showFeedbackError(kind, message, field) {
+    const error = $(kind + 'Error');
+    error.textContent = message;
+    if (field) {
+      $(field).setAttribute('aria-invalid', 'true');
+      $(field).setAttribute('aria-describedby', error.id);
+      $(field).focus();
+    }
+  }
+
   async function post(body) {
-    body = L.cleanText(body, 1000); if (!body) return;
-    try { showError(''); const r = await client.from('circle_messages').insert({ elder_id: elderId, body }); if (r.error) throw r.error; $('text').value = ''; refresh(); } catch (e) { showError(e); }
+    clearFeedback('message');
+    body = L.cleanText(body, 1000);
+    if (!body) return showFeedbackError('message', 'Write a message before sending.', 'text');
+    try {
+      const r = await client.from('circle_messages').insert({ elder_id: elderId, body });
+      if (r.error) throw r.error;
+      $('text').value = '';
+      $('messageStatus').textContent = 'Message sent.';
+      refresh();
+    } catch (e) { showFeedbackError('message', 'Could not send the message. Try again.'); }
   }
   async function finish(id) {
     try { const r = await client.from('circle_tasks').update({ done: true }).eq('id', id); if (r.error) throw r.error; refresh(); } catch (e) { showError(e); }
   }
   async function addTask() {
-    const title = L.cleanText($('taskText').value, 200); if (!title) return;
-    try { const r = await client.from('circle_tasks').insert({ elder_id: elderId, title }); if (r.error) throw r.error; $('taskText').value = ''; refresh(); } catch (e) { showError(e); }
+    clearFeedback('task');
+    const title = L.cleanText($('taskText').value, 200);
+    if (!title) return showFeedbackError('task', 'Enter a task before adding it.', 'taskText');
+    try {
+      const r = await client.from('circle_tasks').insert({ elder_id: elderId, title });
+      if (r.error) throw r.error;
+      $('taskText').value = '';
+      $('taskStatus').textContent = 'Task added.';
+      refresh();
+    } catch (e) { showFeedbackError('task', 'Could not add the task. Try again.'); }
   }
   async function addVisit() {
+    clearFeedback('visit');
     const notes = L.cleanText($('visitNotes').value, 2000);
     const minutes = L.parseMinutes($('visitMinutes').value);
-    if (Number.isNaN(minutes)) { showError(new Error('Minutes must be a whole number from 1 to 1440.')); return; }
-    if (!notes && minutes === null) { showError(new Error('Add a note or the minutes first.')); return; }
+    if ($('visitMinutes').validity.badInput || Number.isNaN(minutes)) {
+      return showFeedbackError('visit', 'Enter a whole number from 1 to 1,440 minutes.', 'visitMinutes');
+    }
+    if (!notes && minutes === null) return showFeedbackError('visit', 'Add a note or the length of the visit.', 'visitNotes');
     try {
       const r = await client.from('circle_visits').insert({ elder_id: elderId, notes, minutes });
       if (r.error) throw r.error;
-      $('visitNotes').value = ''; $('visitMinutes').value = ''; refresh();
-    } catch (e) { showError(e); }
+      $('visitNotes').value = '';
+      $('visitMinutes').value = '';
+      $('visitStatus').textContent = 'Visit logged.';
+      refresh();
+    } catch (e) { showFeedbackError('visit', 'Could not log the visit. Try again.'); }
+  }
+  for (const [id, kind] of [['text', 'message'], ['taskText', 'task'], ['visitNotes', 'visit'], ['visitMinutes', 'visit']]) {
+    $(id).addEventListener('input', () => clearFeedback(kind));
   }
 
   $('send').onclick = () => post($('text').value);
@@ -243,6 +291,13 @@
   $('setupBack').onclick = chooseSelf;
   $('addTask').onclick = addTask;
   $('addVisit').onclick = addVisit;
-  $('bigText').onclick = () => { const on = document.body.classList.toggle('text-xl'); try { localStorage.setItem('exc_text_xl', on ? '1' : '0'); } catch {} };
+  function syncTextButton() {
+    $('bigText').setAttribute('aria-pressed', String(document.body.classList.contains('text-xl')));
+  }
+  $('bigText').onclick = () => {
+    const on = document.body.classList.toggle('text-xl');
+    syncTextButton();
+    try { localStorage.setItem('exc_text_xl', on ? '1' : '0'); } catch {}
+  };
   init().catch(showError);
 })();
