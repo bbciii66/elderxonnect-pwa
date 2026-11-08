@@ -161,7 +161,7 @@
   }
 
   async function addPerson(email, role) {
-    const row = { elder_id: elderId, caregiver_email: email, status: 'pending', role, sections: L.sectionsForRole(role) };
+    const row = { elder_id: elderId, caregiver_email: email, status: 'pending', role, sections: role === 'admin' ? L.sectionsForRole('admin') : ['circle'] };
     return client.from('caregiver_access').insert(row).select('id').maybeSingle();
   }
 

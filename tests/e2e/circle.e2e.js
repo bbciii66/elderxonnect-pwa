@@ -66,6 +66,7 @@ let port;
   await p.fill('#inviteEmail', 'Omar.Aide@Example.com'); await p.selectOption('#inviteRole', 'onsite'); await p.click('#sendInvite');
   await p.waitForFunction(() => document.querySelectorAll('#roles select').length === 4);
   check(await p.evaluate(() => { const r = window.__FAKE_DB__.tables.caregiver_access.find((x) => x.caregiver_email === 'omar.aide@example.com'); return r && r.status === 'pending' && r.role === 'onsite'; }), 'elder can invite someone with a chosen role');
+  check(await p.evaluate(() => JSON.stringify(window.__FAKE_DB__.tables.caregiver_access.find((x) => x.caregiver_email === 'omar.aide@example.com').sections)) === '["circle"]', 'a new invitation starts with messages, tasks and visits only, as the screen promises');
   check(await p.evaluate(() => { const c = (window.__FAKE_DB__.fnCalls || [])[0]; return !!c && c.name === 'send-caregiver-invite' && c.body.caregiverEmail === 'omar.aide@example.com' && !!c.body.invitationId && c.body.portalUrl.endsWith('/caregiver.html'); }), 'inviting asks the email helper to send, with the invitation id');
   check((await p.textContent('#inviteResultText')).includes('could not email'), 'when email cannot be sent, the elder is told plainly');
   check((await p.inputValue('#inviteLinkBox')).endsWith('/caregiver.html?email=omar.aide%40example.com'), 'a link to share by hand is shown with the invited email');
