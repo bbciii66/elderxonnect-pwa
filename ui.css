@@ -80,7 +80,7 @@ details.sub-details > summary { cursor: pointer; min-height: 48px; padding: 10px
 
 /* Emergency card */
 .sos-card { border-color: rgba(224, 82, 82, .35); }
-.sos-title { color: var(--red); }
+.sos-title { color: var(--error-text); }
 
 /* Me: caregiving switch */
 #caregivingSlot:empty { display: none; }
@@ -101,7 +101,7 @@ header .brand p { display: none; }
 
 /* AI helper links: name plus a plain note about sign-up */
 .ai-link { display: flex !important; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; margin-bottom: 8px; line-height: 1.25; padding: 10px 14px; }
-.ai-note { font-size: 15px; font-weight: 500; opacity: .85; }
+.ai-note { font-size: 15px; font-weight: 500; }
 
 /* ── Weather card ── */
 .weather-card .row-input { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
@@ -211,3 +211,84 @@ html.stage-open, html.stage-open body { overflow: hidden; }
 .auth-more > summary::-webkit-details-marker { display: none; }
 .auth-more[open] > summary { margin-bottom: 4px; }
 .auth-more .auth-card { text-align: left; }
+
+/* Shared mobile interaction and reflow rules for the main app. */
+html { scroll-padding-block-end: calc(var(--nav-height, 0px) + 12px); }
+body { padding-bottom: calc(var(--nav-height, 0px) + 16px); }
+html, body { overflow-x: visible; }
+#mainContent { overflow-wrap: anywhere; }
+header, .head-actions, .theme-picker, .mood-grid, .chart-tabs,
+.checkin-hero, .contact-card, .wx-main { flex-wrap: wrap; }
+.theme-picker button { min-width: min(100%, 7rem); }
+header .brand h1 { overflow-wrap: anywhere; }
+.card-title { font-size: 1.3125rem; line-height: 1.3; }
+.card-sub, .small, .label, .tip-label, .rem-note, .wx-credit, .ai-note,
+.drawer-section, .drawer-row-sub, .voice-toggle-sub, .info-row .info-label,
+.contact-rel, .unlock-choice small { font-size: 1rem; line-height: 1.5; }
+.card-sub { font-weight: 400; }
+label.label { display: block; }
+.main-action-row { flex-wrap: wrap; gap: 8px; }
+.input-mic-wrap, .chat-input-row, .weather-card .row-input { min-width: 0; }
+.input-mic-wrap > :is(input, textarea), .chat-input-row input, .weather-card input,
+.contact-info, .list li > :first-child, .info-row > * { min-width: 0; }
+.weather-card .row-input { grid-template-columns: minmax(0, 1fr) auto; }
+.today-list li { grid-template-columns: 28px minmax(0, 1fr) auto; }
+.contact-actions { margin-inline-start: auto; }
+#mainContent input:not([type="checkbox"]):not([type="range"]),
+#mainContent select, #mainContent textarea, .modal :is(input, select, textarea) {
+  font-size: 1.125rem; min-height: 48px;
+}
+#mainContent input[type="range"] { min-height: 44px; }
+.modal-close, .notif-banner-close, .chip, .chart-tab, .drawer-more-link, #voiceStopBtn,
+.me-edit-btn { min-width: 44px; min-height: 44px; }
+.modal-close, .notif-banner-close { width: 44px; height: 44px; flex: none; }
+.drawer-more-link { padding: 8px; }
+.mood-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
+.game-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); }
+#mainNav { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding-inline: 6px; }
+#mainNav .tabbtn { min-width: 0; padding-inline: 0; font-size: .9375rem; overflow-wrap: anywhere; }
+#mainNav .tabbtn[aria-current] { border-color: var(--green); text-decoration: underline; text-underline-offset: .2em; }
+#mainNav .tabbtn:focus-visible, details.fold > summary:focus-visible { outline-offset: -4px; }
+#toast { bottom: calc(var(--nav-height, 0px) + 12px); width: max-content; max-width: calc(100% - 24px); white-space: normal; border-radius: 16px; }
+.skip-link { position: absolute; z-index: 210; inset-inline-start: 12px; transform: translateY(-200%); padding: 12px; background: var(--card); color: var(--text); }
+.skip-link:focus { transform: none; }
+.field-error { color: var(--error-text); font-weight: 600; }
+.field-error:not(:empty) { margin-block: 6px; }
+#mainContent [aria-invalid="true"] { border-color: var(--error-text); }
+#mainContent a:not(.btn) { text-decoration: underline; }
+.toggle-switch { width: 56px; height: 44px; }
+.toggle-slider { inset: 8px 0; border-color: var(--control-line); }
+.toggle-switch input:focus-visible + .toggle-slider { outline: 3px solid var(--focus); outline-offset: 3px; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(28px); }
+:where(.modal-backdrop, .settings-drawer-backdrop, .urgent-overlay) { color: var(--text); }
+dialog:is(.modal-backdrop, .settings-drawer-backdrop, .urgent-overlay) {
+  margin: 0; border: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+}
+dialog:not([open]) { display: none; }
+dialog.modal-backdrop, dialog.settings-drawer-backdrop { padding: 0; }
+.settings-drawer { max-width: 540px; margin-inline: auto; }
+html:has(dialog[open]) { overflow: hidden; }
+.urgent-overlay { justify-content: safe center; overflow-y: auto; }
+.urgent-time { color: #ffdada; }
+.urgent-dismiss, .btn.red { background: #ad332b; }
+.me-hero { padding-top: 16px; }
+.me-edit-btn { position: static; display: block; margin: 0 0 8px auto; }
+
+@media (max-width: 25rem) {
+  .today-list li { grid-template-columns: 28px minmax(0, 1fr); }
+  .today-list .tm { grid-column: 2; white-space: normal; }
+  #mainNav { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #mainNav .tabbtn { grid-column: span 2; min-height: 48px; }
+  #mainNav .tabbtn:nth-child(4) { grid-column: 2 / span 2; }
+}
+@media (max-height: 25rem) {
+  #mainNav { position: static; margin-block-start: 12px; }
+  html { scroll-padding-block-end: 0; }
+  #toast { bottom: 12px; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+.rem-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); gap: 8px; }
+.rem-days label { display: flex; align-items: center; min-height: 44px; padding: 8px; border: 1px solid var(--control-line); border-radius: 12px; cursor: pointer; }
+#mainContent input[type="checkbox"] { width: 1.25rem; height: 1.25rem; min-height: 0; padding: 0; flex: none; }
+#mainContent .toggle-switch input { width: 0; height: 0; }
+dialog.game-stage { margin: 0; border: 0; width: 100%; height: 100%; max-width: none; max-height: none; }

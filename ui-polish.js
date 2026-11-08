@@ -131,31 +131,17 @@
   document.addEventListener('click', function (e) {
     var btn = e.target.closest && e.target.closest('#remList button, #contactList button');
     if (!btn) return;
-    var label = (btn.textContent || '').trim();
-    var isDelete = /✕|×|🗑|delete|remove/i.test(label) || btn.dataset.idx != null && !/📞/.test(label);
-    if (!isDelete) return;
+    if (!btn.hasAttribute('data-delete')) return;
     var what = btn.closest('#remList') ? 'this reminder' : 'this person';
     if (!window.confirm('Delete ' + what + '?')) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
-  // After adding a reminder or a person, fold the form away again.
-  document.addEventListener('click', function (e) {
-    var add = e.target.closest && e.target.closest('#addReminderBtn, #addContactBtn');
-    if (!add) return;
-    setTimeout(function () {
-      var card = add.closest('details');
-      var field = add.id === 'addReminderBtn' ? $('remTitle') : $('cName');
-      if (card && field && !field.value) card.open = false;
-      refreshHome();
-    }, 80);
-  });
-
   document.addEventListener('click', function (e) {
     var go = e.target.closest && e.target.closest('[data-go]');
-    if (go && typeof window.showTab === 'function') { window.showTab(go.getAttribute('data-go')); window.scrollTo(0, 0); }
+    if (go && typeof window.showTab === 'function') { window.showTab(go.getAttribute('data-go'), true); }
     var drawerText = e.target.closest && e.target.closest('#bigTextBtnDrawer');
     if (drawerText) setTimeout(refreshHome, 0);
-    var saveCheckin = e.target.closest && e.target.closest('#saveCheckinBtn, #saveMeBtn');
+    var saveCheckin = e.target.closest && e.target.closest('#saveCheckinBtn, #saveMeBtn, #addReminderBtn');
     if (saveCheckin) setTimeout(refreshHome, 80);
   });
 
@@ -170,20 +156,18 @@
     empty.insertAdjacentElement('afterend', warn);
   }
 
-  function markTabs(name) {
-    document.querySelectorAll('.tabbtn').forEach(function (b) {
-      if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
-    });
-  }
-
   function boot() {
     if (typeof window.showTab === 'function' && !window.showTab.__polished) {
       var original = window.showTab;
-      var wrapped = function (name) { original(name); markTabs(name); if (name === 'home') refreshHome(); if (name === 'me') organizeMe(); if (name === 'reminders') tidyReminders(); };
+      var wrapped = function (name, moveFocus) {
+        if (name === 'home') refreshHome();
+        if (name === 'me') organizeMe();
+        if (name === 'reminders') tidyReminders();
+        original(name, moveFocus);
+      };
       wrapped.__polished = true;
       window.showTab = wrapped;
     }
-    markTabs('home');
 
     var history = $('historyCard');
     if (history) history.addEventListener('toggle', function () { if (history.open && typeof window.refreshChart === 'function') window.refreshChart(); });

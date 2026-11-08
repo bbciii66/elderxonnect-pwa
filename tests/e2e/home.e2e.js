@@ -163,7 +163,7 @@ let port;
     await p.waitForTimeout(200);
     check(await p.evaluate(() => { const m = document.getElementById('meModal'); return !!m && getComputedStyle(m).zoom !== '1' && getComputedStyle(m).zoom !== 'normal'; }), 'bigger text also enlarges the profile editor');
     await p.keyboard.press('Escape');
-    await p.evaluate(() => document.getElementById('meModal')?.classList.add('hidden'));
+    check(!(await p.isVisible('#meModal')), 'Escape closes the profile editor');
     await p.click('#bigTextBtn');
     await ctx.close();
   }
