@@ -87,3 +87,11 @@ Made-up people only. Do not put real health information in until the privacy pha
 - A task's stamped author (`created_by_name`) cannot be rewritten by updating the task.
 - The caregiver page no longer keeps showing an earlier copy of a recipient's profile once access ended or the profile stopped being shared; it says "No profile is shared with you."
 - Left alone on purpose: per-sender email quotas for the invite helper (needs a design decision and only matters once email is switched on), and binding the device profile to its account at creation (#12 only claims it at first sync).
+
+## Speech and translation (free, on the phone)
+- **Read this page aloud** button at the top of Home, Reminders and People. Uses the phone's own voice; emoji are skipped; long pages are read a sentence or two at a time. Works without turning on "Voice output".
+- **My language** (Me → Voice settings): English, Spanish, French, Vietnamese, Chinese, Portuguese, German, Italian, Korean, Japanese, Russian. Starts from the phone's language. Form microphones listen in it; "Read aloud" translates the page into it when the phone has a translator. The companion chat stays English (its replies are English).
+- **Translate card** on the Chat tab: type or speak, translate, listen. Uses the browser's built-in Translator (recent Chrome). Free, on the phone, nothing is sent anywhere. The first use of a language pair downloads a small pack.
+- **Where the phone has no translator** (for example Safari on iPhone) the card says so and offers a button that opens Google Translate. That is the only place text leaves the phone, and only when the person taps it. A real in-app fallback would need a server-side translator (paid or self-hosted); not built.
+- Not done: the app's own buttons and labels are still English only.
+- Files: `speech-logic.js` (rules, tested alone), `speech.js` (screens). Robot: `tests/e2e/speech.e2e.js` fakes the voice, microphone and translator. Service worker cache is now v41.
