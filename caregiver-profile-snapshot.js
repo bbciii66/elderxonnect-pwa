@@ -4,6 +4,8 @@
 
   let snapshots = new Map();
   let loading = false;
+  const known = new Set(); // recipients we have held a copy for, so only a copy that went away is cleared
+  let loadedOnce = false; // true after one successful read, so "no copy" can be told apart from "not loaded yet"
   let timer = null;
   let selectedElderId = sessionStorage.getItem('elderxonnect_selected_elder') || '';
 
@@ -68,6 +70,22 @@
     container.replaceChildren(fragment);
   }
 
+  function clearProfile() {
+    const container = document.getElementById('profile');
+    if (container) {
+      const done = container.childElementCount === 1 && container.firstElementChild.dataset.noProfile === '1';
+      if (!done) {
+        const note = document.createElement('div');
+        note.className = 'empty';
+        note.dataset.noProfile = '1';
+        note.textContent = 'No profile is shared with you.';
+        container.replaceChildren(note);
+      }
+    }
+    const personName = document.getElementById('personName');
+    if (personName && personName.textContent !== 'Care Overview') personName.textContent = 'Care Overview';
+  }
+
   function applyCardNames() {
     document.querySelectorAll('.careRecipientCard').forEach((card) => {
       const button = card.querySelector('.openCareRecipient');
@@ -101,6 +119,11 @@
 
     const elderId = getSelectedElderId();
     const profile = snapshots.get(elderId);
+    if (loadedOnce && elderId && known.has(elderId) && (!profile || !Object.keys(profile).length)) {
+      // Access ended (or the profile is no longer shared): never leave an earlier copy on the screen.
+      clearProfile();
+      return;
+    }
     if (!elderId || !profile || !Object.keys(profile).length) return;
 
     const name = displayName(profile);
@@ -137,6 +160,8 @@
         return [row.elder_id, profile];
       }));
 
+      snapshots.forEach((v, k) => { if (v && Object.keys(v).length) known.add(k); });
+      loadedOnce = true;
       applyAll();
     } catch (error) {
       console.warn('Could not load caregiver profile snapshots:', error);

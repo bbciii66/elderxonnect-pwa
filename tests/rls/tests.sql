@@ -517,4 +517,66 @@ select testkit.login('00000000-0000-0000-0000-0000000000b9','stan@example.test')
 do $$ begin assert coalesce((select recipient_profile from public.caregiver_access where caregiver_email='stan@example.test'),'{}'::jsonb)='{}'::jsonb, 'revoked snapshot stays blank after the admin migration is re-run'; end $$;
 select testkit.logout();
 
+-- 23. Follow-ups: invitations expire after 14 days (and can be renewed), helper not callable by strangers, task author is fixed
+select testkit.logout();
+\i invite-expiry-and-hardening-migration.sql
+insert into auth.users(id,email) values
+ ('00000000-0000-0000-0000-0000000000e9','ida.recipient@example.com'),
+ ('00000000-0000-0000-0000-0000000000ba','late@example.test'),
+ ('00000000-0000-0000-0000-0000000000bb','soon@example.test'),
+ ('00000000-0000-0000-0000-0000000000bc','nosy@example.test');
+insert into public.caregiver_access(elder_id,caregiver_email,status,role,invited_at) values
+ ('00000000-0000-0000-0000-0000000000e9','late@example.test','pending','viewer', now() - interval '15 days'),
+ ('00000000-0000-0000-0000-0000000000e9','soon@example.test','pending','viewer', now() - interval '13 days');
+create view testkit.pending_ids as select id, caregiver_email from public.caregiver_access; grant select on testkit.pending_ids to public;
+-- an expired invitation is invisible to the invited person and cannot be accepted
+select testkit.login('00000000-0000-0000-0000-0000000000ba','late@example.test');
+do $$ declare rid uuid; begin
+  assert (select count(*) from public.caregiver_access)=0, 'an expired invitation is not visible to the invited person';
+  select id into rid from testkit.pending_ids where caregiver_email='late@example.test';
+  begin perform public.accept_caregiver_invitation(rid); assert false, 'EXPIRED-ACCEPT-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'This invitation has expired%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+end $$;
+-- a 13-day-old invitation still works
+select testkit.login('00000000-0000-0000-0000-0000000000bb','soon@example.test');
+do $$ begin
+  assert (select count(*) from public.caregiver_access)=1, 'a 13-day-old invitation is still visible';
+  perform public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='soon@example.test'));
+  assert (select status from public.caregiver_access where caregiver_email='soon@example.test')='active', 'a 13-day-old invitation can be accepted';
+end $$;
+-- a stranger cannot renew someone else's invitation; the elder can; renewing restarts the 14 days
+select testkit.login('00000000-0000-0000-0000-0000000000bc','nosy@example.test');
+do $$ begin
+  begin perform public.renew_caregiver_invitation((select id from testkit.pending_ids where caregiver_email='late@example.test')); assert false, 'STRANGER-RENEW-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e9','ida.recipient@example.com','Ida');
+do $$ begin
+  perform public.renew_caregiver_invitation((select id from public.caregiver_access where caregiver_email='late@example.test'));
+  assert (select invited_at from public.caregiver_access where caregiver_email='late@example.test') > now() - interval '1 minute', 'renew restarts the clock';
+  begin perform public.renew_caregiver_invitation((select id from public.caregiver_access where caregiver_email='soon@example.test')); assert false, 'ACTIVE-RENEW-NOT-REJECTED';
+  exception when others then if sqlerrm not like 'No pending invitation%' then raise exception 'wrong or missing rejection: %', sqlerrm; end if; end;
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000ba','late@example.test');
+do $$ begin
+  perform public.accept_caregiver_invitation((select id from public.caregiver_access where caregiver_email='late@example.test'));
+  assert (select status from public.caregiver_access where caregiver_email='late@example.test')='active', 'a renewed invitation can be accepted';
+end $$;
+-- strangers cannot probe whether someone has a managed circle; the real rules still work
+select testkit.login('00000000-0000-0000-0000-0000000000bc','nosy@example.test');
+do $$ begin
+  begin perform public.circle_managed('00000000-0000-0000-0000-0000000000e9'); assert false, 'MANAGED-PROBE-NOT-REJECTED';
+  exception when insufficient_privilege then null; end;
+end $$;
+select testkit.login('00000000-0000-0000-0000-0000000000e9','ida.recipient@example.com','Ida');
+do $$ begin assert public.circle_can_manage('00000000-0000-0000-0000-0000000000e9'), 'the elder can still manage their own circle'; end $$;
+-- the stamped author of a task cannot be rewritten
+select testkit.login('00000000-0000-0000-0000-0000000000f1','fran.testerson@example.com','Fran');
+do $$ declare t uuid; begin
+  select id into t from public.circle_tasks where title='Refill pills';
+  assert testkit.blocked(format($q$update public.circle_tasks set created_by_name='Forged Author' where id=%L$q$,t)), 'task author name cannot change';
+  assert not testkit.blocked(format($q$update public.circle_tasks set done=true where id=%L$q$,t)), 'ticking still works';
+end $$;
+select testkit.logout();
+
 \echo ALL DATABASE RULE CHECKS PASSED

@@ -37,3 +37,13 @@ test('email is generic: no name, no injection, only our link', async () => {
   assert.ok(!/[\r\n]/.test(subject));
   assert.ok(html.includes('care circle') && html.includes(link));
 });
+
+test('invitations stop working 14 days after they were sent', async () => {
+  const { isInviteCurrent } = await load();
+  const now = new Date('2026-11-14T12:00:00Z');
+  assert.strictEqual(isInviteCurrent('2026-11-14T11:00:00Z', now), true);
+  assert.strictEqual(isInviteCurrent('2026-11-01T13:00:00Z', now), true);   // 13 days old
+  assert.strictEqual(isInviteCurrent('2026-10-31T12:00:00Z', now), false);  // exactly 14 days
+  assert.strictEqual(isInviteCurrent(null, now), false);
+  assert.strictEqual(isInviteCurrent('not a date', now), false);
+});

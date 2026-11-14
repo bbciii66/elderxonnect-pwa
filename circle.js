@@ -91,7 +91,7 @@
   async function loadManage() {
     const [s, r] = await Promise.all([
       client.from('circle_settings').select('*').eq('elder_id', elderId).maybeSingle(),
-      client.from('caregiver_access').select('id,caregiver_email,role,status,sections').eq('elder_id', elderId).in('status', ['pending', 'active']).order('invited_at'),
+      client.from('caregiver_access').select('id,caregiver_email,role,status,sections,invited_at').eq('elder_id', elderId).in('status', ['pending', 'active']).order('invited_at'),
     ]);
     if (r.error) { showError(r.error); return; }
     settingsOk = !s.error; settings = s.error ? null : s.data; accessRows = r.data || [];
@@ -130,13 +130,23 @@
     if ($('roles').contains(document.activeElement)) return; // do not rebuild the list while someone is choosing
     if (!accessRows.length) { $('roles').innerHTML = '<p class="sub">No one has been invited yet.</p>'; return; }
     $('roles').innerHTML = accessRows.map((x) => {
-      const head = `<div>${esc(x.caregiver_email)}${x.status === 'pending' ? ' <span class="who">(invited, not joined yet)</span>' : ''}</div>`;
+      const expired = x.status === 'pending' && L.inviteExpired(x.invited_at, new Date());
+      const pendingNote = expired ? ' <span class="who">(invitation expired)</span>' : ' <span class="who">(invited, not joined yet)</span>';
+      const head = `<div>${esc(x.caregiver_email)}${x.status === 'pending' ? pendingNote : ''}</div>` +
+        (manage && x.status === 'pending' ? `<button type="button" class="ghost" data-renew="${esc(x.id)}">${expired ? 'Send a new invitation' : 'Send the invitation again'}</button>` : '');
       const secs = x.role === 'admin' ? L.SECTIONS : (x.sections || ['circle']);
       if (!manage) return `<div class="rolerow">${head}<div class="who">${esc(L.ROLE_LABELS[x.role] || x.role)}</div></div>`;
       const select = `<select data-role="${esc(x.id)}" aria-label="Role for ${esc(x.caregiver_email)}">${L.ROLES.map((role) => `<option value="${role}" ${role === x.role ? 'selected' : ''}>${esc(L.ROLE_LABELS[role])}</option>`).join('')}</select>`;
       const boxes = L.SECTIONS.map((sec) => `<label class="sec"><input type="checkbox" data-sec="${sec}" data-id="${esc(x.id)}" ${secs.includes(sec) ? 'checked' : ''} ${sec === 'circle' || x.role === 'admin' ? 'disabled' : ''}> ${esc(L.SECTION_LABELS[sec])}</label>`).join('');
       return `<div class="rolerow">${head}${select}<details><summary>What they can see</summary>${boxes}</details></div>`;
     }).join('');
+    document.querySelectorAll('[data-renew]').forEach((b) => {
+      b.onclick = async () => {
+        const row = accessRows.find((x) => x.id === b.dataset.renew);
+        b.blur(); // the list is not rebuilt while something inside it has focus
+        if (row) await renewAndSend(row);
+      };
+    });
     document.querySelectorAll('[data-role]').forEach((s) => {
       s.onchange = async () => {
         const u = await client.from('caregiver_access').update({ role: s.value, sections: L.sectionsForRole(s.value) }).eq('id', s.dataset.role);
@@ -166,7 +176,7 @@
   }
 
   // Email the invitation, then always show a link to share by hand. A failed email never undoes the invitation.
-  async function sendInviteEmail(row, email) {
+  async function sendInviteEmail(row, email, renewed) {
     let result;
     try {
       result = row && row.id
@@ -174,13 +184,24 @@
         : { error: new Error('no id') };
     } catch (e) { result = { error: e }; }
     const out = L.inviteOutcome(email, result);
-    $('inviteResultText').textContent = out.text;
+    $('inviteResultText').textContent = !out.sent && renewed ? 'We could not email ' + email + ', so please send them the link below yourself.' : out.text;
     $('inviteLinkBox').value = L.inviteLink(location.origin, email);
     $('inviteResult').classList.remove('hidden');
   }
   async function copyInviteLink() {
     const box = $('inviteLinkBox'); box.select();
     try { await navigator.clipboard.writeText(box.value); $('copyInviteLink').textContent = 'Copied'; } catch { $('copyInviteLink').textContent = 'Press and hold the link to copy'; }
+  }
+
+  // Start the 14 days again on a waiting invitation, then email it and show the link, the same as a first invitation.
+  async function renewAndSend(row) {
+    try {
+      showError('');
+      const r = await client.rpc('renew_caregiver_invitation', { access_id: row.id });
+      if (r.error) throw r.error;
+      loadManage();
+      await sendInviteEmail({ id: row.id }, row.caregiver_email, true);
+    } catch (e) { showError(e); }
   }
 
   async function invite() {
@@ -190,7 +211,12 @@
     try {
       showError('');
       const r = await addPerson(email, $('inviteRole').value);
-      if (r.error) throw (r.error.code === '23505' ? new Error('That person is already in the circle. Change their role above.') : r.error);
+      if (r.error && r.error.code === '23505') {
+        const existing = accessRows.find((x) => String(x.caregiver_email).toLowerCase() === email);
+        if (existing && existing.status === 'pending') { $('inviteEmail').value = ''; await renewAndSend(existing); return; }
+        throw new Error('That person is already in the circle. Change their role above.');
+      }
+      if (r.error) throw r.error;
       $('inviteEmail').value = ''; loadManage();
       await sendInviteEmail(r.data, email);
     } catch (e) { showError(e); }

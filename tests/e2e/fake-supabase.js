@@ -45,6 +45,15 @@
       // Tests choose the answer: DB.fnAnswer = { data } or { error }. Default: email not configured, like before the key is set.
       return DB.fnAnswer || { data: null, error: { message: 'Edge Function returned a non-2xx status code' } };
     } };
-    return { from: table, functions, auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
+    async function rpc(name, args) {
+      (DB.rpcCalls = DB.rpcCalls || []).push({ name, args }); save();
+      if (name === 'renew_caregiver_invitation') {
+        const row = (DB.tables.caregiver_access || []).find((r) => r.id === args.access_id && r.status === 'pending');
+        if (!row) return { data: null, error: { message: 'No pending invitation to renew.' } };
+        row.invited_at = new Date().toISOString(); save(); return { data: JSON.parse(JSON.stringify(row)), error: null };
+      }
+      return { data: null, error: { message: 'unknown rpc ' + name } };
+    }
+    return { from: table, rpc, functions, auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), getSession: async () => ({ data: { session: DB.me ? { user: { id: DB.me.id, email: DB.me.email, user_metadata: { full_name: DB.me.name } } } : null } }) } };
   } };
 })();

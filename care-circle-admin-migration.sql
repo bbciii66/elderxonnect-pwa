@@ -85,8 +85,8 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 revoke all on function public.circle_is_admin(uuid), public.circle_managed(uuid),
   public.circle_can_manage(uuid), public.circle_has_section(uuid, text) from public;
-grant execute on function public.circle_is_admin(uuid), public.circle_managed(uuid),
-  public.circle_can_manage(uuid), public.circle_has_section(uuid, text) to authenticated;
+grant execute on function public.circle_is_admin(uuid),
+  public.circle_can_manage(uuid), public.circle_has_section(uuid, text) to authenticated; -- circle_managed is internal only
 
 -- 5. Who may change the circle. In managed mode the elder can look but not change.
 drop policy if exists "Elders manage caregiver access" on public.caregiver_access;
