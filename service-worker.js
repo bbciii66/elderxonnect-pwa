@@ -1,4 +1,4 @@
-const CACHE_NAME = "elderxonnect-v39";
+const CACHE_NAME = "elderxonnect-v40";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/push-config.js",

@@ -2,6 +2,14 @@
 
 export const DEFAULT_ALLOWED_ORIGINS = ['https://elderxonnect-pwa.vercel.app'];
 
+// Invitations stop working 14 days after they were sent (the database enforces the same rule on accept).
+export const INVITE_DAYS = 14;
+export function isInviteCurrent(invitedAt, now = new Date()) {
+  const sent = new Date(invitedAt).getTime();
+  if (!invitedAt || Number.isNaN(sent)) return false;
+  return now.getTime() - sent < INVITE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 export function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]

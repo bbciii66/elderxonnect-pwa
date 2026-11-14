@@ -105,3 +105,11 @@ test('only a clear "sent" counts as emailed; everything else falls back to shari
     assert.match(o.text, /send them the link/);
   }
 });
+
+test('the screen labels an invitation expired at 14 days, like the database', () => {
+  const now = at('2026-11-14T12:00:00Z');
+  assert.equal(L.inviteExpired('2026-11-01T13:00:00Z', now), false);
+  assert.equal(L.inviteExpired('2026-10-31T12:00:00Z', now), true);
+  assert.equal(L.inviteExpired(null, now), false);
+  assert.equal(L.inviteExpired('garbage', now), false);
+});

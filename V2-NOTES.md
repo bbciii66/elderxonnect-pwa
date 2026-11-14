@@ -73,10 +73,17 @@ Made-up people only. Do not put real health information in until the privacy pha
 
 ## Privacy migration and run order (caregiver-snapshot-active-only-migration.sql)
 - Pending and revoked caregivers hold no profile copy and no recipient name; active access is bound to the account, not the email address.
-- **Run it LAST.** For a new project: `full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file, then `push-alerts-migration.sql`.
-- **Never re-run `full-setup-v2.sql` on its own on a live database**: it restores older, looser policies and functions. If you do, run the full sequence again (`full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file). This file also re-applies the section-limited read rules and grants itself, but it needs the admin migration's helper functions to exist. All are safe to run twice.
+- **Run it second to last.** For a new project: `full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file, `invite-expiry-and-hardening-migration.sql`, then `push-alerts-migration.sql`.
+- **Never re-run `full-setup-v2.sql` on its own on a live database**: it restores older, looser policies and functions. If you do, run the full sequence again (`full-setup-v2.sql`, `care-circle-v2-migration.sql`, `care-circle-admin-migration.sql`, this file, `invite-expiry-and-hardening-migration.sql`). This file also re-applies the section-limited read rules and grants itself, but it needs the admin migration's helper functions to exist. All are safe to run twice.
 - The invitation email is deliberately generic (no name or email of the care recipient).
-- Not done yet: invitations never expire; the caregiver page can keep showing a profile loaded before access was withdrawn.
 - Invitations can only be accepted (or seen, while pending) by an account whose email is **confirmed** and matches the invited address. Keep "Confirm email" on in Supabase Auth.
 - Old one-off files `caregiver-profile-read-policy.sql` and `caregiver-shared-profile-rpc.sql` moved to `legacy/` (do not run; they ignore per-section sharing).
 - Known follow-ups (not blockers): a demoted admin keeps all sections unless the app resets them (the app does); an active caregiver without the profile section still sees the recipient's name; promoting an existing row to admin on a duplicate invite should reset it to pending.
+
+## Invitation expiry and small database fixes (invite-expiry-and-hardening-migration.sql)
+- **Invitations expire 14 days after they were sent.** Only waiting (pending) invitations expire; people who already joined keep access. An expired invitation is invisible to the invited person and cannot be accepted ("This invitation has expired. Ask for a new one."). The email helper also refuses to send it (410).
+- **Sending again**: the circle screen marks an old invitation "(invitation expired)" and offers "Send a new invitation" (any waiting invitation has "Send the invitation again"). Both call `renew_caregiver_invitation`, which restarts the 14 days and is allowed only for whoever may manage that circle. Typing the email of a person who is still waiting does the same.
+- `circle_managed(uuid)` can no longer be called by signed-in strangers (they could learn whether someone has a managed circle). The database's own functions still use it.
+- A task's stamped author (`created_by_name`) cannot be rewritten by updating the task.
+- The caregiver page no longer keeps showing an earlier copy of a recipient's profile once access ended or the profile stopped being shared; it says "No profile is shared with you."
+- Left alone on purpose: per-sender email quotas for the invite helper (needs a design decision and only matters once email is switched on), and binding the device profile to its account at creation (#12 only claims it at first sync).

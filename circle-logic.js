@@ -94,5 +94,13 @@
     return { sent: false, text: 'Added ' + email + ' to the circle. We could not email them, so please send them the link below yourself.' };
   }
 
-  return { inviteLink, inviteOutcome, ROLES, ROLE_LABELS, SECTIONS, SECTION_LABELS, ROLE_DEFAULT_SECTIONS, QUICK_MESSAGES, canWrite, sectionsForRole, canSee, setupState, canManage, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
+  // An invitation that nobody accepted stops working 14 days after it was sent. The database enforces this; the screen only labels it.
+  const INVITE_DAYS = 14;
+  function inviteExpired(invitedAt, now) {
+    const sent = new Date(invitedAt).getTime();
+    if (!invitedAt || Number.isNaN(sent)) return false;
+    return (now || new Date()).getTime() - sent >= INVITE_DAYS * 24 * 60 * 60 * 1000;
+  }
+
+  return { inviteExpired, INVITE_DAYS, inviteLink, inviteOutcome, ROLES, ROLE_LABELS, SECTIONS, SECTION_LABELS, ROLE_DEFAULT_SECTIONS, QUICK_MESSAGES, canWrite, sectionsForRole, canSee, setupState, canManage, checkinStatus, buildCircles, defaultCircle, cleanText, parseMinutes };
 });

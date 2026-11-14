@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { buildInviteEmail, buildInviteLink, parseAllowedOrigins } from './invite-logic.mjs';
+import { buildInviteEmail, buildInviteLink, isInviteCurrent, parseAllowedOrigins } from './invite-logic.mjs';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
     const { data: access, error: accessError } = await admin
       .from('caregiver_access')
-      .select('id, elder_id, caregiver_email, status')
+      .select('id, elder_id, caregiver_email, status, invited_at')
       .eq('id', invitation)
       .maybeSingle();
 
@@ -63,6 +63,8 @@ Deno.serve(async (req) => {
     const { data: canManage, error: manageError } = await callerClient.rpc('circle_can_manage', { target_elder: access.elder_id });
     if (manageError) return json({ error: 'Could not check permission' }, 500);
     if (canManage !== true) return json({ error: 'Invitation not found or no longer pending' }, 404);
+
+    if (!isInviteCurrent(access.invited_at)) return json({ error: 'Invitation has expired. Send a new one.' }, 410);
 
     const link = buildInviteLink(portalUrl, email, parseAllowedOrigins(Deno.env.get('INVITE_ALLOWED_ORIGINS')));
     if (!link) return json({ error: 'Invalid invitation link' }, 400);

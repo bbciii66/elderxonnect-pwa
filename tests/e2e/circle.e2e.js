@@ -72,7 +72,17 @@ let port;
   check((await p.inputValue('#inviteLinkBox')).endsWith('/caregiver.html?email=omar.aide%40example.com'), 'a link to share by hand is shown with the invited email');
   check(await p.evaluate(() => window.__FAKE_DB__.tables.caregiver_access.some((x) => x.caregiver_email === 'omar.aide@example.com' && x.status === 'pending')), 'a failed email does not undo the invitation');
   await p.fill('#inviteEmail', 'omar.aide@example.com'); await p.click('#sendInvite');
-  check((await p.textContent('#error')).includes('already in the circle'), 'inviting the same person twice is explained');
+  check(await p.evaluate(() => (window.__FAKE_DB__.rpcCalls || []).some((c) => c.name === 'renew_caregiver_invitation')), 'inviting a person who is still waiting sends the invitation again (restarts the 14 days)');
+  check((await p.textContent('#inviteResultText')).includes('omar.aide@example.com'), 'the elder is told who the invitation went to');
+  // an invitation older than 14 days is labelled and can be sent again with one button
+  await p.evaluate(() => { const r = window.__FAKE_DB__.tables.caregiver_access.find((x) => x.caregiver_email === 'new@example.com'); r.invited_at = new Date(Date.now() - 15 * 86400000).toISOString(); sessionStorage.setItem('fakedb', JSON.stringify(window.__FAKE_DB__)); });
+  await p.reload(); await p.waitForSelector('#roles select');
+  check((await p.textContent('#roles')).includes('invitation expired'), 'an invitation older than 14 days is marked expired');
+  await p.click('[data-renew]:has-text("Send a new invitation")');
+  await p.waitForFunction(() => !document.querySelector('#roles').textContent.includes('invitation expired'));
+  check(await p.evaluate(() => { const r = window.__FAKE_DB__.tables.caregiver_access.find((x) => x.caregiver_email === 'new@example.com'); return Date.now() - new Date(r.invited_at).getTime() < 60000; }), 'sending a new invitation restarts the clock');
+  // (the old 'already in the circle' message now only applies to people who have already joined)
+
   await p.fill('#inviteEmail', 'edna@example.com'); await p.click('#sendInvite');
   check((await p.textContent('#error')).includes('different email'), 'cannot invite yourself');
   await p.click('#send');
