@@ -81,7 +81,7 @@
 
   // ── Read this page aloud ──
   var reading = null;
-  function pageText(view) { return (view.innerText || '').replace(/[ \t]+\n/g, '\n').trim().slice(0, 4000); }
+  function pageText(view) { return (view.innerText || '').replace(/(🔊 Read this page aloud|⏹ Stop reading)/g, '').replace(/[ \t]+\n/g, '\n').trim().slice(0, 4000); }
   function resetReadButtons() {
     reading = null;
     document.querySelectorAll('.readaloud').forEach(function (b) {
