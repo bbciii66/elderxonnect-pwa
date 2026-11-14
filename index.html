@@ -1059,6 +1059,30 @@
   </div>
 
 
+  <div class="card" id="translateCard">
+    <h2 class="card-title" id="translateHeading">🌐 Translate</h2>
+    <p class="card-sub">Type or speak, tap Translate, then tap Listen. It happens on this phone; nothing you type is sent anywhere.</p>
+    <div class="tr-langs">
+      <div><label class="label" for="trFrom">From</label><select id="trFrom"></select></div>
+      <button type="button" class="btn ghost tr-swap" id="trSwap" aria-label="Swap the two languages">⇄</button>
+      <div><label class="label" for="trTo">To</label><select id="trTo"></select></div>
+    </div>
+    <div class="sp8"></div>
+    <label class="label" for="trInput">Words to translate</label>
+    <textarea id="trInput" maxlength="2000" placeholder="Type here, or tap the microphone"></textarea>
+    <div class="tr-actions">
+      <button type="button" class="btn ghost" id="trMic">🎙️ Speak</button>
+      <button type="button" class="btn green" id="trGo">Translate</button>
+    </div>
+    <p class="small" id="trStatus" role="status"></p>
+    <div class="tr-result" id="trResult" hidden>
+      <div class="label">Translation</div>
+      <p class="tr-text" id="trOut" lang="en"></p>
+      <button type="button" class="btn ghost" id="trListen">🔊 Listen</button>
+    </div>
+    <a class="btn ghost" id="trFallback" href="#" target="_blank" rel="noopener noreferrer" hidden>Open Google Translate <span class="ai-note">your words are sent to Google</span></a>
+  </div>
+
   <div class="card">
     <div class="main-action-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <h2 class="card-title" style="margin-bottom:0;">Companion Chat</h2>
@@ -1311,6 +1335,10 @@
     </div>
 
     <div class="divider"></div>
+    <label class="label" for="voiceLangSelect">My language</label>
+    <select id="voiceLangSelect"></select>
+    <p class="small" id="voiceLangHelp">Microphone buttons in forms listen in this language, and "Read aloud" speaks this language when your phone can translate. The companion chat stays in English.</p>
+    <div class="sp8"></div>
     <label class="label" for="voiceSpeedSlider">Voice Speed</label>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
       <span class="small">Slow</span>
@@ -2655,13 +2683,13 @@ let recognition = null;
 let recognitionTarget = null; // 'chat' | input element id
 let recognitionActive = false;
 
-function buildRecognition(){
+function buildRecognition(targetId){
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SpeechRecognition) return null;
   const r = new SpeechRecognition();
   r.continuous = false;
   r.interimResults = true;
-  r.lang = 'en-US';
+  r.lang = (targetId === 'chat' || !window.SpeechLogic) ? 'en-US' : SpeechLogic.speechTag(VS.get('lang', SpeechLogic.defaultLanguage(navigator.language)));
   return r;
 }
 
@@ -2675,7 +2703,7 @@ function startVoice(targetId){
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SpeechRecognition){ toast('⚠️ Voice not supported in this browser. Try Chrome.'); return; }
 
-  recognition = buildRecognition();
+  recognition = buildRecognition(targetId);
   recognitionTarget = targetId;
   recognitionActive = true;
 
@@ -2885,6 +2913,8 @@ if('Notification' in window && Notification.permission==='granted') notifGranted
 <script src="/games.js" defer></script>
 <script src="/weather-logic.js" defer></script>
 <script src="/weather.js" defer></script>
+<script src="/speech-logic.js" defer></script>
+<script src="/speech.js" defer></script>
 <script src="/unlock-settings.js" defer></script>
 </body>
 </html>
